@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to Big Data & Cloud Computing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate Gray and Amber -->
+    <!-- Application Structure Plan: The SPA is designed as a thematic, single-page scrolling experience. The structure follows a logical progression from foundational concepts to practical applications, making it easy for users to build knowledge incrementally. The key sections are: 1) Introduction to Big Data (defining the 'Vs'), 2) Core Processing Concepts (architectures, paradigms), 3) Cloud Computing Integration (models, services, architectures), and 4) Real-World Applications (interactive case studies). This structure was chosen over a direct report-to-page mapping to create a more engaging narrative and user flow. Interactivity is centered on comparison and exploration, allowing users to dynamically switch between concepts (like Shared-Everything vs. Shared-Nothing) or filter case studies by industry to see the principles in action. This approach enhances understanding by highlighting contrasts and connections. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: The 6 'Vs' of Big Data. Goal: Inform & Organize. Viz/Method: Interactive card layout with hover effects. Interaction: Hover to reveal details for each 'V'. Justification: Encourages exploration and makes dense definitions more digestible. Library: HTML/CSS/Tailwind.
+        - Report Info: Shared-Everything vs. Shared-Nothing. Goal: Compare. Viz/Method: A dynamic diagram/text block updated by button clicks. Interaction: Buttons to toggle between architectures, updating a central visualization and descriptive text. Justification: Provides a direct, side-by-side comparison of complex architectural principles. Library: HTML/CSS/JS.
+        - Report Info: Batch vs. Real-Time Processing. Goal: Compare. Viz/Method: A bar chart dynamically updated by a dropdown selector. Interaction: User selects a characteristic (e.g., Latency, Cost) from a dropdown, and the chart updates to show the comparison. Justification: Quantifies the trade-offs in an easily understandable visual format. Library: Chart.js.
+        - Report Info: Cloud Service Models (IaaS, PaaS, SaaS). Goal: Organize & Compare. Viz/Method: Tabbed interface. Interaction: Clicking tabs reveals details for each service model. Justification: A clean, standard UI pattern for organizing and comparing distinct categories of information. Library: HTML/CSS/JS.
+        - Report Info: Industry Case Studies. Goal: Inform & Organize. Viz/Method: A filterable grid of case study cards. Interaction: Buttons to filter case studies by industry (e.g., Retail, Finance). Justification: Allows users to explore applications relevant to their interests, making the content more personalized and engaging. Library: HTML/CSS/JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #f59e0b; /* amber-500 */
+        }
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .btn-primary {
+            background-color: #f59e0b; /* amber-500 */
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #d97706; /* amber-600 */
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #475569; /* slate-600 */
+            transition: background-color 0.3s ease;
+        }
+        .btn-secondary.active, .btn-secondary:hover {
+            background-color: #f59e0b; /* amber-500 */
+            color: white;
+        }
+        .section-fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .section-fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">Big Data & Cloud</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#introduction" class="nav-link text-slate-600 font-medium">Introduction</a>
+                <a href="#concepts" class="nav-link text-slate-600 font-medium">Core Concepts</a>
+                <a href="#cloud" class="nav-link text-slate-600 font-medium">Cloud Integration</a>
+                <a href="#applications" class="nav-link text-slate-600 font-medium">Applications</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-slate-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="#introduction" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Introduction</a>
+            <a href="#concepts" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Core Concepts</a>
+            <a href="#cloud" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Cloud Integration</a>
+            <a href="#applications" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Applications</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        
+        <section id="introduction" class="min-h-screen flex flex-col justify-center items-center text-center section-fade-in">
+            <h2 class="text-4xl md:text-6xl font-bold text-slate-800 mb-4">Exploring the World of Big Data</h2>
+            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-8">An interactive journey through the core concepts of big data processing, management, and its powerful synergy with cloud computing. Scroll to begin.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-5xl">
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Volume</h3>
+                    <p class="text-slate-600">The immense scale of data, often reaching petabytes or exabytes, which challenges traditional storage and processing systems.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Velocity</h3>
+                    <p class="text-slate-600">The speed at which data is generated and must be processed, often in real-time, from sources like IoT devices and social media.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Variety</h3>
+                    <p class="text-slate-600">The diverse forms of data, including structured (databases), semi-structured (JSON, XML), and unstructured (text, video) formats.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Veracity</h3>
+                    <p class="text-slate-600">The quality and accuracy of data. Ensuring veracity involves cleaning and validating data to remove inconsistencies and errors.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Value</h3>
+                    <p class="text-slate-600">The ultimate goal of extracting meaningful, actionable insights from data to drive strategic business decisions and create tangible benefits.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Variability</h3>
+                    <p class="text-slate-600">The inconsistency in data flow and meaning. Context can change, requiring adaptive models to interpret data correctly over time.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="concepts" class="py-20 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Core Processing Concepts</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-4">Understand the fundamental architectures and paradigms that power big data systems. These concepts determine how data is managed for scalability, performance, and resilience.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-16">
+                <h3 class="text-2xl font-bold text-center mb-6 text-slate-700">Architectural Patterns: A Tale of Two Systems</h3>
+                <p class="text-center text-slate-600 max-w-3xl mx-auto mb-8">The way a distributed system manages resources is a critical design choice. The two dominant patterns, Shared-Everything and Shared-Nothing, offer different trade-offs between scalability and complexity. Click the buttons to explore how they work.</p>
+                <div class="flex justify-center space-x-4 mb-8">
+                    <button id="btn-se" class="btn-secondary active px-6 py-2 rounded-full font-semibold">Shared-Everything</button>
+                    <button id="btn-sn" class="btn-secondary px-6 py-2 rounded-full font-semibold">Shared-Nothing</button>
+                </div>
+                <div id="architecture-display" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div id="architecture-diagram" class="w-full h-64 bg-slate-100 rounded-lg p-4 flex items-center justify-center transition-all duration-500">
+                    </div>
+                    <div>
+                        <h4 id="architecture-title" class="text-xl font-bold text-slate-800 mb-2"></h4>
+                        <p id="architecture-desc" class="text-slate-600 mb-4"></p>
+                        <div id="architecture-pros" class="mb-4"></div>
+                        <div id="architecture-cons"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-center mb-6 text-slate-700">Processing Paradigms: Batch vs. Real-Time</h3>
+                <p class="text-center text-slate-600 max-w-3xl mx-auto mb-8">Big data can be processed in two primary ways: in large, scheduled groups (Batch) or continuously as it arrives (Real-Time). The choice depends on the need for immediate insights versus cost efficiency. Select a characteristic below to compare them.</p>
+                <div class="flex justify-center mb-8">
+                    <select id="paradigm-selector" class="bg-white border border-slate-300 rounded-md px-4 py-2">
+                        <option value="latency">Latency & Speed</option>
+                        <option value="cost">Cost-Effectiveness</option>
+                        <option value="complexity">Implementation Complexity</option>
+                        <option value="volume">Ideal Data Volume</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="paradigm-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="cloud" class="py-20 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Big Data in the Cloud</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-4">Cloud computing provides the scalability, flexibility, and cost-effectiveness needed to manage big data. Explore the different service models and architectures that make this possible.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-center mb-6 text-slate-700">Cloud Service Models (XaaS)</h3>
+                <p class="text-center text-slate-600 max-w-3xl mx-auto mb-8">Cloud services are delivered in layers of abstraction, from raw infrastructure to ready-to-use software. Each model offers a different balance of control and convenience for your big data workloads.</p>
+                <div class="border-b border-slate-200">
+                    <nav class="-mb-px flex space-x-8 justify-center" aria-label="Tabs">
+                        <button id="tab-iaas" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-amber-500 text-amber-600">IaaS</button>
+                        <button id="tab-paas" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">PaaS</button>
+                        <button id="tab-saas" class="tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">SaaS</button>
+                    </nav>
+                </div>
+                <div id="tab-content" class="mt-8">
+                </div>
+            </div>
+        </section>
+
+        <section id="applications" class="py-20 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Real-World Applications</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-4">See how leading companies across different industries leverage cloud-based big data to innovate, optimize operations, and create value. Filter by industry to explore specific case studies.</p>
+            </div>
+            <div class="flex justify-center flex-wrap gap-2 mb-8">
+                <button class="filter-btn btn-secondary active px-4 py-2 rounded-full text-sm font-semibold" data-filter="all">All</button>
+                <button class="filter-btn btn-secondary px-4 py-2 rounded-full text-sm font-semibold" data-filter="Retail">Retail & E-commerce</button>
+                <button class="filter-btn btn-secondary px-4 py-2 rounded-full text-sm font-semibold" data-filter="Finance">Financial Services</button>
+                <button class="filter-btn btn-secondary px-4 py-2 rounded-full text-sm font-semibold" data-filter="Healthcare">Healthcare</button>
+                <button class="filter-btn btn-secondary px-4 py-2 rounded-full text-sm font-semibold" data-filter="Media">Media & Entertainment</button>
+            </div>
+            <div id="case-studies-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2025 Interactive Data Guide. All concepts synthesized from the source report.</p>
+            <p class="text-sm text-slate-400 mt-2">This is a conceptual web application for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const sections = document.querySelectorAll('.section-fade-in');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            const architectureData = {
+                se: {
+                    title: 'Shared-Everything',
+                    description: 'All computational nodes in the cluster access a common pool of resources, like shared memory and storage. This centralizes data access, simplifying consistency.',
+                    pros: [
+                        { icon: '💾', text: 'Simplified recovery from node failure as data is centralized.' },
+                        { icon: '🔄', text: 'Easier to manage data consistency across the system.' }
+                    ],
+                    cons: [
+                        { icon: '🚦', text: 'High risk of contention and bottlenecks as nodes compete for resources.' },
+                        { icon: '🧱', text: 'Scalability is limited by the capacity of the shared resource.' }
+                    ],
+                    diagram: `
+                        <div class="text-center">
+                            <div class="flex justify-around mb-4">
+                                <div class="p-4 bg-blue-200 rounded-lg">Node 1</div>
+                                <div class="p-4 bg-blue-200 rounded-lg">Node 2</div>
+                                <div class="p-4 bg-blue-200 rounded-lg">Node 3</div>
+                            </div>
+                            <div class="flex justify-center items-center space-x-2 mb-4">
+                                <div class="w-px h-12 bg-slate-400"></div>
+                                <div class="w-px h-12 bg-slate-400 -translate-x-12"></div>
+                                <div class="w-px h-12 bg-slate-400 translate-x-12"></div>
+                            </div>
+                            <div class="p-6 bg-amber-200 rounded-lg inline-block">Shared Storage/Memory</div>
+                        </div>
+                    `
+                },
+                sn: {
+                    title: 'Shared-Nothing',
+                    description: 'Each node is independent, with its own dedicated processor, memory, and storage. Data is partitioned across nodes, eliminating resource competition.',
+                    pros: [
+                        { icon: '🚀', text: 'Highly scalable by simply adding more independent nodes.' },
+                        { icon: '🛡️', text: 'Robust fault tolerance; failure of one node does not affect others.' }
+                    ],
+                    cons: [
+                        { icon: '🌐', text: 'Cross-node queries can be slow due to network latency.' },
+                        { icon: '🧩', text: 'Complex to implement, manage data partitioning, and ensure consistency.' }
+                    ],
+                    diagram: `
+                        <div class="flex justify-around text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="p-4 bg-blue-200 rounded-lg mb-2">Node 1</div>
+                                <div class="p-2 bg-amber-200 rounded-lg text-sm">Disk 1</div>
+                            </div>
+                            <div class="flex flex-col items-center">
+                                <div class="p-4 bg-blue-200 rounded-lg mb-2">Node 2</div>
+                                <div class="p-2 bg-amber-200 rounded-lg text-sm">Disk 2</div>
+                            </div>
+                             <div class="flex flex-col items-center">
+                                <div class="p-4 bg-blue-200 rounded-lg mb-2">Node 3</div>
+                                <div class="p-2 bg-amber-200 rounded-lg text-sm">Disk 3</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center text-slate-500">Nodes communicate via network</div>
+                    `
+                }
+            };
+
+            const displayArchitecture = (type) => {
+                const data = architectureData[type];
+                document.getElementById('architecture-diagram').innerHTML = data.diagram;
+                document.getElementById('architecture-title').textContent = data.title;
+                document.getElementById('architecture-desc').textContent = data.description;
+                document.getElementById('architecture-pros').innerHTML = '<h5 class="font-semibold text-green-600 mb-2">Advantages:</h5>' + data.pros.map(p => `<div class="flex items-start mb-1"><span class="mr-2">${p.icon}</span><span>${p.text}</span></div>`).join('');
+                document.getElementById('architecture-cons').innerHTML = '<h5 class="font-semibold text-red-600 mb-2">Challenges:</h5>' + data.cons.map(c => `<div class="flex items-start mb-1"><span class="mr-2">${c.icon}</span><span>${c.text}</span></div>`).join('');
+                
+                document.getElementById('btn-se').classList.toggle('active', type === 'se');
+                document.getElementById('btn-sn').classList.toggle('active', type === 'sn');
+            };
+
+            document.getElementById('btn-se').addEventListener('click', () => displayArchitecture('se'));
+            document.getElementById('btn-sn').addEventListener('click', () => displayArchitecture('sn'));
+            displayArchitecture('se');
+
+            const paradigmData = {
+                latency: { label: 'Latency (Lower is Better)', batch: 8, realtime: 2 },
+                cost: { label: 'Relative Cost (Lower is Better)', batch: 3, realtime: 9 },
+                complexity: { label: 'Implementation Complexity (Lower is Better)', batch: 4, realtime: 8 },
+                volume: { label: 'Ideal Data Volume (Higher is Better)', batch: 10, realtime: 6 }
+            };
+
+            let paradigmChart;
+            const paradigmCtx = document.getElementById('paradigm-chart').getContext('2d');
+            const createOrUpdateParadigmChart = (metric) => {
+                const data = paradigmData[metric];
+                if (paradigmChart) {
+                    paradigmChart.data.datasets[0].data = [data.batch, data.realtime];
+                    paradigmChart.options.plugins.title.text = data.label;
+                    paradigmChart.update();
+                } else {
+                    paradigmChart = new Chart(paradigmCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Batch Processing', 'Real-Time Processing'],
+                            datasets: [{
+                                label: 'Relative Score',
+                                data: [data.batch, data.realtime],
+                                backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(245, 158, 11, 0.7)'],
+                                borderColor: ['rgba(59, 130, 246, 1)', 'rgba(245, 158, 11, 1)'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, max: 10 }
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: data.label, font: { size: 16 }, color: '#334155' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += context.parsed.y;
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            };
+            
+            document.getElementById('paradigm-selector').addEventListener('change', (e) => {
+                createOrUpdateParadigmChart(e.target.value);
+            });
+            createOrUpdateParadigmChart('latency');
+
+            const tabData = {
+                iaas: {
+                    title: 'Infrastructure as a Service (IaaS)',
+                    description: 'Provides fundamental virtualized computing resources over the internet. You rent IT infrastructure—servers and virtual machines, storage, networks, operating systems—from a cloud provider on a pay-as-you-go basis.',
+                    responsibility: 'You manage the applications, data, runtime, middleware, and O/S. The provider manages virtualization, servers, storage, and networking.',
+                    use_case: 'Ideal for big data workloads requiring maximum control and customization over the infrastructure, such as building custom data processing clusters or high-performance computing.'
+                },
+                paas: {
+                    title: 'Platform as a Service (PaaS)',
+                    description: 'Provides an on-demand environment for developing, testing, delivering, and managing software applications. It is designed to make it easier for developers to quickly create web or mobile apps, without worrying about setting up or managing the underlying infrastructure.',
+                    responsibility: 'You manage the applications and data. The provider manages everything else.',
+                    use_case: 'Excellent for developing and deploying custom big data applications, as it provides managed databases, processing frameworks (like Spark), and development tools.'
+                },
+                saas: {
+                    title: 'Software as a Service (SaaS)',
+                    description: 'A method for delivering software applications over the Internet, on demand and typically on a subscription basis. With SaaS, cloud providers host and manage the software application and underlying infrastructure and handle any maintenance.',
+                    responsibility: 'The provider manages everything. You just use the software.',
+                    use_case: 'Used for consuming ready-to-use analytics and business intelligence tools (like Tableau Cloud or Power BI) that run on big data platforms without any infrastructure management.'
+                }
+            };
+
+            const tabContent = document.getElementById('tab-content');
+            const tabButtons = document.querySelectorAll('.tab-btn');
+
+            const displayTabData = (type) => {
+                const data = tabData[type];
+                tabContent.innerHTML = `
+                    <h4 class="text-xl font-bold text-slate-800 mb-2">${data.title}</h4>
+                    <p class="text-slate-600 mb-4">${data.description}</p>
+                    <div class="bg-slate-100 p-4 rounded-lg">
+                        <p class="font-semibold text-slate-700">Your Responsibility:</p>
+                        <p class="text-slate-600 mb-2">${data.responsibility}</p>
+                        <p class="font-semibold text-slate-700">Big Data Use Case:</p>
+                        <p class="text-slate-600">${data.use_case}</p>
+                    </div>
+                `;
+                tabButtons.forEach(btn => {
+                    if (btn.id === `tab-${type}`) {
+                        btn.classList.add('border-amber-500', 'text-amber-600');
+                        btn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    } else {
+                        btn.classList.remove('border-amber-500', 'text-amber-600');
+                        btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    }
+                });
+            };
+            
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.id.split('-')[1];
+                    displayTabData(type);
+                });
+            });
+            displayTabData('iaas');
+
+
+            const caseStudiesData = [
+                { company: 'Netflix', industry: 'Media', cloud: 'AWS', summary: 'Leverages AWS for global content delivery, personalized recommendations, and massive-scale analytics, with 80% of views driven by its algorithms.' },
+                { company: 'Spotify', industry: 'Media', cloud: 'GCP', summary: 'Uses Google Cloud ML to analyze listening history and user behavior to provide hyper-personalized music recommendations, enhancing user engagement.' },
+                { company: 'Starbucks', industry: 'Retail', cloud: 'Azure', summary: 'Utilizes its loyalty program and mobile app data to predict purchases and send personalized offers, increasing sales and customer re-engagement.' },
+                { company: 'Domino\'s', industry: 'Retail', cloud: 'GCP', summary: 'Employs Google BigQuery to analyze customer data, optimizing menu pricing, and delivery operations for increased profitability and satisfaction.' },
+                { company: 'Capital One', industry: 'Finance', cloud: 'AWS', summary: 'Migrated fully to AWS to enhance fraud protection with real-time machine learning algorithms and accelerate digital banking innovation.' },
+                { company: 'Nasdaq', industry: 'Finance', cloud: 'AWS', summary: 'Leverages AWS to strengthen its market surveillance systems against fraud and other financial crimes, ensuring market integrity.' },
+                { company: 'Philips', industry: 'Healthcare', cloud: 'GCP', summary: 'Uses Google Cloud ML to analyze medical imaging data, enabling earlier and more accurate detection of diseases like cancer.' },
+                { company: 'Pfizer', industry: 'Healthcare', cloud: 'AWS', summary: 'Utilizes AWS to accelerate vaccine development, manage supply chain logistics, and identify new oncology targets with generative AI.' },
+            ];
+
+            const caseStudiesGrid = document.getElementById('case-studies-grid');
+            const filterButtons = document.querySelectorAll('.filter-btn');
+
+            const displayCaseStudies = (filter = 'all') => {
+                caseStudiesGrid.innerHTML = '';
+                const filteredData = filter === 'all' ? caseStudiesData : caseStudiesData.filter(cs => cs.industry === filter);
+                
+                filteredData.forEach(cs => {
+                    const card = document.createElement('div');
+                    card.className = 'card bg-white p-6 rounded-lg shadow-md flex flex-col';
+                    card.innerHTML = `
+                        <h4 class="text-xl font-bold text-slate-800 mb-2">${cs.company}</h4>
+                        <span class="text-sm font-semibold text-amber-600 bg-amber-100 px-2 py-1 rounded-full self-start mb-4">${cs.industry}</span>
+                        <p class="text-slate-600 flex-grow">${cs.summary}</p>
+                        <p class="text-xs text-slate-500 mt-4">Cloud Provider: ${cs.cloud}</p>
+                    `;
+                    caseStudiesGrid.appendChild(card);
+                });
+            };
+
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    displayCaseStudies(btn.dataset.filter);
+                });
+            });
+            
+            displayCaseStudies();
+        });
+    </script>
+</body>
+</html>

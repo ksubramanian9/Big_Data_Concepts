@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Data Concepts Navigation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #f59e0b; /* amber-500 */
+        }
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body>
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">Big Data Concepts</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="Big_Data_Processing.html" class="nav-link text-slate-600 font-medium">Big Data Processing</a>
+                <a href="Big_Data_Storage_Concepts.html" class="nav-link text-slate-600 font-medium">Big Data Storage</a>
+                <a href="Map_Reduce.html" class="nav-link text-slate-600 font-medium">Map Reduce</a>
+                <a href="NoSQL_Deep_Dive.html" class="nav-link text-slate-600 font-medium">NoSQL Deep Dive</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-slate-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="Big_Data_Processing.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Big Data Processing</a>
+            <a href="Big_Data_Storage_Concepts.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Big Data Storage</a>
+            <a href="Map_Reduce.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Map Reduce</a>
+            <a href="NoSQL_Deep_Dive.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">NoSQL Deep Dive</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12 text-center">
+        <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mb-8">Welcome to Your Big Data Resources</h2>
+        <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-12">Use the navigation bar above or click on the cards below to explore various aspects of Big Data processing and management concepts.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <a href="Big_Data_Processing.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                <h3 class="text-2xl font-bold text-amber-500 mb-2">Big Data Processing</h3>
+                <p class="text-slate-600">Dive into how large datasets are processed and analyzed.</p>
+            </a>
+            <a href="Big_Data_Storage_Concepts.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                <h3 class="text-2xl font-bold text-amber-500 mb-2">Big Data Storage Concepts</h3>
+                <p class="text-slate-600">Understand the foundational ideas behind storing massive amounts of data.</p>
+            </a>
+            <a href="Map_Reduce.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                <h3 class="text-2xl font-bold text-amber-500 mb-2">Map Reduce</h3>
+                <p class="text-slate-600">Explore the core programming model for processing large data sets with a parallel, distributed algorithm.</p>
+            </a>
+            <a href="NoSQL_Deep_Dive.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                <h3 class="text-2xl font-bold text-amber-500 mb-2">NoSQL Deep Dive</h3>
+                <p class="text-slate-600">Get an in-depth look at non-relational databases, designed for handling large volumes of unstructured data.</p>
+            </a>
+        </div>
+    </main>
+
+    <footer class="bg-slate-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2025 Big Data Navigation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
