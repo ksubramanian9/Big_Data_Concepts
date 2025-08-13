@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hadoop Fundamentals</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #f59e0b; /* amber-500 */
+        }
+        .section {
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">Hadoop Fundamentals</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html" class="nav-link text-slate-600 font-medium">Home</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-slate-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="index.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Home</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+        <section class="section mb-12">
+            <h2 class="text-3xl font-bold text-amber-500 mb-4">What is Hadoop?</h2>
+            <p class="text-slate-600">Hadoop is an open-source framework for distributed storage and processing of large data sets across clusters of computers. It provides a way to scale data processing tasks from single servers to thousands of machines.</p>
+        </section>
+        <section class="section mb-12">
+            <h2 class="text-3xl font-bold text-amber-500 mb-4">Core Components</h2>
+            <ul class="list-disc list-inside text-slate-600 space-y-2">
+                <li><span class="font-semibold">HDFS (Hadoop Distributed File System):</span> A distributed file system that stores data across multiple machines for reliability and throughput.</li>
+                <li><span class="font-semibold">YARN (Yet Another Resource Negotiator):</span> Manages resources and schedules jobs across the cluster.</li>
+                <li><span class="font-semibold">MapReduce:</span> A programming model for processing large data sets with a parallel, distributed algorithm.</li>
+            </ul>
+        </section>
+        <section class="section mb-12">
+            <h2 class="text-3xl font-bold text-amber-500 mb-4">Hadoop Ecosystem</h2>
+            <p class="text-slate-600 mb-4">The Hadoop ecosystem includes a variety of tools that extend its capabilities:</p>
+            <ul class="list-disc list-inside text-slate-600 space-y-2">
+                <li><span class="font-semibold">Hive:</span> Data warehousing and SQL-like query language.</li>
+                <li><span class="font-semibold">Pig:</span> High-level platform for creating MapReduce programs.</li>
+                <li><span class="font-semibold">HBase:</span> NoSQL database built on top of HDFS.</li>
+                <li><span class="font-semibold">Spark:</span> Fast in-memory data processing engine compatible with Hadoop data.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2025 Big Data Navigation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
