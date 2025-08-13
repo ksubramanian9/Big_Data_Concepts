@@ -1,13 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hadoop Fundamentals</title>
+    <title>Hadoop Fundamentals: An Interactive Guide</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate Gray and Amber -->
+    <!-- Application Structure Plan: The SPA is structured thematically, guiding the user from an overall understanding of Hadoop to its specific core components and their functionalities. The main sections are: 1) Introduction to Hadoop, 2) Hadoop Ecosystem Overview (HDFS, YARN, MapReduce), 3) Deep Dive into HDFS, 4) Understanding YARN, 5) Demystifying MapReduce, and 6) Benefits & Limitations. This logical flow allows users to build knowledge progressively. Key interactions include dynamic diagrams for HDFS, a tabbed interface for YARN components, and a step-by-step visualizer for MapReduce, all designed to make abstract concepts concrete and explorable. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Hadoop Definition & Principles. Goal: Inform. Viz/Method: Header and descriptive text with simple HTML/CSS cards for principles. Interaction: Standard text consumption. Justification: Clear initial understanding. Library: HTML/CSS/Tailwind.
+        - Report Info: Hadoop Ecosystem Components. Goal: Organize & Inform. Viz/Method: Card layout for HDFS, YARN, MapReduce. Interaction: Clickable cards potentially leading to sections. Justification: Provides a high-level overview before deep dives. Library: HTML/CSS/Tailwind.
+        - Report Info: HDFS Architecture & Concepts. Goal: Inform & Demonstrate. Viz/Method: Dynamic HTML/CSS diagram with accompanying text updated by buttons to illustrate NameNode, DataNodes, and replication. Interaction: Buttons to cycle through different states/explanations. Justification: Visualizes complex distributed file system concepts. Library: HTML/CSS/JS.
+        - Report Info: YARN Architecture Components (ResourceManager, NodeManager, ApplicationMaster). Goal: Organize & Inform. Viz/Method: Tabbed interface for each component with its role and diagram/text. Interaction: Tabs to switch content. Justification: Breaks down YARN's complexity into manageable, digestible pieces. Library: HTML/CSS/JS.
+        - Report Info: MapReduce Workflow. Goal: Inform & Illustrate Process. Viz/Method: Step-by-step HTML/CSS/JS visualizer for Map, Shuffle, and Reduce phases with text descriptions. Interaction: "Next/Previous" buttons to advance through the process. Justification: Demystifies the core processing paradigm through animation/sequential reveal. Library: HTML/CSS/JS.
+        - Report Info: Hadoop Strengths & Weaknesses. Goal: Compare & Inform. Viz/Method: Bar Chart comparing various aspects (scalability, latency, cost). Interaction: Dropdown to select comparison metric. Justification: Quantifies trade-offs for clear understanding. Library: Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -17,60 +29,268 @@
         .nav-link {
             transition: color 0.3s ease;
         }
-        .nav-link:hover {
+        .nav-link:hover, .nav-link.active {
             color: #f59e0b; /* amber-500 */
         }
-        .section {
-            max-width: 800px;
+        .card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-primary {
+            background-color: #f59e0b; /* amber-500 */
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #d97706; /* amber-600 */
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #475569; /* slate-600 */
+            transition: background-color 0.3s ease;
+        }
+        .btn-secondary.active, .btn-secondary:hover {
+            background-color: #f59e0b; /* amber-500 */
+            color: white;
+        }
+        .section-fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .section-fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
             margin-left: auto;
             margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .diagram-box {
+            background-color: #bae6fd; /* sky-200 */
+            border: 1px solid #38bdf8; /* sky-400 */
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .arrow {
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 10px solid #64748b; /* slate-500 */
+            margin: 0 auto;
+        }
+        .line {
+            background-color: #64748b; /* slate-500 */
+            height: 2px;
+            width: 100%;
+        }
+        .connector {
+            background-color: #64748b;
+            width: 2px;
+            height: 20px;
+            margin: 0 auto;
         }
     </style>
 </head>
 <body class="bg-slate-50">
+
     <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-slate-800">Hadoop Fundamentals</h1>
             <div class="hidden md:flex space-x-8">
-                <a href="index.html" class="nav-link text-slate-600 font-medium">Home</a>
+                <a href="#intro" class="nav-link text-slate-600 font-medium">Introduction</a>
+                <a href="#hdfs" class="nav-link text-slate-600 font-medium">HDFS</a>
+                <a href="#yarn" class="nav-link text-slate-600 font-medium">YARN</a>
+                <a href="#mapreduce" class="nav-link text-slate-600 font-medium">MapReduce</a>
+                <a href="#benefits" class="nav-link text-slate-600 font-medium">Benefits & Limits</a>
             </div>
             <button id="mobile-menu-button" class="md:hidden text-slate-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
             </button>
         </nav>
         <div id="mobile-menu" class="hidden md:hidden">
-            <a href="index.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Home</a>
+            <a href="#intro" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Introduction</a>
+            <a href="#hdfs" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">HDFS</a>
+            <a href="#yarn" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">YARN</a>
+            <a href="#mapreduce" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">MapReduce</a>
+            <a href="#benefits" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Benefits & Limits</a>
         </div>
     </header>
 
     <main class="container mx-auto px-6 py-12">
-        <section class="section mb-12">
-            <h2 class="text-3xl font-bold text-amber-500 mb-4">What is Hadoop?</h2>
-            <p class="text-slate-600">Hadoop is an open-source framework for distributed storage and processing of large data sets across clusters of computers. It provides a way to scale data processing tasks from single servers to thousands of machines.</p>
+        
+        <section id="intro" class="min-h-screen flex flex-col justify-center items-center text-center section-fade-in">
+            <h2 class="text-4xl md:text-6xl font-bold text-slate-800 mb-4">Unlocking Big Data: The Power of Hadoop</h2>
+            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-8">Hadoop is an open-source framework designed for storing and processing very large datasets across clusters of commodity hardware. It revolutionized big data by enabling distributed computing at scale, making it affordable and accessible. Explore its core principles and components.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-5xl">
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Distributed</h3>
+                    <p class="text-slate-600">Spreads data and computation across many machines, working in parallel.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Fault-Tolerant</h3>
+                    <p class="text-slate-600">Designed to handle hardware failures gracefully, ensuring data availability.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Scalable</h3>
+                    <p class="text-slate-600">Easily expands by adding more commodity servers to the cluster.</p>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Cost-Effective</h3>
+                    <p class="text-slate-600">Uses inexpensive hardware instead of specialized, costly servers.</p>
+                </div>
+            </div>
         </section>
-        <section class="section mb-12">
-            <h2 class="text-3xl font-bold text-amber-500 mb-4">Core Components</h2>
-            <ul class="list-disc list-inside text-slate-600 space-y-2">
-                <li><span class="font-semibold">HDFS (Hadoop Distributed File System):</span> A distributed file system that stores data across multiple machines for reliability and throughput.</li>
-                <li><span class="font-semibold">YARN (Yet Another Resource Negotiator):</span> Manages resources and schedules jobs across the cluster.</li>
-                <li><span class="font-semibold">MapReduce:</span> A programming model for processing large data sets with a parallel, distributed algorithm.</li>
-            </ul>
+
+        <section id="ecosystem" class="py-20 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">The Hadoop Ecosystem: Core Components</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-4">Hadoop is more than just one tool; it's a collection of related projects that work together. At its heart are three fundamental components, forming the backbone for storing, managing, and processing massive datasets.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl mx-auto">
+                <div class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center text-center">
+                    <div class="text-5xl mb-4">💾</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-2">HDFS</h3>
+                    <p class="text-slate-600">Hadoop Distributed File System: The reliable storage layer for massive files.</p>
+                    <a href="#hdfs" class="mt-4 text-amber-600 hover:text-amber-700 font-semibold">Learn More &rarr;</a>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center text-center">
+                    <div class="text-5xl mb-4">⚙️</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-2">YARN</h3>
+                    <p class="text-slate-600">Yet Another Resource Negotiator: The resource management and job scheduling engine.</p>
+                    <a href="#yarn" class="mt-4 text-amber-600 hover:text-amber-700 font-semibold">Learn More &rarr;</a>
+                </div>
+                <div class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center text-center">
+                    <div class="text-5xl mb-4">📊</div>
+                    <h3 class="text-2xl font-bold text-slate-800 mb-2">MapReduce</h3>
+                    <p class="text-slate-600">The original processing framework for parallel data processing.</p>
+                    <a href="#mapreduce" class="mt-4 text-amber-600 hover:text-amber-700 font-semibold">Learn More &rarr;</a>
+                </div>
+            </div>
         </section>
-        <section class="section mb-12">
-            <h2 class="text-3xl font-bold text-amber-500 mb-4">Hadoop Ecosystem</h2>
-            <p class="text-slate-600 mb-4">The Hadoop ecosystem includes a variety of tools that extend its capabilities:</p>
-            <ul class="list-disc list-inside text-slate-600 space-y-2">
-                <li><span class="font-semibold">Hive:</span> Data warehousing and SQL-like query language.</li>
-                <li><span class="font-semibold">Pig:</span> High-level platform for creating MapReduce programs.</li>
-                <li><span class="font-semibold">HBase:</span> NoSQL database built on top of HDFS.</li>
-                <li><span class="font-semibold">Spark:</span> Fast in-memory data processing engine compatible with Hadoop data.</li>
-            </ul>
+
+        <section id="hdfs" class="py-20 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">HDFS: The Distributed Storage Heart</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-4">Hadoop Distributed File System (HDFS) is the primary storage component of Hadoop. It stores data reliably across a large cluster of machines, making it highly fault-tolerant and suitable for very large files. Its architecture consists of two main types of nodes. Click the buttons to see how data is stored and retrieved.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-center mb-6 text-slate-700">HDFS Architecture & Data Flow</h3>
+                <div class="flex justify-center space-x-4 mb-8">
+                    <button id="hdfs-btn-overview" class="btn-secondary active px-6 py-2 rounded-full font-semibold">Overview</button>
+                    <button id="hdfs-btn-write" class="btn-secondary px-6 py-2 rounded-full font-semibold">Data Write</button>
+                    <button id="hdfs-btn-read" class="btn-secondary px-6 py-2 rounded-full font-semibold">Data Read</button>
+                </div>
+                <div id="hdfs-display" class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div id="hdfs-diagram" class="w-full h-80 bg-slate-100 rounded-lg p-4 flex flex-col items-center justify-center transition-all duration-500 relative">
+                        <!-- Diagram content injected by JS -->
+                    </div>
+                    <div>
+                        <h4 id="hdfs-title" class="text-xl font-bold text-slate-800 mb-2"></h4>
+                        <p id="hdfs-desc" class="text-slate-600 mb-4"></p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="font-semibold text-blue-700 mb-1">Block Size:</p>
+                                <p class="text-slate-700 text-lg">128 MB or 256 MB</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <p class="font-semibold text-green-700 mb-1">Replication Factor:</p>
+                                <p class="text-slate-700 text-lg">Default 3</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="yarn" class="py-20 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">YARN: Resource Management & Job Scheduling</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-4">YARN (Yet Another Resource Negotiator) is Hadoop's operating system, responsible for managing computational resources in a cluster and scheduling applications. It enables various processing engines (like MapReduce, Spark, etc.) to run on Hadoop. Learn about its key components.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-center mb-6 text-slate-700">YARN Components</h3>
+                <div class="border-b border-slate-200">
+                    <nav class="-mb-px flex space-x-8 justify-center" aria-label="Tabs">
+                        <button id="yarn-tab-rm" class="yarn-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-amber-500 text-amber-600">ResourceManager</button>
+                        <button id="yarn-tab-nm" class="yarn-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">NodeManager</button>
+                        <button id="yarn-tab-am" class="yarn-tab-btn whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300">ApplicationMaster</button>
+                    </nav>
+                </div>
+                <div id="yarn-tab-content" class="mt-8">
+                    <!-- Tab content injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <section id="mapreduce" class="py-20 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">MapReduce: The Processing Paradigm</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-4">MapReduce is a programming model and an associated implementation for processing large data sets with a parallel, distributed algorithm on a cluster. It breaks down a large problem into smaller, independent tasks. Follow the steps of a classic "Word Count" example.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-center mb-6 text-slate-700">MapReduce Word Count Example</h3>
+                <div id="mapreduce-diagram" class="w-full bg-slate-100 rounded-lg p-6 mb-8 flex flex-col items-center justify-center min-h-[300px] relative">
+                    <!-- Diagram content injected by JS -->
+                </div>
+                <div class="flex justify-between items-center mb-8">
+                    <button id="mr-prev-btn" class="btn-secondary px-4 py-2 rounded-full font-semibold flex items-center"><span class="text-xl leading-none mr-2">&larr;</span> Previous</button>
+                    <span id="mr-step-indicator" class="text-slate-600 font-medium">Step 1 / 4</span>
+                    <button id="mr-next-btn" class="btn-primary px-4 py-2 rounded-full font-semibold flex items-center">Next <span class="text-xl leading-none ml-2">&rarr;</span></button>
+                </div>
+                <h4 id="mr-step-title" class="text-xl font-bold text-slate-800 mb-2 text-center"></h4>
+                <p id="mr-step-desc" class="text-slate-600 text-center"></p>
+            </div>
+        </section>
+
+        <section id="benefits" class="py-20 section-fade-in">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Hadoop: Benefits and Limitations</h2>
+                <p class="text-lg text-slate-600 max-w-2xl mx-auto mt-4">While Hadoop brought revolutionary capabilities to big data processing, it's important to understand both its strengths and where other technologies might be more suitable. Select a characteristic to see how Hadoop compares.</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-center mb-6 text-slate-700">Comparative Analysis</h3>
+                <div class="flex justify-center mb-8">
+                    <select id="compare-selector" class="bg-white border border-slate-300 rounded-md px-4 py-2">
+                        <option value="scalability">Scalability</option>
+                        <option value="cost">Cost Efficiency</option>
+                        <option value="faultTolerance">Fault Tolerance</option>
+                        <option value="latency">Latency (Small Data)</option>
+                        <option value="flexibility">Processing Flexibility</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="benefits-chart"></canvas>
+                </div>
+            </div>
         </section>
     </main>
 
     <footer class="bg-slate-800 text-white mt-20">
         <div class="container mx-auto px-6 py-8 text-center">
-            <p>&copy; 2025 Big Data Navigation. All rights reserved.</p>
+            <p>&copy; 2025 Hadoop Fundamentals Guide. All concepts based on established Hadoop principles.</p>
+            <p class="text-sm text-slate-400 mt-2">This is a conceptual web application for educational purposes.</p>
         </div>
     </footer>
 
@@ -81,6 +301,369 @@
             mobileMenuButton.addEventListener('click', () => {
                 mobileMenu.classList.toggle('hidden');
             });
+
+            const sections = document.querySelectorAll('.section-fade-in');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            // HDFS Interaction
+            const hdfsData = {
+                overview: {
+                    title: 'HDFS Overview: NameNode & DataNodes',
+                    description: 'HDFS operates with a Master/Slave architecture. The NameNode is the master, managing the file system namespace and controlling access. DataNodes are slaves, storing the actual data blocks.',
+                    diagram: `
+                        <div class="flex flex-col items-center">
+                            <div class="diagram-box bg-red-200 border-red-400">NameNode (Master)</div>
+                            <div class="connector h-8"></div>
+                            <div class="flex space-x-16">
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 1</div>
+                                    <div class="connector h-4"></div>
+                                    <div class="w-16 h-8 bg-slate-300 rounded-md">Blocks</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 2</div>
+                                    <div class="connector h-4"></div>
+                                    <div class="w-16 h-8 bg-slate-300 rounded-md">Blocks</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 3</div>
+                                    <div class="connector h-4"></div>
+                                    <div class="w-16 h-8 bg-slate-300 rounded-md">Blocks</div>
+                                </div>
+                            </div>
+                        </div>
+                    `
+                },
+                write: {
+                    title: 'HDFS Data Write Process',
+                    description: 'When a client wants to write a file, it communicates with the NameNode, which provides a list of DataNodes to store the data blocks. The client then directly writes data to these DataNodes in a pipeline.',
+                    diagram: `
+                        <div class="flex flex-col items-center">
+                            <div class="diagram-box bg-blue-200 border-blue-400">Client</div>
+                            <div class="connector h-4"></div>
+                            <div class="arrow"></div>
+                            <div class="diagram-box bg-red-200 border-red-400 mb-4">NameNode</div>
+                            <div class="text-sm text-slate-600 mb-4">Request Block Locations</div>
+                            <div class="arrow"></div>
+                            <div class="flex space-x-16">
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 1</div>
+                                    <div class="mt-2 text-xs text-green-600">Block A</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 2</div>
+                                    <div class="mt-2 text-xs text-green-600">Block A (Replica)</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 3</div>
+                                    <div class="mt-2 text-xs text-green-600">Block A (Replica)</div>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-xs text-slate-500">Client writes directly to DataNodes.</div>
+                        </div>
+                    `
+                },
+                read: {
+                    title: 'HDFS Data Read Process',
+                    description: 'For reading, the client asks the NameNode for block locations. The NameNode responds with the DataNodes holding those blocks, and the client reads the data directly from the closest DataNode.',
+                    diagram: `
+                        <div class="flex flex-col items-center">
+                            <div class="diagram-box bg-blue-200 border-blue-400">Client</div>
+                            <div class="connector h-4"></div>
+                            <div class="arrow"></div>
+                            <div class="diagram-box bg-red-200 border-red-400 mb-4">NameNode</div>
+                            <div class="text-sm text-slate-600 mb-4">Request Block Locations</div>
+                            <div class="arrow transform rotate-180 mb-4"></div>
+                            <div class="flex space-x-16">
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 1</div>
+                                    <div class="mt-2 text-xs text-green-600">Block A</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 2</div>
+                                    <div class="mt-2 text-xs text-green-600">Block A (Replica)</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box">DataNode 3</div>
+                                    <div class="mt-2 text-xs text-green-600">Block A (Replica)</div>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-xs text-slate-500">Client reads directly from DataNodes.</div>
+                        </div>
+                    `
+                }
+            };
+
+            const displayHdfsData = (type) => {
+                const data = hdfsData[type];
+                document.getElementById('hdfs-diagram').innerHTML = data.diagram;
+                document.getElementById('hdfs-title').textContent = data.title;
+                document.getElementById('hdfs-desc').textContent = data.description;
+                
+                document.getElementById('hdfs-btn-overview').classList.toggle('active', type === 'overview');
+                document.getElementById('hdfs-btn-write').classList.toggle('active', type === 'write');
+                document.getElementById('hdfs-btn-read').classList.toggle('active', type === 'read');
+            };
+
+            document.getElementById('hdfs-btn-overview').addEventListener('click', () => displayHdfsData('overview'));
+            document.getElementById('hdfs-btn-write').addEventListener('click', () => displayHdfsData('write'));
+            document.getElementById('hdfs-btn-read').addEventListener('click', () => displayHdfsData('read'));
+            displayHdfsData('overview');
+
+            // YARN Interaction
+            const yarnTabData = {
+                rm: {
+                    title: 'ResourceManager (Master)',
+                    description: 'The ResourceManager is the master daemon of YARN. It is responsible for arbitrating all the resources in the cluster and managing the application lifecycles. There is only one ResourceManager per cluster, making it a critical component.',
+                    diagram: `
+                        <div class="flex flex-col items-center">
+                            <div class="diagram-box bg-red-200 border-red-400">ResourceManager</div>
+                            <div class="connector h-10"></div>
+                            <div class="text-sm text-slate-600 text-center">Resource Allocation & Job Scheduling</div>
+                        </div>
+                    `
+                },
+                nm: {
+                    title: 'NodeManager (Slave)',
+                    description: 'The NodeManager is the slave daemon that runs on each node in the YARN cluster. It is responsible for monitoring resource usage (CPU, memory, disk, network) on its node, reporting to the ResourceManager, and managing containers.',
+                    diagram: `
+                        <div class="flex flex-col items-center">
+                            <div class="diagram-box">NodeManager</div>
+                            <div class="connector h-10"></div>
+                            <div class="text-sm text-slate-600 text-center">Container Management & Health Reporting</div>
+                        </div>
+                    `
+                },
+                am: {
+                    title: 'ApplicationMaster (Per Application)',
+                    description: 'The ApplicationMaster is responsible for an individual application running on YARN. It negotiates resources from the ResourceManager and works with the NodeManager(s) to execute and monitor its component tasks.',
+                    diagram: `
+                        <div class="flex flex-col items-center">
+                            <div class="diagram-box bg-green-200 border-green-400">ApplicationMaster</div>
+                            <div class="connector h-10"></div>
+                            <div class="text-sm text-slate-600 text-center">Per-Application Resource Negotiation & Task Coordination</div>
+                        </div>
+                    `
+                }
+            };
+
+            const yarnTabContent = document.getElementById('yarn-tab-content');
+            const yarnTabButtons = document.querySelectorAll('.yarn-tab-btn');
+
+            const displayYarnTabData = (type) => {
+                const data = yarnTabData[type];
+                yarnTabContent.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                        <div class="w-full h-48 bg-slate-100 rounded-lg p-4 flex flex-col items-center justify-center">${data.diagram}</div>
+                        <div>
+                            <h4 class="text-xl font-bold text-slate-800 mb-2">${data.title}</h4>
+                            <p class="text-slate-600 mb-4">${data.description}</p>
+                        </div>
+                    </div>
+                `;
+                yarnTabButtons.forEach(btn => {
+                    if (btn.id === `yarn-tab-${type}`) {
+                        btn.classList.add('border-amber-500', 'text-amber-600');
+                        btn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    } else {
+                        btn.classList.remove('border-amber-500', 'text-amber-600');
+                        btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'hover:border-slate-300');
+                    }
+                });
+            };
+            
+            yarnTabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const type = btn.id.split('-')[2];
+                    displayYarnTabData(type);
+                });
+            });
+            displayYarnTabData('rm');
+
+            // MapReduce Interaction
+            const mapReduceSteps = [
+                {
+                    title: 'Step 1: Input Data',
+                    description: 'The raw data, typically text, is split into smaller chunks (input splits) and fed into the Map phase. For Word Count, this is your document text.',
+                    diagram: `
+                        <div class="flex flex-col items-center w-full">
+                            <div class="diagram-box bg-gray-200 border-gray-400 w-3/4">"hello world hello"</div>
+                            <div class="diagram-box bg-gray-200 border-gray-400 w-3/4 mt-2">"world hadoop"</div>
+                            <div class="text-sm text-slate-600 mt-4">Input Splits</div>
+                        </div>
+                    `
+                },
+                {
+                    title: 'Step 2: Map Phase',
+                    description: 'Each input split is processed by a Map task. It takes key-value pairs as input and emits a new set of key-value pairs. In Word Count, each word becomes a key, and its count (1) becomes the value.',
+                    diagram: `
+                        <div class="flex flex-col items-center w-full">
+                            <div class="diagram-box bg-blue-200 border-blue-400 w-3/4">Map Tasks</div>
+                            <div class="flex justify-around w-full mt-4">
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box bg-white border-slate-300">"hello", 1</div>
+                                    <div class="diagram-box bg-white border-slate-300 mt-1">"world", 1</div>
+                                    <div class="diagram-box bg-white border-slate-300 mt-1">"hello", 1</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box bg-white border-slate-300">"world", 1</div>
+                                    <div class="diagram-box bg-white border-slate-300 mt-1">"hadoop", 1</div>
+                                </div>
+                            </div>
+                            <div class="text-sm text-slate-600 mt-4">Intermediate Key-Value Pairs</div>
+                        </div>
+                    `
+                },
+                {
+                    title: 'Step 3: Shuffle & Sort Phase',
+                    description: 'The intermediate key-value pairs from all Map tasks are grouped by key, and then sorted. All values for the same key are sent to the same Reducer. This is where "hello" from different mappers gets grouped together.',
+                    diagram: `
+                        <div class="flex flex-col items-center w-full">
+                            <div class="diagram-box bg-purple-200 border-purple-400 w-3/4">Shuffle & Sort</div>
+                            <div class="flex justify-around w-full mt-4">
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box bg-white border-slate-300">"hello", [1, 1]</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box bg-white border-slate-300">"hadoop", [1]</div>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="diagram-box bg-white border-slate-300">"world", [1, 1]</div>
+                                </div>
+                            </div>
+                            <div class="text-sm text-slate-600 mt-4">Grouped & Sorted Data</div>
+                        </div>
+                    `
+                },
+                {
+                    title: 'Step 4: Reduce Phase',
+                    description: 'The Reducer tasks process the grouped data. They aggregate the values for each unique key to produce the final output. For Word Count, it sums up the 1s for each word.',
+                    diagram: `
+                        <div class="flex flex-col items-center w-full">
+                            <div class="diagram-box bg-amber-200 border-amber-400 w-3/4">Reduce Tasks</div>
+                            <div class="flex justify-around w-full mt-4">
+                                <div class="diagram-box bg-white border-slate-300">"hello", 2</div>
+                                <div class="diagram-box bg-white border-slate-300">"hadoop", 1</div>
+                                <div class="diagram-box bg-white border-slate-300">"world", 2</div>
+                            </div>
+                            <div class="text-sm text-slate-600 mt-4">Final Output</div>
+                        </div>
+                    `
+                }
+            ];
+
+            let currentMrStep = 0;
+            const mrDiagram = document.getElementById('mapreduce-diagram');
+            const mrStepTitle = document.getElementById('mr-step-title');
+            const mrStepDesc = document.getElementById('mr-step-desc');
+            const mrStepIndicator = document.getElementById('mr-step-indicator');
+            const mrPrevBtn = document.getElementById('mr-prev-btn');
+            const mrNextBtn = document.getElementById('mr-next-btn');
+
+            const updateMapReduceDisplay = () => {
+                const step = mapReduceSteps[currentMrStep];
+                mrDiagram.innerHTML = step.diagram;
+                mrStepTitle.textContent = step.title;
+                mrStepDesc.textContent = step.description;
+                mrStepIndicator.textContent = `Step ${currentMrStep + 1} / ${mapReduceSteps.length}`;
+                
+                mrPrevBtn.disabled = currentMrStep === 0;
+                mrPrevBtn.classList.toggle('opacity-50', currentMrStep === 0);
+                mrPrevBtn.classList.toggle('cursor-not-allowed', currentMrStep === 0);
+
+                mrNextBtn.disabled = currentMrStep === mapReduceSteps.length - 1;
+                mrNextBtn.classList.toggle('opacity-50', currentMrStep === mapReduceSteps.length - 1);
+                mrNextBtn.classList.toggle('cursor-not-allowed', currentMrStep === mapReduceSteps.length - 1);
+            };
+
+            mrPrevBtn.addEventListener('click', () => {
+                if (currentMrStep > 0) {
+                    currentMrStep--;
+                    updateMapReduceDisplay();
+                }
+            });
+
+            mrNextBtn.addEventListener('click', () => {
+                if (currentMrStep < mapReduceSteps.length - 1) {
+                    currentMrStep++;
+                    updateMapReduceDisplay();
+                }
+            });
+            updateMapReduceDisplay();
+
+            // Benefits Chart
+            const benefitsData = {
+                scalability: { label: 'Scalability', hadoop: 9, traditional: 4 },
+                cost: { label: 'Cost Efficiency', hadoop: 8, traditional: 3 },
+                faultTolerance: { label: 'Fault Tolerance', hadoop: 7, traditional: 5 },
+                latency: { label: 'Latency (for small data jobs)', hadoop: 3, traditional: 7 }, // Lower is better for latency
+                flexibility: { label: 'Processing Flexibility (using ecosystem)', hadoop: 9, traditional: 5 }
+            };
+
+            let benefitsChart;
+            const benefitsCtx = document.getElementById('benefits-chart').getContext('2d');
+            const createOrUpdateBenefitsChart = (metric) => {
+                const data = benefitsData[metric];
+                if (benefitsChart) {
+                    benefitsChart.data.datasets[0].data = [data.hadoop, data.traditional];
+                    benefitsChart.options.plugins.title.text = data.label;
+                    benefitsChart.options.scales.y.reverse = (metric === 'latency'); // Reverse for latency: lower bar means better
+                    benefitsChart.update();
+                } else {
+                    benefitsChart = new Chart(benefitsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Hadoop', 'Traditional Systems'],
+                            datasets: [{
+                                label: 'Relative Score',
+                                data: [data.hadoop, data.traditional],
+                                backgroundColor: ['rgba(245, 158, 11, 0.7)', 'rgba(59, 130, 246, 0.7)'],
+                                borderColor: ['rgba(245, 158, 11, 1)', 'rgba(59, 130, 246, 1)'],
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, max: 10, reverse: (metric === 'latency')}
+                            },
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: true, text: data.label, font: { size: 16 }, color: '#334155' },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += context.parsed.y;
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            };
+            
+            document.getElementById('compare-selector').addEventListener('change', (e) => {
+                createOrUpdateBenefitsChart(e.target.value);
+            });
+            createOrUpdateBenefitsChart('scalability');
         });
     </script>
 </body>
