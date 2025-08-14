@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Essentials</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #334155; /* slate-700 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #f59e0b; /* amber-500 */
+            border-bottom-color: #f59e0b;
+        }
+        .card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">MongoDB Essentials</h1>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="index.html" class="nav-link font-medium pb-1">Home</a>
+                <a href="NoSQL_Deep_Dive.html" class="nav-link font-medium pb-1">NoSQL</a>
+                <a href="#value" class="nav-link font-medium pb-1">Value</a>
+                <a href="#principles" class="nav-link font-medium pb-1">Principles</a>
+                <a href="#concepts" class="nav-link font-medium pb-1">Concepts</a>
+                <a href="#commands" class="nav-link font-medium pb-1">Commands</a>
+                <a href="#organizations" class="nav-link font-medium pb-1">Organizations</a>
+            </div>
+            <div class="md:hidden flex items-center space-x-4">
+                <a href="index.html" class="text-slate-600 font-medium">Home</a>
+                <select id="mobile-nav" class="bg-slate-100 border border-slate-300 rounded-md p-2 text-slate-700">
+                    <option value="#value">Value</option>
+                    <option value="#principles">Principles</option>
+                    <option value="#concepts">Concepts</option>
+                    <option value="#commands">Commands</option>
+                    <option value="#organizations">Organizations</option>
+                    <option value="NoSQL_Deep_Dive.html">NoSQL Page</option>
+                </select>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-12">
+        <section id="value" class="py-16">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-slate-800">Why MongoDB?</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-3xl mx-auto">MongoDB is a document database built for developer productivity and horizontal scalability. Its flexible schema and rich query capabilities make it a popular choice for modern applications.</p>
+            </div>
+        </section>
+
+        <section id="principles" class="py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-800">Guiding Principles</h3>
+            </div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Schema Flexibility</h4>
+                    <p class="text-slate-600">Documents use a JSON-like structure, allowing fields to vary from record to record.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Horizontal Scale-Out</h4>
+                    <p class="text-slate-600">Sharding distributes data across clusters, enabling massive scale without complex joins.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Rich Query Capability</h4>
+                    <p class="text-slate-600">Queries support filtering, aggregation, geospatial data, and more with a consistent API.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Developer Friendly</h4>
+                    <p class="text-slate-600">Drivers for every major language and a natural data model speed up application development.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="concepts" class="py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-800">Core Concepts</h3>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Documents & Collections</h4>
+                    <p class="text-slate-600">Data is stored as documents inside collections rather than rows in tables.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Replica Sets</h4>
+                    <p class="text-slate-600">Multiple copies of data provide redundancy and automatic failover.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Indexes</h4>
+                    <p class="text-slate-600">Secondary indexes accelerate queries on frequently accessed fields.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Aggregation Pipeline</h4>
+                    <p class="text-slate-600">Stages transform documents for analytics, similar to SQL GROUP BY operations.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Sharding</h4>
+                    <p class="text-slate-600">Data is partitioned across shards, each holding a subset of the dataset.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Transactions</h4>
+                    <p class="text-slate-600">Multi-document ACID transactions ensure data consistency when needed.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="commands" class="py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-800">Common Commands</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-xl overflow-hidden shadow">
+                    <thead class="bg-slate-100">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-700">Command</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-700">Example</th>
+                            <th class="px-6 py-3 text-left text-sm font-semibold text-slate-700">Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">show dbs</td>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">show dbs</td>
+                            <td class="px-6 py-4 text-slate-600">List available databases</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">use &lt;db&gt;</td>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">use shop</td>
+                            <td class="px-6 py-4 text-slate-600">Switch to or create a database</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.createCollection()</td>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.createCollection('users')</td>
+                            <td class="px-6 py-4 text-slate-600">Create a new collection</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.collection.insertOne()</td>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.users.insertOne({name: 'Ada'})</td>
+                            <td class="px-6 py-4 text-slate-600">Insert a single document</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.collection.find()</td>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.users.find({name: 'Ada'})</td>
+                            <td class="px-6 py-4 text-slate-600">Query for documents</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.collection.updateOne()</td>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.users.updateOne({name: 'Ada'}, {$set: {age: 30}})</td>
+                            <td class="px-6 py-4 text-slate-600">Update a document</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.collection.deleteOne()</td>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.users.deleteOne({name: 'Ada'})</td>
+                            <td class="px-6 py-4 text-slate-600">Remove a document</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="organizations" class="py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-800">Organizations Using MongoDB</h3>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-6 rounded-xl shadow-md card text-center">
+                    <h4 class="text-xl font-bold text-slate-800 mb-2">Adobe</h4>
+                    <p class="text-slate-600">Powers collaborative features in Creative Cloud services.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card text-center">
+                    <h4 class="text-xl font-bold text-slate-800 mb-2">eBay</h4>
+                    <p class="text-slate-600">Uses MongoDB for search suggestions and user metadata.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card text-center">
+                    <h4 class="text-xl font-bold text-slate-800 mb-2">Lyft</h4>
+                    <p class="text-slate-600">Stores ride and driver data for real-time operations.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card text-center">
+                    <h4 class="text-xl font-bold text-slate-800 mb-2">Forbes</h4>
+                    <p class="text-slate-600">Manages content and user personalization at scale.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card text-center">
+                    <h4 class="text-xl font-bold text-slate-800 mb-2">Verizon</h4>
+                    <p class="text-slate-600">Tracks network events and customer data across systems.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card text-center">
+                    <h4 class="text-xl font-bold text-slate-800 mb-2">SAP</h4>
+                    <p class="text-slate-600">Integrates MongoDB into enterprise solutions for flexibility.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                const value = e.target.value;
+                if (value.endsWith('.html')) {
+                    window.location.href = value;
+                } else {
+                    window.location.hash = value;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

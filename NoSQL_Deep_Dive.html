@@ -73,6 +73,7 @@
                 <a href="#applications" class="nav-link font-medium pb-1">Applications</a>
                 <a href="#future" class="nav-link font-medium pb-1">Future</a>
                 <a href="#products" class="nav-link font-medium pb-1">Products</a>
+                <a href="MongoDB.html" class="nav-link font-medium pb-1">MongoDB</a>
             </div>
             <div class="md:hidden flex items-center space-x-4">
                 <a href="index.html" class="text-slate-600 font-medium">Home</a>
@@ -83,6 +84,7 @@
                     <option value="#applications">Applications</option>
                     <option value="#future">Future</option>
                     <option value="#products">Products</option>
+                    <option value="MongoDB.html">MongoDB</option>
                 </select>
             </div>
         </nav>
@@ -518,7 +520,12 @@
             function setupMobileNav() {
                 const mobileNav = document.getElementById('mobile-nav');
                 mobileNav.addEventListener('change', (e) => {
-                    window.location.hash = e.target.value;
+                    const value = e.target.value;
+                    if (value.endsWith('.html')) {
+                        window.location.href = value;
+                    } else {
+                        window.location.hash = value;
+                    }
                 });
             }
 
