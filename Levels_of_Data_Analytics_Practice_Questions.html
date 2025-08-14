@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Analytics Levels Practice Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f7f4;
+            color: #4a4a4a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border: 1px solid #eaddd7;
+            border-radius: 0.75rem;
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 700px;
+            padding: 2.5rem;
+            text-align: center;
+        }
+        .quiz-header {
+            color: #63534d;
+            margin-bottom: 2rem;
+        }
+        .question-text {
+            font-size: 1.25rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+        .option-label {
+            display: block;
+            background-color: #ece5e1;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            text-align: left;
+        }
+        .option-label:hover {
+            background-color: #eaddd7;
+            transform: translateY(-2px);
+        }
+        .option-input[type="radio"]:checked + .option-label,
+        .option-input[type="checkbox"]:checked + .option-label {
+            background-color: #d3c1b9;
+            color: #ffffff;
+        }
+        .feedback-text {
+            margin-top: 1rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        .correct {
+            color: #22c55e; /* Green-500 */
+        }
+        .incorrect {
+            color: #ef4444; /* Red-500 */
+        }
+        .submit-btn, .nav-btn {
+            background-color: #8c7b72;
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        .submit-btn:hover, .nav-btn:hover {
+            background-color: #6f5f57;
+        }
+        .submit-btn:disabled, .nav-btn:disabled {
+            background-color: #a89a93;
+            cursor: not-allowed;
+        }
+        .results-container {
+            margin-top: 2rem;
+            border-top: 1px solid #eaddd7;
+            padding-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1 class="text-3xl font-bold quiz-header">Data Analytics Levels Quiz</h1>
+        <div id="quiz-content">
+            <!-- Questions will be loaded here by JavaScript -->
+        </div>
+        <div id="quiz-navigation" class="mt-8 flex justify-between">
+            <button id="prev-btn" class="nav-btn" disabled>← Previous</button>
+            <button id="submit-btn" class="submit-btn">Submit Answer</button>
+            <button id="next-btn" class="nav-btn" disabled>Next Question →</button>
+        </div>
+        <div id="quiz-results" class="results-container hidden">
+            <h2 class="text-2xl font-bold quiz-header">Quiz Results</h2>
+            <p id="score-display" class="text-xl mb-4"></p>
+            <button id="restart-btn" class="nav-btn">Retake Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Which level of analytics primarily answers the question, 'What happened?'",
+                type: "single",
+                options: [
+                    "Diagnostic Analytics",
+                    "Descriptive Analytics",
+                    "Predictive Analytics",
+                    "Prescriptive Analytics"
+                ],
+                answer: "Descriptive Analytics"
+            },
+            {
+                question: "Root cause analysis is a core principle of which analytics level, aiming to find out 'Why did it happen?'",
+                type: "single",
+                options: [
+                    "Predictive Analytics",
+                    "Descriptive Analytics",
+                    "Diagnostic Analytics",
+                    "Prescriptive Analytics"
+                ],
+                answer: "Diagnostic Analytics"
+            },
+            {
+                question: "Which of the following are typical applications of **Predictive Analytics** in the retail sector? (Select all that apply)",
+                type: "multi",
+                options: [
+                    "Forecasting monthly sales trends",
+                    "Predicting customer churn",
+                    "Providing personalized product recommendations",
+                    "Identifying unutilized office spaces"
+                ],
+                answer: ["Predicting customer churn", "Providing personalized product recommendations"]
+            },
+            {
+                question: "Which level of analytics is considered the most advanced, often involving optimization and simulation to recommend optimal actions?",
+                type: "single",
+                options: [
+                    "Descriptive Analytics",
+                    "Diagnostic Analytics",
+                    "Predictive Analytics",
+                    "Prescriptive Analytics"
+                ],
+                answer: "Prescriptive Analytics"
+            },
+            {
+                question: "Mathematical modeling, rules-based systems, and reinforcement learning are key methodologies for:",
+                type: "single",
+                options: [
+                    "Descriptive Analytics",
+                    "Diagnostic Analytics",
+                    "Predictive Analytics",
+                    "Prescriptive Analytics"
+                ],
+                answer: "Prescriptive Analytics"
+            },
+            {
+                question: "What are some essential **soft skills** for data analytics professionals? (Select all that apply)",
+                type: "multi",
+                options: [
+                    "SQL proficiency",
+                    "Problem-solving",
+                    "Critical thinking",
+                    "Communication",
+                    "Data visualization tool mastery"
+                ]
+                ,
+                answer: ["Problem-solving", "Critical thinking", "Communication"]
+            },
+            {
+                question: "Which tool is commonly used for basic data analysis and visualization in descriptive analytics?",
+                type: "single",
+                options: [
+                    "Tableau",
+                    "Python (TensorFlow)",
+                    "Excel",
+                    "Gurobi"
+                ],
+                answer: "Excel"
+            },
+            {
+                question: "Which of the following is considered a Key Performance Indicator (KPI)?",
+                type: "single",
+                options: [
+                    "Future stock prices",
+                    "Customer sentiment analysis",
+                    "Monthly sales reports",
+                    "Optimal delivery routes"
+                ],
+                answer: "Monthly sales reports"
+            },
+            {
+                question: "Distinguishing between correlation and causality is a pivotal aspect of which analytics level?",
+                type: "single",
+                options: [
+                    "Descriptive Analytics",
+                    "Diagnostic Analytics",
+                    "Predictive Analytics",
+                    "Prescriptive Analytics"
+                ],
+                answer: "Diagnostic Analytics"
+            },
+            {
+                question: "An online business discovers that a recent website update inadvertently slowed down page load times, leading to higher cart abandonment rates. This discovery is an example of which type of analytics?",
+                type: "single",
+                options: [
+                    "Descriptive Analytics",
+                    "Diagnostic Analytics",
+                    "Predictive Analytics",
+                    "Prescriptive Analytics"
+                ],
+                answer: "Diagnostic Analytics"
+            },
+            {
+                question: "Which of the following machine learning models is used to categorize new, unseen data based on labeled historical data (e.g., for customer segmentation or fraud detection)?",
+                type: "single",
+                options: [
+                    "Clustering Models",
+                    "Time Series Models",
+                    "Classification Models",
+                    "Optimization Models"
+                ],
+                answer: "Classification Models"
+            },
+            {
+                question: "A significant challenge in implementing predictive analytics is that models can grow stale over time. What does this mean?",
+                type: "single",
+                options: [
+                    "They become too complex to understand",
+                    "They are no longer supported by software",
+                    "They lose accuracy due to changing patterns",
+                    "They require more computational power"
+                ],
+                answer: "They lose accuracy due to changing patterns"
+            },
+            {
+                question: "Which of the following is a core principle or technique used in Prescriptive Analytics? (Select all that apply)",
+                type: "multi",
+                options: [
+                    "Root cause analysis",
+                    "Optimization theory",
+                    "Monte Carlo simulation",
+                    "KPI tracking"
+                ],
+                answer: ["Optimization theory", "Monte Carlo simulation"]
+            },
+            {
+                question: "In logistics, optimizing delivery routes based on real-time traffic and priorities to reduce costs is an application of which analytics level?",
+                type: "single",
+                options: [
+                    "Descriptive Analytics",
+                    "Diagnostic Analytics",
+                    "Predictive Analytics",
+                    "Prescriptive Analytics"
+                ],
+                answer: "Prescriptive Analytics"
+            },
+            {
+                question: "Which ethical consideration is paramount in data analytics to prevent biased outcomes or discrimination?",
+                type: "single",
+                options: [
+                    "Data Storage Solutions",
+                    "Data Ingestion Methods",
+                    "Addressing Bias in Algorithms",
+                    "Data Visualization Tools"
+                ],
+                answer: "Addressing Bias in Algorithms"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answeredQuestions = new Array(quizData.length).fill(false);
+        let userAnswers = new Array(quizData.length).fill(null);
+
+        const quizContent = document.getElementById('quiz-content');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const quizResults = document.getElementById('quiz-results');
+        const scoreDisplay = document.getElementById('score-display');
+        const restartBtn = document.getElementById('restart-btn');
+
+        function loadQuestion() {
+            const q = quizData[currentQuestionIndex];
+            let optionsHtml = '';
+            const inputType = q.type === 'single' ? 'radio' : 'checkbox';
+
+            q.options.forEach((option, index) => {
+                const checked = userAnswers[currentQuestionIndex] &&
+                                (q.type === 'single' ? userAnswers[currentQuestionIndex] === option : userAnswers[currentQuestionIndex].includes(option))
+                                ? 'checked' : '';
+                optionsHtml += `
+                    <div>
+                        <input type="${inputType}" id="option${index}" name="question${currentQuestionIndex}" value="${option}" class="hidden option-input" ${checked}>
+                        <label for="option${index}" class="option-label">${option}</label>
+                    </div>
+                `;
+            });
+
+            quizContent.innerHTML = `
+                <div class="question-text text-xl mb-4">${currentQuestionIndex + 1}. ${q.question}</div>
+                <div class="options-container flex flex-col items-center">
+                    ${optionsHtml}
+                </div>
+                <div id="feedback" class="feedback-text mt-4"></div>
+            `;
+            updateNavigation();
+            disableSubmitIfAnswered();
+            showFeedbackIfAnswered();
+        }
+
+        function updateNavigation() {
+            prevBtn.disabled = currentQuestionIndex === 0;
+
+            if (currentQuestionIndex === quizData.length - 1) {
+                nextBtn.textContent = 'Show Results';
+                // Always enable "Show Results" when on the last question
+                nextBtn.disabled = false;
+            } else {
+                nextBtn.textContent = 'Next Question →';
+                // Disable next button if current question is not yet answered
+                nextBtn.disabled = !answeredQuestions[currentQuestionIndex];
+            }
+        }
+
+        function disableSubmitIfAnswered() {
+            submitBtn.disabled = answeredQuestions[currentQuestionIndex];
+            const inputs = quizContent.querySelectorAll('.option-input');
+            inputs.forEach(input => {
+                input.disabled = answeredQuestions[currentQuestionIndex];
+            });
+        }
+
+        function showFeedbackIfAnswered() {
+            const feedbackEl = document.getElementById('feedback');
+            if (answeredQuestions[currentQuestionIndex]) {
+                const q = quizData[currentQuestionIndex];
+                const isCorrect = checkAnswer(q, userAnswers[currentQuestionIndex]);
+                if (isCorrect) {
+                    feedbackEl.textContent = "Correct! ✅";
+                    feedbackEl.className = "feedback-text correct";
+                } else {
+                    feedbackEl.textContent = `Incorrect. The correct answer${q.type === 'single' ? '' : 's'} ${q.type === 'single' ? 'is' : 'are'}: ${Array.isArray(q.answer) ? q.answer.join(', ') : q.answer} ❌`;
+                    feedbackEl.className = "feedback-text incorrect";
+                }
+            } else {
+                feedbackEl.textContent = "";
+                feedbackEl.className = "feedback-text";
+            }
+        }
+
+        function checkAnswer(question, selectedAnswers) {
+            if (question.type === 'single') {
+                return selectedAnswers === question.answer;
+            } else { // multi-choice
+                if (!selectedAnswers) return false;
+                if (selectedAnswers.length !== question.answer.length) return false;
+                return question.answer.every(ans => selectedAnswers.includes(ans));
+            }
+        }
+
+        submitBtn.addEventListener('click', () => {
+            const q = quizData[currentQuestionIndex];
+            let selectedAnswers;
+            const inputs = quizContent.querySelectorAll(`input[name="question${currentQuestionIndex}"]:checked`);
+
+            if (q.type === 'single') {
+                selectedAnswers = inputs.length > 0 ? inputs[0].value : null;
+            } else {
+                selectedAnswers = Array.from(inputs).map(input => input.value);
+            }
+
+            userAnswers[currentQuestionIndex] = selectedAnswers;
+            answeredQuestions[currentQuestionIndex] = true;
+
+            const isCorrect = checkAnswer(q, selectedAnswers);
+            if (isCorrect) {
+                score++;
+            }
+
+            disableSubmitIfAnswered();
+            showFeedbackIfAnswered();
+            updateNavigation();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                quizResults.classList.add('hidden');
+                quizContent.classList.remove('hidden');
+                submitBtn.classList.remove('hidden');
+                loadQuestion();
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentQuestionIndex < quizData.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else if (currentQuestionIndex === quizData.length - 1) { // Removed answeredQuestions[currentQuestionIndex] check here to allow showing results even if last question is skipped
+                showResults();
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            score = 0;
+            answeredQuestions.fill(false);
+            userAnswers.fill(null);
+            quizResults.classList.add('hidden');
+            quizContent.classList.remove('hidden');
+            submitBtn.classList.remove('hidden');
+            loadQuestion();
+        });
+
+        function showResults() {
+            quizContent.classList.add('hidden');
+            submitBtn.classList.add('hidden');
+            prevBtn.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            quizResults.classList.remove('hidden');
+            scoreDisplay.textContent = `You scored ${score} out of ${quizData.length} questions correctly!`;
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
