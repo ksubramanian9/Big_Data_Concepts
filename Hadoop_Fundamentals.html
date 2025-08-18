@@ -296,6 +296,20 @@
         </div>
     </footer>
 
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
+            <h2 id="quiz-question" class="text-xl font-bold text-slate-800 mb-4"></h2>
+            <div id="quiz-options" class="space-y-2"></div>
+            <div id="quiz-feedback" class="mt-4 text-slate-700 font-medium"></div>
+            <div class="mt-6 flex justify-end space-x-2">
+                <button id="quiz-skip" class="btn-secondary px-4 py-2 rounded">Skip</button>
+                <button id="quiz-submit" class="btn-primary px-4 py-2 rounded">Submit</button>
+                <button id="quiz-close" class="btn-primary px-4 py-2 rounded hidden">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -666,6 +680,167 @@
                 createOrUpdateBenefitsChart(e.target.value);
             });
             createOrUpdateBenefitsChart('scalability');
+
+            // Quiz Functionality
+            const quizQuestions = [
+                {
+                    question: 'What does HDFS stand for?',
+                    options: ['Hadoop Distributed File System', 'High Data File Storage', 'High-Density File System', 'Hadoop Data File Storage'],
+                    answer: 0
+                },
+                {
+                    question: 'Which component acts as the master in HDFS architecture?',
+                    options: ['NameNode', 'DataNode', 'NodeManager', 'TaskTracker'],
+                    answer: 0
+                },
+                {
+                    question: 'In HDFS, data is stored in units called ______.',
+                    options: ['Blocks', 'Files', 'Chunks', 'Packets'],
+                    answer: 0
+                },
+                {
+                    question: 'What is the primary purpose of YARN in the Hadoop ecosystem?',
+                    options: ['Data storage', 'Resource management and job scheduling', 'Data replication', 'Security'],
+                    answer: 1
+                },
+                {
+                    question: 'Which daemon runs on each node and manages containers in YARN?',
+                    options: ['ResourceManager', 'NodeManager', 'ApplicationMaster', 'JobTracker'],
+                    answer: 1
+                },
+                {
+                    question: 'MapReduce is primarily used for ______.',
+                    options: ['Real-time processing', 'Batch processing of large datasets', 'Streaming data analysis', 'Database management'],
+                    answer: 1
+                },
+                {
+                    question: 'Which phase of MapReduce groups and sorts intermediate key-value pairs?',
+                    options: ['Map', 'Shuffle & Sort', 'Reduce', 'Combine'],
+                    answer: 1
+                },
+                {
+                    question: 'Hadoop is best described as ______.',
+                    options: ['A database', 'An open-source framework for distributed storage and processing', 'A hardware appliance', 'A programming language'],
+                    answer: 1
+                },
+                {
+                    question: 'Which of the following is NOT a feature of Hadoop?',
+                    options: ['Scalability', 'Fault tolerance', 'Real-time analytics', 'Cost-effectiveness'],
+                    answer: 2
+                },
+                {
+                    question: 'Data replication in HDFS is primarily used to ____.',
+                    options: ['Improve network bandwidth', 'Increase data security', 'Ensure fault tolerance and reliability', 'Reduce storage requirements'],
+                    answer: 2
+                },
+                {
+                    question: 'The ApplicationMaster in YARN is responsible for _____.',
+                    options: ['Managing the entire cluster', 'Negotiating resources for an application', 'Running Map tasks', 'Monitoring disk usage'],
+                    answer: 1
+                },
+                {
+                    question: 'In MapReduce, the output of the Reduce phase is typically _____.',
+                    options: ['Stored back into HDFS', 'Sent directly to the client', 'Discarded after viewing', 'Replicated by the ResourceManager'],
+                    answer: 0
+                },
+                {
+                    question: 'The default block size in HDFS is typically _____.',
+                    options: ['16 MB', '64 MB', '128 MB', '512 MB'],
+                    answer: 2
+                },
+                {
+                    question: 'Which component manages the file system namespace in HDFS?',
+                    options: ['DataNode', 'NameNode', 'Secondary NameNode', 'ResourceManager'],
+                    answer: 1
+                },
+                {
+                    question: 'YARN stands for _____.',
+                    options: ['Yet Another Resource Negotiator', 'Yearly Allocated Resource Network', 'Your Application Resource Node', 'Young Active Resource Network'],
+                    answer: 0
+                },
+                {
+                    question: 'The process of dividing input data into pieces for Map tasks is called _____.',
+                    options: ['Chunking', 'Data replication', 'Input splitting', 'Data shuffling'],
+                    answer: 2
+                },
+                {
+                    question: 'Which Hadoop component handled job scheduling in versions before YARN?',
+                    options: ['JobTracker', 'TaskTracker', 'ResourceManager', 'NameNode'],
+                    answer: 0
+                },
+                {
+                    question: 'The Secondary NameNode in HDFS primarily _____.',
+                    options: ['Replaces NameNode on failure', 'Performs checkpoints and merges namespace image with edit logs', 'Manages data blocks', 'Schedules jobs'],
+                    answer: 1
+                },
+                {
+                    question: 'What happens when a DataNode fails in HDFS?',
+                    options: ['The cluster shuts down', 'The NameNode reallocates blocks to other DataNodes', 'All data is lost', 'The client must restart'],
+                    answer: 1
+                },
+                {
+                    question: 'Which project provides SQL-like query capabilities on top of Hadoop?',
+                    options: ['Hive', 'Pig', 'HBase', 'Oozie'],
+                    answer: 0
+                }
+            ];
+
+            const quizModal = document.getElementById('quiz-modal');
+            const quizQuestionEl = document.getElementById('quiz-question');
+            const quizOptionsEl = document.getElementById('quiz-options');
+            const quizFeedbackEl = document.getElementById('quiz-feedback');
+            const quizSubmitBtn = document.getElementById('quiz-submit');
+            const quizSkipBtn = document.getElementById('quiz-skip');
+            const quizCloseBtn = document.getElementById('quiz-close');
+            let currentQuestion;
+
+            function showQuiz() {
+                const randomIndex = Math.floor(Math.random() * quizQuestions.length);
+                currentQuestion = quizQuestions[randomIndex];
+                quizQuestionEl.textContent = currentQuestion.question;
+                quizOptionsEl.innerHTML = currentQuestion.options
+                    .map((opt, i) => `<label class="flex items-center"><input type="radio" name="quiz-option" value="${i}" class="mr-2">${opt}</label>`)
+                    .join('');
+                quizFeedbackEl.textContent = '';
+                quizSubmitBtn.classList.remove('hidden');
+                quizSkipBtn.classList.remove('hidden');
+                quizCloseBtn.classList.add('hidden');
+                quizModal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+
+            function closeQuiz() {
+                quizModal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                scheduleQuiz();
+            }
+
+            quizSubmitBtn.addEventListener('click', () => {
+                const selected = document.querySelector('input[name="quiz-option"]:checked');
+                if (!selected) {
+                    quizFeedbackEl.textContent = 'Please select an option.';
+                    return;
+                }
+                const answerIndex = parseInt(selected.value, 10);
+                if (answerIndex === currentQuestion.answer) {
+                    quizFeedbackEl.textContent = 'Correct!';
+                } else {
+                    quizFeedbackEl.textContent = `Incorrect. Correct answer: ${currentQuestion.options[currentQuestion.answer]}`;
+                }
+                quizSubmitBtn.classList.add('hidden');
+                quizSkipBtn.classList.add('hidden');
+                quizCloseBtn.classList.remove('hidden');
+            });
+
+            quizSkipBtn.addEventListener('click', closeQuiz);
+            quizCloseBtn.addEventListener('click', closeQuiz);
+
+            function scheduleQuiz() {
+                const delay = Math.random() * 15 * 60 * 1000;
+                setTimeout(showQuiz, delay);
+            }
+
+            scheduleQuiz();
         });
     </script>
 </body>
