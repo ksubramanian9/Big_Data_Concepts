@@ -249,6 +249,89 @@
             </div>
         </section>
 
+        <section id="java-example" class="mb-24">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold mb-2">Annotated Java MapReduce Example</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">This program answers a key business question: <span class="font-semibold">What is the total sales amount for each product category?</span></p>
+            </div>
+            <div class="card p-8">
+                <pre class="bg-gray-900 text-white p-4 overflow-x-auto rounded-lg"><code>// SalesByCategory.java
+// Determines total sales per product category from transactional data.
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+public class SalesByCategory {
+    // Mapper reads one line at a time and emits (category, saleAmount)
+    public static class SalesMapper extends Mapper&lt;LongWritable, Text, Text, DoubleWritable&gt; {
+        private final Text category = new Text();
+        private final DoubleWritable amount = new DoubleWritable();
+
+        // Map function runs on each input record.
+        protected void map(LongWritable key, Text value, Context context)
+                throws java.io.IOException, InterruptedException {
+            // Expected CSV format: transactionId,productCategory,saleAmount
+            String[] fields = value.toString().split(&quot;,&quot;);
+            if (fields.length == 3) {
+                category.set(fields[1].trim());          // emit product category
+                try {
+                    amount.set(Double.parseDouble(fields[2].trim()));
+                    context.write(category, amount);     // key-value pair sent to reducer
+                } catch (NumberFormatException ex) {
+                    // Bad data is skipped to keep results clean
+                }
+            }
+        }
+    }
+
+    // Reducer sums all sales for a given category
+    public static class SalesReducer extends Reducer&lt;Text, DoubleWritable, Text, DoubleWritable&gt; {
+        protected void reduce(Text key, Iterable&lt;DoubleWritable&gt; values, Context context)
+                throws java.io.IOException, InterruptedException {
+            double total = 0.0;
+            for (DoubleWritable v : values) {
+                total += v.get();
+            }
+            context.write(key, new DoubleWritable(total));
+        }
+    }
+
+    // Driver configures and launches the job on the cluster
+    public static void main(String[] args) throws Exception {
+        if (args.length != 2) {
+            System.err.println(&quot;Usage: SalesByCategory &lt;input path&gt; &lt;output path&gt;&quot;);
+            System.exit(-1); // exit if the user forgets arguments
+        }
+
+        Job job = Job.getInstance(new Configuration(), &quot;Total Sales Per Category&quot;);
+        job.setJarByClass(SalesByCategory.class);           // identifies the driver JAR
+
+        job.setMapperClass(SalesMapper.class);
+        job.setReducerClass(SalesReducer.class);
+        job.setCombinerClass(SalesReducer.class);           // notice: reducer used as combiner
+
+        job.setOutputKeyClass(Text.class);                  // output types from Reducer
+        job.setOutputValueClass(DoubleWritable.class);
+
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        System.exit(job.waitForCompletion(true) ? 0 : 1);   // 0 = success, 1 = failure
+    }
+}
+</code></pre>
+                <p class="text-sm text-gray-600 mt-4">Notice how the combiner reuses the reducer logic to reduce network traffic, and how the program gracefully skips malformed records.</p>
+            </div>
+        </section>
+
         <section id="pros-cons" class="mb-24">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-2">Advantages vs. Limitations</h2>
