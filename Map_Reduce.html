@@ -140,28 +140,46 @@
         <section id="simulation" class="mb-24">
             <div class="text-center mb-12">
                 <h2 class="text-4xl font-bold mb-2">Interactive Simulation: Word Count</h2>
-                <p class="text-gray-600 max-w-2xl mx-auto">Enter some text and watch how MapReduce breaks it down, shuffles it, and aggregates the results to count each word.</p>
+                <p class="text-gray-600 max-w-2xl mx-auto">The word count job is sent to multiple nodes. Each node processes its own block of text before the results are shuffled and reduced.</p>
             </div>
             <div class="card p-8 mb-8">
-                <textarea id="inputText" class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition" rows="3" placeholder="e.g., Hello world hello mapreduce">Hello world hello mapreduce</textarea>
+                <div id="nodes-input" class="grid md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-center">Node 1</h4>
+                        <textarea id="node1" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition" rows="4">Hadoop enables distributed processing of large data sets across clusters of computers. Reliability and scalability are built in.</textarea>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-center">Node 2</h4>
+                        <textarea id="node2" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition" rows="4">MapReduce programs run in parallel on multiple nodes to provide high throughput and handle failures gracefully.</textarea>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-2 text-center">Node 3</h4>
+                        <textarea id="node3" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition" rows="4">The shuffle and sort phases group intermediate data before it reaches the reducers that finish the computation.</textarea>
+                    </div>
+                </div>
                 <div class="text-center mt-4">
-                    <button id="processButton" class="bg-primary text-white font-bold py-3 px-8 rounded-lg hover:bg-teal-700 transition transform hover:scale-105">Process Data</button>
+                    <button id="processButton" class="bg-primary text-white font-bold py-3 px-8 rounded-lg hover:bg-teal-700 transition transform hover:scale-105">Run Word Count</button>
                     <button id="resetButton" class="bg-gray-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-gray-600 transition ml-4">Reset</button>
                 </div>
             </div>
             <div id="simulation-stages" class="space-y-8">
                 <div class="stage">
-                    <h3 class="text-2xl font-semibold mb-4 text-accent border-b-2 border-accent/30 pb-2">1. Map Phase</h3>
-                    <p class="text-gray-500 mb-4">Input records are split, and each word is mapped to a key-value pair of `(word, 1)`.</p>
+                    <h3 class="text-2xl font-semibold mb-4 text-accent border-b-2 border-accent/30 pb-2">1. Command Propagation</h3>
+                    <p class="text-gray-500 mb-4">The word count command is distributed to every node along with its local text.</p>
+                    <div id="propagation-output" class="flex flex-wrap justify-center min-h-[50px]"></div>
+                </div>
+                <div class="stage">
+                    <h3 class="text-2xl font-semibold mb-4 text-accent border-b-2 border-accent/30 pb-2">2. Map Phase</h3>
+                    <p class="text-gray-500 mb-4">Each node maps its words into key-value pairs of `(word, 1)`.</p>
                     <div id="map-output" class="flex flex-wrap justify-center min-h-[50px]"></div>
                 </div>
                 <div class="stage">
-                    <h3 class="text-2xl font-semibold mb-4 text-accent border-b-2 border-accent/30 pb-2">2. Shuffle & Sort Phase</h3>
+                    <h3 class="text-2xl font-semibold mb-4 text-accent border-b-2 border-accent/30 pb-2">3. Shuffle & Sort Phase</h3>
                     <p class="text-gray-500 mb-4">The framework collects all pairs with the same key and groups the values together.</p>
                     <div id="shuffle-output" class="flex flex-wrap justify-center min-h-[50px]"></div>
                 </div>
                 <div class="stage">
-                    <h3 class="text-2xl font-semibold mb-4 text-accent border-b-2 border-accent/30 pb-2">3. Reduce Phase</h3>
+                    <h3 class="text-2xl font-semibold mb-4 text-accent border-b-2 border-accent/30 pb-2">4. Reduce Phase</h3>
                     <p class="text-gray-500 mb-4">Each grouped list is processed to produce the final aggregated count.</p>
                     <div id="reduce-output" class="flex flex-wrap justify-center min-h-[50px]"></div>
                 </div>
@@ -354,44 +372,70 @@
 
             const processButton = document.getElementById('processButton');
             const resetButton = document.getElementById('resetButton');
-            const inputText = document.getElementById('inputText');
+            const nodeInputs = [document.getElementById('node1'), document.getElementById('node2'), document.getElementById('node3')];
+            const propagationOutput = document.getElementById('propagation-output');
             const mapOutput = document.getElementById('map-output');
             const shuffleOutput = document.getElementById('shuffle-output');
             const reduceOutput = document.getElementById('reduce-output');
 
+            const defaultTexts = [
+                'Hadoop enables distributed processing of large data sets across clusters of computers. Reliability and scalability are built in.',
+                'MapReduce programs run in parallel on multiple nodes to provide high throughput and handle failures gracefully.',
+                'The shuffle and sort phases group intermediate data before it reaches the reducers that finish the computation.'
+            ];
+
             resetButton.addEventListener('click', () => {
+                propagationOutput.innerHTML = '';
                 mapOutput.innerHTML = '';
                 shuffleOutput.innerHTML = '';
                 reduceOutput.innerHTML = '';
-                inputText.value = 'Hello world hello mapreduce';
+                nodeInputs.forEach((input, idx) => input.value = defaultTexts[idx]);
             });
 
             processButton.addEventListener('click', () => {
+                propagationOutput.innerHTML = '';
                 mapOutput.innerHTML = '';
                 shuffleOutput.innerHTML = '';
                 reduceOutput.innerHTML = '';
 
-                const text = inputText.value.trim();
-                if (!text) return;
+                const nodeTexts = nodeInputs.map(input => input.value.trim()).filter(Boolean);
+                if (nodeTexts.length === 0) return;
 
-                const words = text.toLowerCase().split(/\s+/);
-                
                 let delay = 0;
-                
-                words.forEach(word => {
+                nodeTexts.forEach((text, idx) => {
                     setTimeout(() => {
-                        const mapBox = document.createElement('div');
-                        mapBox.className = 'map-reduce-box border-blue-500 bg-blue-50';
-                        mapBox.innerHTML = `( <span class="font-mono text-blue-800">'${word}'</span>, <span class="font-mono text-red-600">1</span> )`;
-                        mapOutput.appendChild(mapBox);
-                        setTimeout(() => mapBox.style.opacity = 1, 10);
+                        const nodeBox = document.createElement('div');
+                        nodeBox.className = 'map-reduce-box border-yellow-500 bg-yellow-50';
+                        nodeBox.innerHTML = `<span class="font-bold">Node ${idx + 1}</span>: ${text.substring(0, 60)}...`;
+                        propagationOutput.appendChild(nodeBox);
+                        setTimeout(() => nodeBox.style.opacity = 1, 10);
                     }, delay);
-                    delay += 100;
+                    delay += 200;
                 });
 
-                setTimeout(() => runShuffle(words), delay + 500);
+                const wordsPerNode = nodeTexts.map(t => t.toLowerCase().split(/\s+/));
+                setTimeout(() => runMap(wordsPerNode), delay + 500);
             });
-            
+
+            function runMap(wordsPerNode) {
+                let delay = 0;
+                wordsPerNode.forEach((words, nodeIdx) => {
+                    words.forEach(word => {
+                        setTimeout(() => {
+                            const mapBox = document.createElement('div');
+                            mapBox.className = 'map-reduce-box border-blue-500 bg-blue-50';
+                            mapBox.innerHTML = `[N${nodeIdx + 1}] ( <span class="font-mono text-blue-800">'${word}'</span>, <span class="font-mono text-red-600">1</span> )`;
+                            mapOutput.appendChild(mapBox);
+                            setTimeout(() => mapBox.style.opacity = 1, 10);
+                        }, delay);
+                        delay += 100;
+                    });
+                });
+
+                const allWords = wordsPerNode.flat();
+                setTimeout(() => runShuffle(allWords), delay + 500);
+            }
+
             function runShuffle(words) {
                 const wordGroups = words.reduce((acc, word) => {
                     acc[word] = (acc[word] || 0) + 1;
@@ -400,7 +444,7 @@
 
                 let delay = 0;
                 Object.keys(wordGroups).sort().forEach(key => {
-                     setTimeout(() => {
+                    setTimeout(() => {
                         const values = Array(wordGroups[key]).fill(1).join(', ');
                         const shuffleBox = document.createElement('div');
                         shuffleBox.className = 'map-reduce-box border-purple-500 bg-purple-50';
@@ -410,12 +454,12 @@
                     }, delay);
                     delay += 200;
                 });
-                
+
                 setTimeout(() => runReduce(wordGroups), delay + 500);
             }
 
             function runReduce(wordGroups) {
-                 let delay = 0;
+                let delay = 0;
                 Object.keys(wordGroups).sort().forEach(key => {
                     setTimeout(() => {
                         const reduceBox = document.createElement('div');
