@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hadoop Infrastructure Estimator</title>
+<style>
+  :root{
+    --bg:#0f172a;           /* slate-900 */
+    --panel:#111827;        /* gray-900 */
+    --muted:#94a3b8;        /* slate-400 */
+    --text:#e5e7eb;         /* gray-200 */
+    --accent:#22d3ee;       /* cyan-400 */
+    --accent-2:#a78bfa;     /* violet-400 */
+    --ok:#34d399;           /* emerald-400 */
+    --warn:#f59e0b;         /* amber-500 */
+    --err:#f87171;          /* red-400 */
+    --card:#0b1223;         /* custom */
+    --shadow: 0 10px 25px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; }
+  body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; background:linear-gradient(180deg, #0b1223, #0f172a); color:var(--text); }
+  header{ position:sticky; top:0; z-index:10; backdrop-filter: blur(6px); background: linear-gradient(90deg, rgba(15,23,42,.9), rgba(17,24,39,.9)); border-bottom: 1px solid rgba(255,255,255,.08); }
+  .shell{ max-width:1300px; margin:0 auto; padding:14px 18px; }
+  h1{ margin:0; font-size:1.35rem; letter-spacing:.2px; font-weight:700; display:flex; align-items:center; gap:.6rem; }
+  .badge{ font-size:.7rem; color:#0b1223; background:var(--accent); border-radius:999px; padding:.2rem .55rem; font-weight:700; }
+  .grid{ display:grid; grid-template-columns: 420px 1fr; gap:18px; padding:16px; max-width:1300px; margin:0 auto; }
+  .panel{ background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:16px; box-shadow:var(--shadow); }
+  .panel h2{ margin:0; font-size:1rem; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.06); color:#e2e8f0; letter-spacing:.2px; }
+  .panel .content{ padding:14px 16px 18px; }
+  .row{ display:grid; grid-template-columns: 1fr auto; gap:10px; align-items:center; margin-bottom:12px; }
+  .row label{ font-size:.88rem; color:var(--muted); }
+  .row input[type="number"], .row input[type="text"], .row select{ width:160px; background:#0b1020; border:1px solid rgba(255,255,255,.08); color:var(--text); border-radius:10px; padding:.5rem .6rem; outline:none; }
+  .row input[readonly]{ opacity:.75; }
+  .row input[type="range"]{ width:100%; }
+  .hint{ font-size:.72rem; color:#93c5fd; }
+  .muted{ color:var(--muted); }
+  .flex{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .buttons{ display:flex; gap:8px; flex-wrap:wrap; }
+  button{ background:linear-gradient(180deg, #22d3ee,#0891b2); border:none; color:#001018; font-weight:800; padding:.55rem .7rem; border-radius:10px; cursor:pointer; box-shadow:var(--shadow); }
+  button.secondary{ background:linear-gradient(180deg, #a78bfa,#6d28d9); color:#0a031b; }
+  button.ghost{ background:transparent; border:1px solid rgba(255,255,255,.14); color:var(--text); font-weight:600; }
+  .cards{ display:grid; grid-template-columns: repeat(4, 1fr); gap:12px; padding:12px; }
+  .card{ background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:12px 14px; box-shadow:var(--shadow);} 
+  .card h3{ margin:0 0 2px; font-size:.85rem; color:var(--muted); font-weight:700; letter-spacing:.3px; }
+  .card .metric{ font-size:1.35rem; font-weight:900; }
+  .card.small .metric{ font-size:1.1rem; }
+  .viz-wrapper{ padding:12px; }
+  #svgWrap{ background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06); border-radius:16px; overflow:auto; position:relative; }
+  svg{ width:100%; height:auto; display:block; }
+  .legend{ display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+  .dot{ width:12px; height:12px; border-radius:3px; display:inline-block; margin-right:6px; vertical-align:middle; }
+  .footer{ max-width:1300px; margin:10px auto 40px; color:var(--muted); padding:0 16px; }
+  details{ border:1px solid rgba(255,255,255,.06); border-radius:12px; padding:10px 12px; background:rgba(255,255,255,.03); }
+  details summary{ cursor:pointer; font-weight:700; }
+  .datatable{ width:100%; border-collapse:separate; border-spacing:0 8px; }
+  .datatable th{ text-align:left; font-size:.8rem; color:#9fb3d1; font-weight:700; }
+  .datatable td{ background:#0b1020; border:1px solid rgba(255,255,255,.08); padding:8px; border-radius:10px; }
+  .datatable input{ width:100%; background:transparent; border:none; outline:none; color:var(--text); }
+  .deleteRow{ background:#111827; color:#e5e7eb; border:1px solid rgba(255,255,255,.12); }
+  @media (max-width: 1100px){ .grid{ grid-template-columns: 1fr; } .cards{ grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px){ .cards{ grid-template-columns: 1fr; } }
+
+  /* Hide spinners for number inputs in the data model table */
+  .datatable input[type=number]::-webkit-outer-spin-button,
+  .datatable input[type=number]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .datatable input[type=number] {
+    -moz-appearance: textfield;
+  }
+
+  /* Slightly widen the name and avg size columns */
+
+  /* Right align numeric inputs for better readability */
+  .datatable td:nth-child(2) input,
+  .datatable td:nth-child(3) input {
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="shell flex" style="justify-content:space-between;">
+      <h1><span class="badge">Hadoop</span> Infrastructure Estimator</h1>
+      <div class="buttons">
+        <select id="presets">
+          <option value="custom">Preset: Custom</option>
+          <option value="poc">Preset: Small POC</option>
+          <option value="dept">Preset: Department</option>
+          <option value="enterprise">Preset: Enterprise</option>
+        </select>
+        <button id="resetBtn" class="ghost" title="Reset to sensible defaults">Reset</button>
+        <button id="exportBtn" class="secondary" title="Download current config">Export JSON</button>
+        <button id="downloadSVGBtn" class="ghost" title="Download the rack diagram as SVG">Download SVG</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <!-- LEFT: Controls -->
+    <section class="panel">
+      <h2>Inputs</h2>
+      <div class="content">
+        <details open>
+          <summary>Data Model → builds Daily Ingest</summary>
+          <div class="content" style="padding-top:12px;">
+            <p class="muted" style="margin-top:0">Add each data structure (topic/table/file type) with volume & size. The estimator sums raw daily ingest.</p>
+            <div class="buttons" style="margin-bottom:8px;">
+              <button id="addRowBtn">+ Add structure</button>
+              <button id="clearRowsBtn" class="ghost">Clear</button>
+              <span class="muted">Raw ingest/day: <b id="rawIngestLabel">—</b></span>
+            </div>
+            <table class="datatable" id="dmTable">
+              <thead>
+                <tr>
+                  <!-- widen Name and Avg columns, and narrow Remove column -->
+                  <th style="width:36%">Name</th>
+                  <th style="width:20%">Records/day</th>
+                  <th style="width:20%">Avg size</th>
+                  <th style="width:14%">Unit</th>
+                  <th style="width:10%">Remove</th>
+                </tr>
+              </thead>
+              <tbody id="dmBody"></tbody>
+            </table>
+            <div class="row">
+              <label>Use model to set Daily ingest?</label>
+              <div class="flex"><input id="useModel" type="checkbox" checked>&nbsp;<span class="muted">If checked, Daily ingest is computed from the above table.</span></div>
+            </div>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Workload & Storage</summary>
+          <div class="content" style="padding-top:12px;">
+            <div class="row"><label>Daily ingest (GB/day)</label><input id="dailyIngest" type="number" min="1" step="1" value="200"/></div>
+            <div class="row"><label>Retention window (days)</label><input id="retentionDays" type="number" min="1" step="1" value="180"/></div>
+            <div class="row"><label>Compression ratio <span class="hint" title="0.7 means 30% reduction vs raw">(0–1)</span></label><input id="compression" type="number" min="0.1" max="1" step="0.05" value="0.7"/></div>
+            <div class="row"><label>Replication factor</label><input id="replication" type="number" min="1" max="5" step="1" value="3"/></div>
+            <div class="row"><label>Temp/ETL overhead <span class="hint" title="Extra transient storage for staging, shuffle, checkpoints">(%)</span></label><input id="etlOverhead" type="number" min="0" max="300" step="5" value="50"/></div>
+            <div class="row"><label>Headroom for growth <span class="hint" title="Free capacity for growth & anti-fragmentation">(%)</span></label><input id="headroom" type="number" min="0" max="200" step="5" value="30"/></div>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Compute</summary>
+          <div class="content" style="padding-top:12px;">
+            <div class="row"><label>Processing window per day (hours)</label><input id="procWindow" type="number" min="1" max="24" step="1" value="6"/></div>
+            <div class="row"><label>Complexity: vCore‑hr per GB <span class="hint" title="Rough measure of compute needed per GB of data processed per day">(?)</span></label><input id="complexity" type="number" min="0.001" step="0.005" value="0.05"/></div>
+            <div class="row"><label>Cluster efficiency <span class="hint" title="Scheduler + I/O + overheads; 0.4–0.8 typical">(0–1)</span></label><input id="efficiency" type="number" min="0.3" max="1" step="0.05" value="0.7"/></div>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Node Profile</summary>
+          <div class="content" style="padding-top:12px;">
+            <div class="row"><label>Usable storage per DataNode (TB)</label><input id="nodeStorageTB" type="number" min="1" step="1" value="24"/></div>
+            <div class="row"><label>vCores per DataNode</label><input id="nodeVCores" type="number" min="2" step="2" value="16"/></div>
+            <div class="row"><label>Memory per DataNode (GB)</label><input id="nodeMemGB" type="number" min="8" step="4" value="128"/></div>
+            <div class="row"><label>Nodes per Rack (for viz)</label><input id="nodesPerRack" type="number" min="4" step="1" value="20"/></div>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Topology & Services</summary>
+          <div class="content" style="padding-top:12px;">
+            <div class="row"><label>HA for NameNode?</label>
+              <select id="haNN"><option value="yes" selected>Yes (2)</option><option value="no">No (1)</option></select>
+            </div>
+            <div class="row"><label>HA for ResourceManager?</label>
+              <select id="haRM"><option value="yes" selected>Yes (2)</option><option value="no">No (1)</option></select>
+            </div>
+            <div class="row"><label>ZooKeeper quorum</label>
+              <select id="zkCount"><option value="0">None</option><option value="3" selected>3</option><option value="5">5</option></select>
+            </div>
+            <div class="row"><label>Edge/Gateway nodes</label><input id="edgeCount" type="number" min="0" step="1" value="1"/></div>
+          </div>
+        </details>
+
+        <details open>
+          <summary>Costs (INR)</summary>
+          <div class="content" style="padding-top:12px;">
+            <div class="row"><label>Cost per DataNode (₹)</label><input id="costDataNode" type="number" min="0" step="1000" value="200000"/></div>
+            <div class="row"><label>Cost per Master (NN/RM) (₹)</label><input id="costMaster" type="number" min="0" step="1000" value="250000"/></div>
+            <div class="row"><label>Cost per ZooKeeper (₹)</label><input id="costZK" type="number" min="0" step="1000" value="80000"/></div>
+            <div class="row"><label>Cost per Edge/Gateway (₹)</label><input id="costEdge" type="number" min="0" step="1000" value="150000"/></div>
+            <div class="row"><label>Monthly Opex / node (power/rack etc.) (₹)</label><input id="opexPerNode" type="number" min="0" step="500" value="5000"/></div>
+          </div>
+        </details>
+
+        <div class="content" style="padding-top:6px;">
+          <div class="buttons">
+            <button id="recalcBtn">Recalculate</button>
+            <button id="saveBtn" class="ghost" title="Persist inputs on this browser">Save Inputs</button>
+            <span class="muted" id="statusMsg"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Results + Visualization -->
+    <section class="panel">
+      <h2>Results</h2>
+      <div class="content">
+        <div class="cards">
+          <div class="card"><h3>Total storage required</h3><div class="metric" id="mTotalStorage">—</div><div class="muted" id="mTotalStorageDetail"></div></div>
+          <div class="card"><h3>DataNodes required</h3><div class="metric" id="mDataNodes">—</div><div class="muted" id="mDataNodesReason"></div></div>
+          <div class="card"><h3>Racks (visual)</h3><div class="metric" id="mRacks">—</div><div class="muted">@ <span id="mNodesPerRack">—</span> nodes/rack</div></div>
+          <div class="card small"><h3>Masters & Services</h3><div class="metric" id="mMasters">—</div><div class="muted" id="mMastersDetail"></div></div>
+          <div class="card small"><h3>CapEx (approx)</h3><div class="metric" id="mCapex">—</div><div class="muted" id="mCapexDetail"></div></div>
+          <div class="card small"><h3>Monthly OpEx (approx)</h3><div class="metric" id="mOpex">—</div><div class="muted" id="mOpexDetail"></div></div>
+        </div>
+
+        <div class="viz-wrapper">
+          <div class="flex" style="justify-content:space-between; margin-bottom:8px;">
+            <div class="muted">Infrastructure diagram (SVG)</div>
+            <div class="flex"><label class="muted" for="zoom">Zoom</label>&nbsp;<input id="zoom" type="range" min="50" max="200" value="100"></div>
+          </div>
+          <div id="svgWrap">
+            <svg id="rackSVG" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-label="Hadoop cluster rack diagram"></svg>
+          </div>
+          <div class="legend">
+            <span><span class="dot" style="background:#38bdf8"></span>DataNode</span>
+            <span><span class="dot" style="background:#a78bfa"></span>NameNode</span>
+            <span><span class="dot" style="background:#f59e0b"></span>ResourceManager</span>
+            <span><span class="dot" style="background:#34d399"></span>ZooKeeper</span>
+            <span><span class="dot" style="background:#f472b6"></span>Edge/Gateway</span>
+          </div>
+        </div>
+
+        <details>
+          <summary>Assumptions & formulas</summary>
+          <div class="content">
+            <ul>
+              <li><b>Raw Daily Ingest (GB):</b> Σ (records/day × avgSize) across rows, converting units to GB.</li>
+              <li><b>Storage (GB):</b> dailyIngest × retention × compression × replication × (1 + ETL%) × (1 + headroom%).</li>
+              <li><b>DataNodes by storage:</b> ceil(totalStorageGB ÷ (usableTBperNode × 1024)).</li>
+              <li><b>Compute need (vCore‑hr/day):</b> dailyIngest × complexity.</li>
+              <li><b>Node supply in window:</b> nodeVCores × processingWindowHours × efficiency.</li>
+              <li><b>DataNodes by compute:</b> ceil(vCoreHrRequired ÷ perNodeWindowCapacity).</li>
+              <li><b>Final DataNodes:</b> max(storage‑driven, compute‑driven).</li>
+              <li><b>CapEx (₹):</b> DataNodes×costDN + (NN+RM)×costMaster + ZK×costZK + Edge×costEdge.</li>
+              <li><b>Monthly OpEx (₹):</b> (DataNodes + NN + RM + ZK + Edge) × opexPerNode.</li>
+              <li>Prices are placeholders. Adjust to your vendor quotes. Formatting uses Indian comma grouping (en‑IN).</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer">
+    <p class="muted">Tip: Model multiple structures (e.g., transactions, logs, telemetry). Toggle “Use model” to override with a known daily ingest if needed.</p>
+  </div>
+
+<script>
+(function(){
+  const qs = sel => document.querySelector(sel);
+  const $ = id => document.getElementById(id);
+
+  const state = { cfg: {}, model: [] };
+
+  const defaults = () => ({
+    // Derived from data model unless useModel=false
+    dailyIngest: 200,             // GB/day (fallback / override)
+    useModel: true,
+
+    retentionDays: 180,
+    compression: 0.7,             // 0..1
+    replication: 3,
+    etlOverhead: 50,              // %
+    headroom: 30,                 // %
+
+    procWindow: 6,                // hours/day
+    complexity: 0.05,             // vCore-hr per GB
+    efficiency: 0.7,              // 0..1
+
+    nodeStorageTB: 24,            // usable
+    nodeVCores: 16,
+    nodeMemGB: 128,
+    nodesPerRack: 20,
+
+    haNN: 'yes',
+    haRM: 'yes',
+    zkCount: 3,
+    edgeCount: 1,
+
+    // costs (INR)
+    costDataNode: 200000,
+    costMaster: 250000,
+    costZK: 80000,
+    costEdge: 150000,
+    opexPerNode: 5000,
+
+    // starter data model rows
+    model: [
+      { name: 'Transactions', recPerDay: 5_000_000, size: 700, unit: 'B' },
+      { name: 'Logs',         recPerDay: 50_000_000, size: 200, unit: 'B' },
+      { name: 'Telemetry',    recPerDay: 2_000_000, size: 2,   unit: 'KB' },
+    ]
+  });
+
+  // ---------- Data model table ----------
+  const units = ['B','KB','MB','GB'];
+  function unitToGB(size, unit){
+    const u = (unit||'B').toUpperCase();
+    if(u==='GB') return size;
+    if(u==='MB') return size/1024;
+    if(u==='KB') return size/(1024*1024);
+    return size/(1024*1024*1024); // bytes
+  }
+  function gbToStr(g){ return g<1? (g*1024).toFixed(0)+' MB' : g.toFixed(1)+' GB'; }
+  function fmtGB(n){ if (n < 1024) return n.toFixed(0) + ' GB'; return (n/1024).toFixed(2) + ' TB'; }
+  function fmtTB(n){ if (n < 1) return (n*1024).toFixed(0) + ' GB'; if (n < 10) return n.toFixed(2) + ' TB'; return n.toFixed(1) + ' TB'; }
+  function ceilDiv(a,b){ return Math.ceil(a/b); }
+
+  function formatINR(n){ try { return new Intl.NumberFormat('en-IN',{ style:'currency', currency:'INR', maximumFractionDigits:0 }).format(n); } catch(e){ return '₹'+String(n).replace(/\B(?=(\d{3})+(?!\d))/g,','); } }
+
+  function loadInputs(obj){
+    const c = obj || defaults();
+    $("dailyIngest").value = c.dailyIngest;
+    $("retentionDays").value = c.retentionDays;
+    $("compression").value = c.compression;
+    $("replication").value = c.replication;
+    $("etlOverhead").value = c.etlOverhead;
+    $("headroom").value = c.headroom;
+
+    $("procWindow").value = c.procWindow;
+    $("complexity").value = c.complexity;
+    $("efficiency").value = c.efficiency;
+
+    $("nodeStorageTB").value = c.nodeStorageTB;
+    $("nodeVCores").value = c.nodeVCores;
+    $("nodeMemGB").value = c.nodeMemGB;
+    $("nodesPerRack").value = c.nodesPerRack;
+
+    $("haNN").value = c.haNN;
+    $("haRM").value = c.haRM;
+    $("zkCount").value = c.zkCount;
+    $("edgeCount").value = c.edgeCount;
+
+    $("costDataNode").value = c.costDataNode;
+    $("costMaster").value = c.costMaster;
+    $("costZK").value = c.costZK;
+    $("costEdge").value = c.costEdge;
+    $("opexPerNode").value = c.opexPerNode;
+
+    $("useModel").checked = !!c.useModel;
+
+    // table
+    state.model = Array.isArray(c.model) ? c.model.map(r=>({...r})) : [];
+    renderModelTable();
+    updateDailyIngestFromModel();
+  }
+
+  function readInputs(){
+    const getN = id => Number($(id).value);
+    const cfg = {
+      dailyIngest: getN('dailyIngest'),
+      useModel: $("useModel").checked,
+
+      retentionDays: getN('retentionDays'),
+      compression: Number($("compression").value),
+      replication: getN('replication'),
+      etlOverhead: getN('etlOverhead'),
+      headroom: getN('headroom'),
+
+      procWindow: getN('procWindow'),
+      complexity: Number($("complexity").value),
+      efficiency: Number($("efficiency").value),
+
+      nodeStorageTB: getN('nodeStorageTB'),
+      nodeVCores: getN('nodeVCores'),
+      nodeMemGB: getN('nodeMemGB'),
+      nodesPerRack: getN('nodesPerRack'),
+
+      haNN: $("haNN").value,
+      haRM: $("haRM").value,
+      zkCount: getN('zkCount'),
+      edgeCount: getN('edgeCount'),
+
+      costDataNode: getN('costDataNode'),
+      costMaster: getN('costMaster'),
+      costZK: getN('costZK'),
+      costEdge: getN('costEdge'),
+      opexPerNode: getN('opexPerNode')
+    };
+    state.cfg = cfg;
+    return cfg;
+  }
+
+  function calcRawIngestGB(){
+    let sumGB = 0;
+    for(const r of state.model){
+      const perRecordGB = unitToGB(Number(r.size)||0, r.unit);
+      const rec = Number(r.recPerDay)||0;
+      sumGB += rec * perRecordGB;
+    }
+    return sumGB; // GB/day raw
+  }
+
+  function updateDailyIngestFromModel(){
+    const useModel = $("useModel").checked;
+    const rawGB = calcRawIngestGB();
+    $("rawIngestLabel").textContent = fmtGB(rawGB);
+    if(useModel){
+      $("dailyIngest").value = Math.max(1, Math.round(rawGB));
+      $("dailyIngest").setAttribute('readonly','readonly');
+    }else{
+      $("dailyIngest").removeAttribute('readonly');
+    }
+  }
+
+  function addModelRow(row){
+    state.model.push(row || { name:'', recPerDay: 100000, size: 1, unit:'KB' });
+    renderModelTable();
+    updateDailyIngestFromModel();
+    calculate();
+  }
+  function removeModelRow(idx){ state.model.splice(idx,1); renderModelTable(); updateDailyIngestFromModel(); calculate(); }
+
+  function renderModelTable(){
+    const body = $("dmBody");
+    body.innerHTML = '';
+    state.model.forEach((r, idx)=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input value="${r.name||''}" data-k="name"/></td>
+        <td><input type="text" inputmode="decimal" pattern="[0-9.,]*" step="1" min="0" value="${r.recPerDay||0}" data-k="recPerDay"/></td>
+        <td><input type="text" inputmode="decimal" pattern="[0-9.,]*" step="0.01" min="0" value="${r.size||0}" data-k="size"/></td>
+        <td>
+          <select data-k="unit">${units.map(u=>`<option ${u===r.unit? 'selected':''}>${u}</option>`).join('')}</select>
+        </td>
+        <td><button class="deleteRow" title="Remove">×</button></td>`;
+      body.appendChild(tr);
+      tr.querySelectorAll('input,select').forEach(el=>{
+        el.addEventListener('input', e=>{
+          const k = el.getAttribute('data-k');
+          if(k === 'name' || k === 'unit') {
+            state.model[idx][k] = el.value;
+          } else {
+            // remove commas and underscores before parsing numbers
+            const cleaned = (el.value || '').replace(/[,_\s]/g, '');
+            state.model[idx][k] = Number(cleaned);
+          }
+          updateDailyIngestFromModel();
+          calculate();
+        });
+      });
+      tr.querySelector('.deleteRow').addEventListener('click', ()=> removeModelRow(idx));
+    });
+  }
+
+  // ---------- Core calculations ----------
+  function calcStorage(cfg){
+    const rawGB = cfg.dailyIngest * cfg.retentionDays;
+    const afterCompression = rawGB * cfg.compression;
+    const withReplication = afterCompression * cfg.replication;
+    const withETL = withReplication * (1 + cfg.etlOverhead/100);
+    const finalGB = withETL * (1 + cfg.headroom/100);
+    const perNodeGB = cfg.nodeStorageTB * 1024; // usable per node
+    const nodesByStorage = Math.max(1, Math.ceil(finalGB / perNodeGB));
+    return { rawGB, afterCompression, withReplication, withETL, finalGB, perNodeGB, nodesByStorage };
+  }
+
+  function calcCompute(cfg){
+    const vchRequired = cfg.dailyIngest * cfg.complexity; // vCore-hr per day
+    const perNodeWindow = cfg.nodeVCores * cfg.procWindow * cfg.efficiency; // vCore-hr/day within window
+    const nodesByCompute = Math.max(1, Math.ceil(vchRequired / Math.max(1e-6, perNodeWindow)));
+    return { vchRequired, perNodeWindow, nodesByCompute };
+  }
+
+  function masterCounts(cfg){
+    const nn = (cfg.haNN === 'yes') ? 2 : 1;
+    const rm = (cfg.haRM === 'yes') ? 2 : 1;
+    const zk = cfg.zkCount || 0;
+    const edge = cfg.edgeCount || 0;
+    return { nn, rm, zk, edge, total: nn + rm + zk + edge };
+  }
+
+  function calcCosts(cfg, counts){
+    const mastersTotal = counts.nn + counts.rm;
+    const capex = (counts.dataNodes * cfg.costDataNode) + (mastersTotal * cfg.costMaster) + (counts.zk * cfg.costZK) + (counts.edge * cfg.costEdge);
+    const totalNodes = counts.dataNodes + mastersTotal + counts.zk + counts.edge;
+    const opex = totalNodes * cfg.opexPerNode;
+    return { capex, opex, totalNodes, mastersTotal };
+  }
+
+  function calculate(){
+    const cfg = readInputs();
+    updateDailyIngestFromModel();
+    const S = calcStorage(cfg);
+    const C = calcCompute(cfg);
+    const masters = masterCounts(cfg);
+    const dataNodes = Math.max(S.nodesByStorage, C.nodesByCompute);
+    const racks = Math.max(1, Math.ceil(dataNodes / Math.max(1, cfg.nodesPerRack)));
+    const costs = calcCosts(cfg, { ...masters, dataNodes });
+    state.results = { S, C, masters, dataNodes, racks, costs };
+    renderResults();
+    renderSVG();
+  }
+
+  function renderResults(){
+    const { S, C, masters, dataNodes, racks, costs } = state.results;
+    $("mTotalStorage").textContent = fmtGB(S.finalGB);
+    $("mTotalStorageDetail").textContent = `Raw ${fmtGB(S.rawGB)} → Comp ${fmtGB(S.afterCompression)} × repl ${state.cfg.replication} → +ETL +Headroom`;
+
+    $("mDataNodes").textContent = String(dataNodes);
+    const reason = (S.nodesByStorage >= C.nodesByCompute) ? `Storage‑driven (needs ${S.nodesByStorage})` : `Compute‑driven (needs ${C.nodesByCompute})`;
+    $("mDataNodesReason").textContent = reason;
+
+    $("mRacks").textContent = String(racks);
+    $("mNodesPerRack").textContent = String(state.cfg.nodesPerRack);
+
+    $("mMasters").textContent = masters.total + ' nodes';
+    $("mMastersDetail").textContent = `NN ${masters.nn}, RM ${masters.rm}, ZK ${masters.zk}, Edge ${masters.edge}`;
+
+    $("mCapex").textContent = formatINR(costs.capex);
+    $("mCapexDetail").textContent = `DN×${formatINR(state.cfg.costDataNode)} + (NN+RM)×${formatINR(state.cfg.costMaster)} + ZK×${formatINR(state.cfg.costZK)} + Edge×${formatINR(state.cfg.costEdge)}`;
+
+    $("mOpex").textContent = formatINR(costs.opex) + ' / month';
+    $("mOpexDetail").textContent = `${costs.totalNodes} nodes × ${formatINR(state.cfg.opexPerNode)}/mo`;
+  }
+
+  // ---------- SVG rendering ----------
+  function renderSVG(){
+    const svg = $("rackSVG"); while (svg.lastChild) svg.removeChild(svg.lastChild);
+    const width = 1180, height = 700; svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    const bg = document.createElementNS('http://www.w3.org/2000/svg','rect'); bg.setAttribute('x','0'); bg.setAttribute('y','0'); bg.setAttribute('width', width); bg.setAttribute('height', height); bg.setAttribute('fill', '#0a0f1f'); bg.setAttribute('stroke', 'rgba(255,255,255,.05)'); svg.appendChild(bg);
+
+    const { dataNodes, racks } = state.results; const cfg = state.cfg;
+    const rackPad = 18, rackW = 250, rackH = 250; const cols = Math.max(1, Math.floor((width - rackPad) / (rackW + rackPad))); const rows = Math.max(1, Math.ceil(racks / cols));
+
+    const masters = state.results.masters; const masterZone = { x: rackPad, y: rackPad, w: width - rackPad*2, h: 120 }; drawMasters(svg, masterZone, masters);
+
+    const topY = masterZone.y + masterZone.h + 10; const gridArea = { x: rackPad, y: topY, w: width - rackPad*2, h: height - topY - rackPad };
+
+    let dnRemaining = dataNodes;
+    for(let r=0; r<racks; r++){
+      const cx = gridArea.x + (r % cols) * (rackW + rackPad);
+      const cy = gridArea.y + Math.floor(r / cols) * (rackH + rackPad);
+      drawRack(svg, cx, cy, rackW, rackH, r+1, cfg.nodesPerRack, dnRemaining);
+      dnRemaining -= Math.min(cfg.nodesPerRack, dnRemaining);
+    }
+
+    const title = textNode(width - rackPad - 4, rackPad + 16, 'Hadoop DataNode racks', { anchor:'end', size:14, fill:'#93c5fd' }); svg.appendChild(title);
+  }
+
+  function textNode(x,y, str, opts={}){ const t = document.createElementNS('http://www.w3.org/2000/svg','text'); t.setAttribute('x', x); t.setAttribute('y', y); t.setAttribute('fill', opts.fill || '#cbd5e1'); t.setAttribute('font-size', opts.size || 12); t.setAttribute('font-weight', opts.weight || 700); t.setAttribute('text-anchor', opts.anchor || 'start'); t.textContent = str; return t; }
+
+  function drawMasters(svg, zone, masters){
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g'); svg.appendChild(g);
+    const box = document.createElementNS('http://www.w3.org/2000/svg','rect'); box.setAttribute('x', zone.x); box.setAttribute('y', zone.y); box.setAttribute('rx', 14); box.setAttribute('ry', 14); box.setAttribute('width', zone.w); box.setAttribute('height', zone.h); box.setAttribute('fill', '#0b1223'); box.setAttribute('stroke', 'rgba(255,255,255,.08)'); g.appendChild(box);
+    const title = textNode(zone.x + 12, zone.y + 20, 'Masters & Services', { size:13, fill:'#e2e8f0' }); g.appendChild(title);
+
+    const parts = []; for(let i=0;i<masters.nn;i++) parts.push({label:'NameNode', color:'#a78bfa'}); for(let i=0;i<masters.rm;i++) parts.push({label:'ResMgr', color:'#f59e0b'}); for(let i=0;i<masters.zk;i++) parts.push({label:'ZK', color:'#34d399'}); for(let i=0;i<masters.edge;i++) parts.push({label:'Edge', color:'#f472b6'});
+    const n = Math.max(1, parts.length); const pad = 12, w=90, h=26; const cols = Math.min(n, Math.floor((zone.w - pad) / (w + pad))); const rows = Math.max(1, Math.ceil(n / cols));
+
+    let k=0; for(let r=0;r<rows;r++){ for(let c=0;c<cols;c++){ if(k>=n) break; const px = zone.x + pad + c*(w+pad); const py = zone.y + 32 + r*(h+10); const p = parts[k++]; const rect = document.createElementNS('http://www.w3.org/2000/svg','rect'); rect.setAttribute('x', px); rect.setAttribute('y', py); rect.setAttribute('width', w); rect.setAttribute('height', h); rect.setAttribute('rx',8); rect.setAttribute('ry',8); rect.setAttribute('fill', p.color); rect.setAttribute('opacity', .9); rect.setAttribute('stroke', 'rgba(0,0,0,.25)'); const t = textNode(px + w/2, py + h/2 + 4, p.label, { anchor:'middle', size:12, fill:'#0b1020', weight:900 }); g.appendChild(rect); g.appendChild(t); } }
+  }
+
+  function drawRack(svg, x, y, w, h, rackNo, nodesPerRack, dnRemaining){
+    const g = document.createElementNS('http://www.w3.org/2000/svg','g'); svg.appendChild(g);
+    const rack = document.createElementNS('http://www.w3.org/2000/svg','rect'); rack.setAttribute('x', x); rack.setAttribute('y', y); rack.setAttribute('width', w); rack.setAttribute('height', h); rack.setAttribute('rx', 12); rack.setAttribute('ry', 12); rack.setAttribute('fill', '#0b1223'); rack.setAttribute('stroke', 'rgba(255,255,255,.08)'); rack.setAttribute('filter','drop-shadow(0 6px 10px rgba(0,0,0,.35))'); g.appendChild(rack);
+    const title = textNode(x + 10, y + 18, `Rack ${rackNo}`, { size:12, fill:'#e2e8f0' }); g.appendChild(title);
+
+    const gridPad = 10; const nodeW=48, nodeH=22, gap=6; const cols = Math.max(1, Math.floor((w - gridPad*2 + gap) / (nodeW + gap))); const rows = Math.max(1, Math.floor((h - gridPad*2 - 22 + gap) / (nodeH + gap))); const capacity = Math.min(nodesPerRack, cols*rows); const toPlace = Math.min(dnRemaining, capacity);
+    let i=0; for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        if(i>=toPlace) break;
+        const px = x + gridPad + c*(nodeW + gap);
+        const py = y + 24 + gridPad + r*(nodeH + gap);
+        const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rect.setAttribute('x', px); rect.setAttribute('y', py);
+        rect.setAttribute('width', nodeW); rect.setAttribute('height', nodeH);
+        rect.setAttribute('rx', 5); rect.setAttribute('ry', 5);
+        rect.setAttribute('fill', '#38bdf8'); rect.setAttribute('opacity', .9);
+        rect.setAttribute('stroke', 'rgba(0,0,0,.35)');
+        const idx = i + 1 + (nodesPerRack * (rackNo-1));
+        rect.appendChild(makeTitle(`DataNode ${idx}`));
+        g.appendChild(rect);
+        i++;
+      }
+    }
+  }
+
+  function makeTitle(str){ const t = document.createElementNS('http://www.w3.org/2000/svg','title'); t.textContent = str; return t; }
+
+  function exportJSON(){ const payload = JSON.stringify({ inputs: { ...state.cfg, model: state.model }, results: state.results }, null, 2); const blob = new Blob([payload], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'hadoop_estimate.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+  function downloadSVG(){ const svg = $("rackSVG"); const ser = new XMLSerializer(); let src = ser.serializeToString(svg); if(!src.match(/^<svg[^>]+xmlns=/)) src = src.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"'); const blob = new Blob([src], { type: 'image/svg+xml;charset=utf-8' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'hadoop_racks.svg'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); }
+
+  function onZoom(){ const z = Number($("zoom").value); $("rackSVG").style.transformOrigin = 'top left'; $("rackSVG").style.transform = `scale(${z/100})`; $("svgWrap").style.height = Math.max(260, 640 * (z/100)) + 'px'; }
+
+  function saveInputs(){ readInputs(); const toSave = { ...state.cfg, model: state.model, useModel: $("useModel").checked }; localStorage.setItem('hadoopEstimatorConfig', JSON.stringify(toSave)); setStatus('Saved ✓'); }
+  function setStatus(msg){ $("statusMsg").textContent = msg; setTimeout(()=> $("statusMsg").textContent = '', 2000); }
+  function loadSaved(){ try{ const raw = localStorage.getItem('hadoopEstimatorConfig'); if(raw){ const parsed = JSON.parse(raw); loadInputs(parsed); return true; } }catch(e){} return false; }
+
+  function applyPreset(v){ const d = defaults(); if(v==='poc'){ d.dailyIngest=50; d.retentionDays=60; d.nodeStorageTB=12; d.nodeVCores=12; d.nodeMemGB=64; d.procWindow=4; d.compression=0.8; d.etlOverhead=30; d.headroom=20; d.nodesPerRack=16; d.zkCount=3; d.edgeCount=1; d.model=[{name:'Events',recPerDay:3_000_000,size:600,unit:'B'}]; }
+    else if(v==='dept'){ d.dailyIngest=300; d.retentionDays=180; d.nodeStorageTB=24; d.nodeVCores=16; d.nodeMemGB=128; d.procWindow=6; d.compression=0.7; d.etlOverhead=50; d.headroom=30; d.nodesPerRack=20; d.zkCount=3; d.edgeCount=1; }
+    else if(v==='enterprise'){ d.dailyIngest=1500; d.retentionDays=365; d.nodeStorageTB=36; d.nodeVCores=32; d.nodeMemGB=256; d.procWindow=8; d.compression=0.65; d.etlOverhead=60; d.headroom=40; d.nodesPerRack=24; d.zkCount=5; d.edgeCount=2; d.model=[{name:'Txn',recPerDay:20_000_000,size:800,unit:'B'},{name:'Logs',recPerDay:200_000_000,size:220,unit:'B'},{name:'IOT',recPerDay:10_000_000,size:1.5,unit:'KB'}]; }
+    loadInputs(d); calculate(); }
+
+  function resetDefaults(){ loadInputs(defaults()); $("presets").value = 'custom'; calculate(); }
+
+  function hookInputs(){
+    ['dailyIngest','retentionDays','compression','replication','etlOverhead','headroom','procWindow','complexity','efficiency','nodeStorageTB','nodeVCores','nodeMemGB','nodesPerRack','haNN','haRM','zkCount','edgeCount','costDataNode','costMaster','costZK','costEdge','opexPerNode'].forEach(id => $(id).addEventListener('input', calculate));
+    $("useModel").addEventListener('change', ()=>{ updateDailyIngestFromModel(); calculate(); });
+    $("recalcBtn").addEventListener('click', calculate);
+    $("saveBtn").addEventListener('click', saveInputs);
+    $("exportBtn").addEventListener('click', exportJSON);
+    $("downloadSVGBtn").addEventListener('click', downloadSVG);
+    $("zoom").addEventListener('input', onZoom);
+    $("resetBtn").addEventListener('click', resetDefaults);
+    $("presets").addEventListener('change', e=>{ const v = e.target.value; if(v==='custom') return; applyPreset(v); });
+
+    $("addRowBtn").addEventListener('click', ()=> addModelRow());
+    $("clearRowsBtn").addEventListener('click', ()=>{ state.model = []; renderModelTable(); updateDailyIngestFromModel(); calculate(); });
+  }
+
+  // init
+  loadInputs(defaults());
+  hookInputs();
+  if(!loadSaved()) calculate(); else calculate();
+  onZoom();
+})();
+</script>
+</body>
+</html>

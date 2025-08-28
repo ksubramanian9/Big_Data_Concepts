@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Record Size Estimator</title>
+<style>
+  :root{
+    --bg:#0f172a;           /* slate-900 */
+    --panel:#111827;        /* gray-900 */
+    --muted:#94a3b8;        /* slate-400 */
+    --text:#e5e7eb;         /* gray-200 */
+    --accent:#22d3ee;       /* cyan-400 */
+    --accent-2:#a78bfa;     /* violet-400 */
+    --ok:#34d399;           /* emerald-400 */
+    --warn:#f59e0b;         /* amber-500 */
+    --err:#f87171;          /* red-400 */
+    --card:#0b1223;         /* custom */
+    --shadow: 0 10px 25px rgba(0,0,0,.25);
+  }
+  * { box-sizing: border-box; }
+  body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; background:linear-gradient(180deg, #0b1223, #0f172a); color:var(--text); }
+  header{ position:sticky; top:0; z-index:10; backdrop-filter: blur(6px); background: linear-gradient(90deg, rgba(15,23,42,.9), rgba(17,24,39,.9)); border-bottom: 1px solid rgba(255,255,255,.08); }
+  .shell{ max-width:1300px; margin:0 auto; padding:14px 18px; }
+  h1{ margin:0; font-size:1.35rem; letter-spacing:.2px; font-weight:700; display:flex; align-items:center; gap:.6rem; }
+  .badge{ font-size:.7rem; color:#0b1223; background:var(--accent); border-radius:999px; padding:.2rem .55rem; font-weight:700; }
+  .grid{ display:grid; grid-template-columns: 420px 1fr; gap:18px; padding:16px; max-width:1300px; margin:0 auto; }
+  .panel{ background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:16px; box-shadow:var(--shadow); }
+  .panel h2{ margin:0; font-size:1rem; padding:14px 16px; border-bottom:1px solid rgba(255,255,255,.06); color:#e2e8f0; letter-spacing:.2px; }
+  .panel .content{ padding:14px 16px 18px; }
+  .buttons{ display:flex; gap:8px; flex-wrap:wrap; }
+  button{ background:linear-gradient(180deg, #22d3ee,#0891b2); border:none; color:#001018; font-weight:800; padding:.55rem .7rem; border-radius:10px; cursor:pointer; box-shadow:var(--shadow); }
+  button.secondary{ background:linear-gradient(180deg, #a78bfa,#6d28d9); color:#0a031b; }
+  button.ghost{ background:transparent; border:1px solid rgba(255,255,255,.14); color:var(--text); font-weight:600; }
+  .cards{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; padding:12px; }
+  .card{ background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:12px 14px; box-shadow:var(--shadow);} 
+  .card h3{ margin:0 0 2px; font-size:.85rem; color:var(--muted); font-weight:700; letter-spacing:.3px; }
+  .card .metric{ font-size:1.35rem; font-weight:900; }
+  .card.small .metric{ font-size:1.1rem; }
+  .viz-wrapper{ padding:12px; }
+  #chart{ width:100%; height:auto; display:block; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06); border-radius:16px; }
+  .datatable{ width:100%; border-collapse:separate; border-spacing:0 8px; margin-top:12px; }
+  .datatable th{ text-align:left; font-size:.8rem; color:#9fb3d1; font-weight:700; }
+  .datatable td{ background:#0b1020; border:1px solid rgba(255,255,255,.08); padding:8px; border-radius:10px; font-size:.85rem; color:var(--text); }
+  .datatable tbody tr td:first-child{ font-weight:600; color:#e2e8f0; }
+  textarea#inputRecord{ width:100%; min-height:200px; background:#0b1020; border:1px solid rgba(255,255,255,.08); color:var(--text); border-radius:10px; padding:.7rem; resize:vertical; font-family:monospace; }
+  @media (max-width: 1100px){ .grid{ grid-template-columns: 1fr; } .cards{ grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px){ .cards{ grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <header>
+    <div class="shell flex" style="justify-content:space-between; align-items:center;">
+      <h1><span class="badge">Data</span> Record Size Estimator</h1>
+      <div class="buttons">
+        <!-- future buttons if needed -->
+      </div>
+    </div>
+  </header>
+  <main class="grid">
+    <!-- LEFT: Input -->
+    <section class="panel">
+      <h2>Input Record Definition</h2>
+      <div class="content">
+        <p class="muted">Paste or type a single record definition (JSON object, CSV row, or SQL column definitions) below. Example: <code>{"id":123,"name":"Alice","score":95.5}</code> or <code>id INT, name VARCHAR(50), score FLOAT</code>.</p>
+        <textarea id="inputRecord" placeholder="Enter JSON, CSV row, or SQL definition here..."></textarea>
+        <div style="margin-top:12px;">
+          <button id="calcBtn">Estimate Size</button>
+        </div>
+      </div>
+    </section>
+    <!-- RIGHT: Results -->
+    <section class="panel">
+      <h2>Results</h2>
+      <div class="content">
+        <div class="cards">
+          <div class="card"><h3>Approximate Size</h3><div class="metric" id="totalSize">—</div><div class="muted" id="formatLabel">Format: —</div></div>
+          <div class="card"><h3>Fields</h3><div class="metric" id="fieldCount">—</div><div class="muted">Detected fields</div></div>
+          <div class="card"><h3>Assumptions</h3><div style="font-size:.75rem; color:var(--muted)">Numeric values use 4–8 bytes; strings use their character count; dates use 3 bytes; booleans use 1 byte; unknown types use 8 bytes.</div></div>
+        </div>
+        <table class="datatable" id="fieldsTable">
+          <thead>
+            <tr><th>Name</th><th>Type</th><th>Approx size (b)</th></tr>
+          </thead>
+          <tbody id="fieldsBody"></tbody>
+        </table>
+        <div class="viz-wrapper" style="margin-top:18px;">
+          <div class="muted" style="margin-bottom:8px;">Field size breakdown</div>
+          <svg id="chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 200" role="img" aria-label="Field size bar chart"></svg>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+  (function(){
+    const $ = id => document.getElementById(id);
+
+    function parseCSVLine(line) {
+      const arr = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') {
+          if (inQuotes && i+1 < line.length && line[i+1] === '"') {
+            current += '"'; i++; continue;
+          }
+          inQuotes = !inQuotes;
+        } else if (c === ',' && !inQuotes) {
+          arr.push(current);
+          current = '';
+        } else {
+          current += c;
+        }
+      }
+      arr.push(current);
+      return arr;
+    }
+
+    function inferCSVValueType(val) {
+      if (val === undefined || val === null) return 'string';
+      const s = val.trim();
+      if (s === '') return 'string';
+      const lower = s.toLowerCase();
+      if (lower === 'true' || lower === 'false') return 'boolean';
+      if (!isNaN(Number(s))) {
+        return (s.includes('.') || s.toLowerCase().includes('e')) ? 'float' : 'int';
+      }
+      if (/\d{4}-\d{2}-\d{2}/.test(s)) return 'date';
+      return 'string';
+    }
+
+    function calcJSONValueSize(val) {
+      if (val === null || val === undefined) return 0;
+      const t = typeof val;
+      if (t === 'string') return val.length;
+      if (t === 'number') return 8;
+      if (t === 'boolean') return 1;
+      if (Array.isArray(val)) {
+        return val.reduce((a,b) => a + calcJSONValueSize(b), 0);
+      }
+      if (t === 'object') {
+        return Object.keys(val).reduce((a,key) => a + calcJSONValueSize(val[key]), 0);
+      }
+      return String(val).length;
+    }
+
+    function parseJSONRecord(text) {
+      let obj = JSON.parse(text);
+      let instance = Array.isArray(obj) ? (obj[0] || {}) : obj;
+      if (typeof instance !== 'object' || instance === null) return null;
+      const fields = [];
+      const recordSize = calcJSONValueSize(instance);
+      for (const key in instance) {
+        const val = instance[key];
+        fields.push({ name: key, type: typeof val, size: calcJSONValueSize(val) });
+      }
+      return { format:'JSON', fields, recordSize };
+    }
+
+    function guessSQLTypeSize(type, param) {
+      const t = type.toLowerCase();
+      if (t.startsWith('varchar')) {
+        const len = param ? parseInt(param.split(',')[0]) : NaN;
+        return isNaN(len) ? 255 : len;
+      }
+      if (t.startsWith('char')) {
+        const len = param ? parseInt(param) : NaN;
+        return isNaN(len) ? 1 : len;
+      }
+      if (t.startsWith('tinyint')) return 1;
+      if (t.startsWith('smallint')) return 2;
+      if (t.startsWith('bigint')) return 8;
+      if (t.startsWith('int')) return 4;
+      if (t.startsWith('decimal') || t.startsWith('numeric')) return 8;
+      if (t.startsWith('float') || t.startsWith('real')) return 8;
+      if (t.startsWith('double')) return 8;
+      if (t.startsWith('boolean') || t.startsWith('bool') || t.startsWith('bit')) return 1;
+      if (t.startsWith('date')) return 3;
+      if (t.startsWith('time')) return 3;
+      if (t.startsWith('datetime') || t.startsWith('timestamp')) return 8;
+      if (t.startsWith('json') || t.startsWith('text') || t.startsWith('clob') || t.startsWith('blob')) return 100;
+      if (t.startsWith('binary') || t.startsWith('varbinary')) return 100;
+      return 8;
+    }
+
+    function parseSQLDefinition(sql) {
+      const normalized = sql.replace(/\n/g,' ').replace(/\s+/g,' ');
+      // find content inside parentheses after CREATE TABLE or assume comma separated definitions
+      let body = '';
+      const createMatch = normalized.match(/create\s+table\s+[^()]+\((.*)\)/i);
+      if (createMatch) {
+        body = createMatch[1];
+      } else {
+        // maybe user just provided comma separated column definitions
+        body = normalized;
+      }
+      // split by comma not inside parentheses
+      const parts = body.split(/,(?![^()]*\))/);
+      const fields = [];
+      let recognized = false;
+      const knownTypes = [
+        'int','integer','smallint','tinyint','bigint','float','double','real','numeric','decimal',
+        'varchar','char','nvarchar','nchar','text','json','jsonb','bool','boolean',
+        'date','time','datetime','timestamp','blob','binary','varbinary','bit'
+      ];
+      for (let part of parts) {
+        part = part.trim();
+        if (!part) continue;
+        // ignore constraints, primary keys etc.
+        if (/^(primary|foreign|unique|constraint|key)/i.test(part)) continue;
+        const m = part.match(/^`?([\w-]+)`?\s+([\w]+)(?:\(([^)]+)\))?/i);
+        if (m) {
+          const name = m[1];
+          const type = m[2];
+          const param = m[3];
+          // Check if the type is in known types list (prefix match)
+          const tLower = type.toLowerCase();
+          if (knownTypes.some(kt => tLower.startsWith(kt))) recognized = true;
+          fields.push({ name, type, param });
+        }
+      }
+      if (!recognized || fields.length === 0) return null;
+      const out = fields.map(f => {
+        return { name: f.name, type: f.type.toLowerCase(), size: guessSQLTypeSize(f.type, f.param) };
+      });
+      const recordSize = out.reduce((a,b) => a + b.size, 0);
+      return { format:'SQL', fields: out, recordSize };
+    }
+
+    function parseCSVRecord(text) {
+      const lines = text.trim().split(/\r?\n/).filter(l => l.trim() !== '');
+      if (lines.length === 0) return null;
+      // If there's no comma and only one line, it's unlikely to be CSV; skip
+      if (text.indexOf(',') === -1 && lines.length === 1) {
+        return null;
+      }
+      const fields = [];
+      if (lines.length === 1) {
+        // one record, no header
+        const values = parseCSVLine(lines[0]);
+        for (let i = 0; i < values.length; i++) {
+          const val = values[i].trim();
+          const type = inferCSVValueType(val);
+          let size;
+          if (type === 'string') size = val.length;
+          else if (type === 'int') size = 4;
+          else if (type === 'float') size = 8;
+          else if (type === 'boolean') size = 1;
+          else if (type === 'date') size = 3;
+          else size = 8;
+          fields.push({ name: 'field'+(i+1), type, size });
+        }
+        const recordSize = fields.reduce((a,b) => a + b.size, 0) + Math.max(0, fields.length - 1);
+        return { format:'CSV', fields, recordSize };
+      } else {
+        // header + sample line
+        const header = parseCSVLine(lines[0]);
+        const values = parseCSVLine(lines[1]);
+        for (let i = 0; i < header.length; i++) {
+          const name = header[i].trim() || ('field'+(i+1));
+          const val = (i < values.length ? values[i].trim() : '');
+          const type = inferCSVValueType(val);
+          let size;
+          if (type === 'string') size = val.length;
+          else if (type === 'int') size = 4;
+          else if (type === 'float') size = 8;
+          else if (type === 'boolean') size = 1;
+          else if (type === 'date') size = 3;
+          else size = 8;
+          fields.push({ name, type, size });
+        }
+        const recordSize = fields.reduce((a,b) => a + b.size, 0) + Math.max(0, fields.length - 1);
+        return { format:'CSV', fields, recordSize };
+      }
+    }
+
+    function parseUnknownFormat(text) {
+      const len = text.length;
+      return { format:'Text', fields: [{ name:'record', type:'string', size: len }], recordSize: len };
+    }
+
+    function drawChart(fields) {
+      const svg = $('chart');
+      // Remove existing elements
+      while (svg.lastChild) svg.removeChild(svg.lastChild);
+      if (!fields || fields.length === 0) return;
+      const totalW = svg.clientWidth || 500;
+      const marginL = 80;
+      const marginR = 40;
+      const barH = 18;
+      const gap = 6;
+      const n = fields.length;
+      const maxSize = Math.max(...fields.map(f => f.size));
+      const height = n * (barH + gap) + 20;
+      svg.setAttribute('viewBox', `0 0 ${totalW} ${height}`);
+      // color palette for types
+      const typeColors = {
+        int: '#38bdf8', float:'#a78bfa', string:'#f59e0b', boolean:'#34d399', date:'#f472b6', time:'#10b981', datetime:'#ef4444', timestamp:'#f87171', sql:'#d946ef', json:'#6ee7b7', text:'#e879f9'
+      };
+      fields.forEach((f, i) => {
+        const y = 10 + i * (barH + gap);
+        const barWidth = maxSize ? (f.size / maxSize) * (totalW - marginL - marginR) : 0;
+        const color = typeColors[f.type.toLowerCase()] || '#38bdf8';
+        const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+        rect.setAttribute('x', marginL);
+        rect.setAttribute('y', y);
+        rect.setAttribute('width', barWidth);
+        rect.setAttribute('height', barH);
+        rect.setAttribute('fill', color);
+        rect.setAttribute('opacity', 0.9);
+        svg.appendChild(rect);
+        const nameText = document.createElementNS('http://www.w3.org/2000/svg','text');
+        nameText.setAttribute('x', 5);
+        nameText.setAttribute('y', y + barH/2 + 5);
+        nameText.setAttribute('fill', '#e2e8f0');
+        nameText.setAttribute('font-size', 10);
+        nameText.textContent = f.name;
+        svg.appendChild(nameText);
+        const sizeText = document.createElementNS('http://www.w3.org/2000/svg','text');
+        sizeText.setAttribute('x', marginL + barWidth + 5);
+        sizeText.setAttribute('y', y + barH/2 + 5);
+        sizeText.setAttribute('fill', '#9fb3d1');
+        sizeText.setAttribute('font-size', 10);
+        sizeText.textContent = f.size + ' b';
+        svg.appendChild(sizeText);
+      });
+    }
+
+    function estimateRecord() {
+      const text = $('inputRecord').value.trim();
+      if (!text) {
+        $('totalSize').textContent = '—';
+        $('formatLabel').textContent = 'Format: —';
+        $('fieldCount').textContent = '—';
+        $('fieldsBody').innerHTML = '';
+        drawChart([]);
+        return;
+      }
+      let result = null;
+      try {
+        result = parseJSONRecord(text);
+      } catch(e) {}
+      if (!result) {
+        result = parseSQLDefinition(text);
+      }
+      if (!result) {
+        result = parseCSVRecord(text);
+      }
+      if (!result) {
+        result = parseUnknownFormat(text);
+      }
+      if (!result) {
+        $('totalSize').textContent = '—';
+        $('formatLabel').textContent = 'Format: —';
+        $('fieldCount').textContent = '—';
+        $('fieldsBody').innerHTML = '';
+        drawChart([]);
+        return;
+      }
+      $('totalSize').textContent = result.recordSize + ' b';
+      $('formatLabel').textContent = 'Format: ' + result.format;
+      $('fieldCount').textContent = result.fields.length;
+      const body = $('fieldsBody');
+      body.innerHTML = '';
+      result.fields.forEach(f => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${f.name}</td><td>${f.type}</td><td>${f.size}</td>`;
+        body.appendChild(tr);
+      });
+      drawChart(result.fields);
+    }
+
+    $('calcBtn').addEventListener('click', estimateRecord);
+  })();
+  </script>
+</body>
+</html>

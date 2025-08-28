@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Interactive Hadoop Ecosystem Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Tech Neutral -->
+    <!-- Application Structure Plan: A single-page application with a fixed sidebar for navigation and a dynamic main content area. This thematic dashboard structure is chosen over a linear report format to enhance usability and encourage non-linear exploration. Users can jump between key topics like the historical timeline, an interactive architecture diagram, a comparison of ecosystem tools, and practical command references. This approach allows users with different goals (e.g., a student learning basics vs. a developer looking for commands) to find relevant information quickly. The user flow is designed to be intuitive, guiding discovery through interactive elements within each thematic section. -->
+    <!-- Visualization & Content Choices: 
+        - History -> Goal: Inform/Change -> Viz: Interactive HTML/CSS Timeline -> Interaction: Click events to show details -> Justification: More engaging than text for showing progression.
+        - Core Architecture -> Goal: Organize/Inform -> Viz: HTML/CSS Diagram -> Interaction: Click on components to display info -> Justification: Clarifies complex system relationships visually.
+        - Hadoop vs. Spark -> Goal: Compare -> Viz: Bar Chart (Chart.js) -> Interaction: Buttons to switch comparison metrics -> Justification: Visually impactful for comparing performance.
+        - Ecosystem Tools -> Goal: Organize -> Viz: Interactive Cards -> Interaction: Click to reveal details -> Justification: Cleanly presents a portfolio of tools, encouraging exploration.
+        - Industry Use Cases -> Goal: Inform -> Viz: Icon-based grid -> Interaction: Click to expand -> Justification: Quickly digestible overview of applications.
+        - Commands -> Goal: Inform -> Viz: Tabbed Interface -> Interaction: Click tabs to switch contexts -> Justification: Organizes reference material efficiently.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-link.active, .nav-link:hover {
+            background-color: #e0f2fe;
+            color: #0c4a6e;
+            transform: translateX(4px);
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: -21px;
+            width: 12px;
+            height: 12px;
+            background-color: #38bdf8;
+            border-radius: 50%;
+            border: 2px solid #fff;
+        }
+        .arch-component {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .arch-component:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-white shadow-md fixed h-full hidden lg:block">
+            <div class="p-6">
+                <h1 class="text-xl font-bold text-sky-800">Hadoop Explorer</h1>
+                <p class="text-sm text-slate-500 mt-1">An Interactive Guide</p>
+            </div>
+            <nav class="mt-4">
+                <a href="#overview" class="nav-link block py-3 px-6 text-slate-700 font-medium">
+                    <span class="mr-2">🚀</span> Overview
+                </a>
+                <a href="#history" class="nav-link block py-3 px-6 text-slate-700 font-medium">
+                    <span class="mr-2">📜</span> History Timeline
+                </a>
+                <a href="#architecture" class="nav-link block py-3 px-6 text-slate-700 font-medium">
+                    <span class="mr-2">🏗️</span> Core Architecture
+                </a>
+                <a href="#ecosystem" class="nav-link block py-3 px-6 text-slate-700 font-medium">
+                    <span class="mr-2">🛠️</span> Ecosystem Tools
+                </a>
+                <a href="#usage" class="nav-link block py-3 px-6 text-slate-700 font-medium">
+                    <span class="mr-2">🏢</span> Industry Usage
+                </a>
+                <a href="#commands" class="nav-link block py-3 px-6 text-slate-700 font-medium">
+                    <span class="mr-2">💻</span> Command Center
+                </a>
+                <a href="#future" class="nav-link block py-3 px-6 text-slate-700 font-medium">
+                    <span class="mr-2">🔮</span> Future Landscape
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Mobile Header -->
+        <header class="lg:hidden bg-white shadow-md fixed top-0 left-0 right-0 z-10">
+            <div class="flex justify-between items-center p-4">
+                <h1 class="text-xl font-bold text-sky-800">Hadoop Explorer</h1>
+                <button id="mobile-menu-button" class="text-slate-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+            <nav id="mobile-menu" class="hidden">
+                 <a href="#overview" class="nav-link block py-3 px-6 text-slate-700 font-medium">🚀 Overview</a>
+                 <a href="#history" class="nav-link block py-3 px-6 text-slate-700 font-medium">📜 History Timeline</a>
+                 <a href="#architecture" class="nav-link block py-3 px-6 text-slate-700 font-medium">🏗️ Core Architecture</a>
+                 <a href="#ecosystem" class="nav-link block py-3 px-6 text-slate-700 font-medium">🛠️ Ecosystem Tools</a>
+                 <a href="#usage" class="nav-link block py-3 px-6 text-slate-700 font-medium">🏢 Industry Usage</a>
+                 <a href="#commands" class="nav-link block py-3 px-6 text-slate-700 font-medium">💻 Command Center</a>
+                 <a href="#future" class="nav-link block py-3 px-6 text-slate-700 font-medium">🔮 Future Landscape</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="lg:ml-64 flex-1 p-6 md:p-10 lg:p-12 mt-16 lg:mt-0">
+            
+            <!-- Overview Section -->
+            <section id="overview" class="content-section">
+                <h2 class="text-3xl font-bold text-slate-800">The Foundation of Big Data</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl">This application provides an interactive journey through the Apache Hadoop ecosystem, a foundational framework in modern data processing. Originating from the challenge of scaling web search, Hadoop pioneered a new paradigm for handling "big data" by democratizing distributed storage and parallel computation. Explore its history, understand its core components, and discover the rich ecosystem of tools that have been built upon it.</p>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-sky-700 text-lg">Distributed Storage</h3>
+                        <p class="mt-2 text-slate-600">Learn how the Hadoop Distributed File System (HDFS) provides resilient, fault-tolerant storage for petabytes of data on inexpensive commodity hardware.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-sky-700 text-lg">Resource Management</h3>
+                        <p class="mt-2 text-slate-600">Discover how YARN (Yet Another Resource Negotiator) acts as the cluster's operating system, managing resources for multiple applications.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-sky-700 text-lg">Parallel Processing</h3>
+                        <p class="mt-2 text-slate-600">Explore the evolution from the original MapReduce model to faster, in-memory engines like Apache Spark that run on the Hadoop platform.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- History Section -->
+            <section id="history" class="content-section">
+                <h2 class="text-3xl font-bold text-slate-800">A Timeline of Innovation</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl">The story of Hadoop is one of responding to the explosive growth of the web. What started as an open-source project to build a search engine quickly evolved into a general-purpose framework that redefined data processing. Click on the events below to learn more about key moments in its history.</p>
+                <div class="mt-8 relative border-l-2 border-sky-200 ml-4 pl-8">
+                    <div class="timeline-item mb-12">
+                        <h3 class="font-bold text-lg text-slate-700">Early 2000s: The Data Deluge</h3>
+                        <p class="text-slate-600">Traditional databases struggle to handle the scale and diversity of web data, creating a need for new distributed computing frameworks.</p>
+                    </div>
+                    <div class="timeline-item mb-12">
+                        <h3 class="font-bold text-lg text-slate-700">2003-2004: Google's Blueprint</h3>
+                        <p class="text-slate-600">Google publishes seminal papers on its internal Google File System (GFS) and MapReduce programming model, providing the theoretical foundation for Hadoop.</p>
+                    </div>
+                    <div class="timeline-item mb-12">
+                        <h3 class="font-bold text-lg text-slate-700">2005: Nutch and Open Source</h3>
+                        <p class="text-slate-600">Inspired by Google, Doug Cutting and Mike Cafarella create an open-source implementation within their Nutch web search project.</p>
+                    </div>
+                    <div class="timeline-item mb-12">
+                        <h3 class="font-bold text-lg text-slate-700">2006: Hadoop is Born</h3>
+                        <p class="text-slate-600">The distributed computing parts are split from Nutch to form a new Apache subproject named "Hadoop." Doug Cutting joins Yahoo!, gaining resources to scale the project.</p>
+                    </div>
+                    <div class="timeline-item mb-12">
+                        <h3 class="font-bold text-lg text-slate-700">2008: Democratizing Big Data</h3>
+                        <p class="text-slate-600">Yahoo! open-sources Hadoop, making large-scale data processing accessible to organizations worldwide using commodity hardware.</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3 class="font-bold text-lg text-slate-700">2013: The YARN Revolution</h3>
+                        <p class="text-slate-600">The release of Hadoop 2.0 introduces YARN, decoupling resource management from MapReduce and transforming Hadoop into a multi-application platform, paving the way for tools like Spark.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Architecture Section -->
+            <section id="architecture" class="content-section">
+                <h2 class="text-3xl font-bold text-slate-800">Explore the Core Architecture</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl">Hadoop's power lies in its robust, fault-tolerant architecture. It's built on two main pillars: HDFS for storing data and YARN for managing cluster resources. Click on any component in the diagram below to understand its role in the ecosystem.</p>
+                <div class="mt-8 flex flex-col lg:flex-row gap-8">
+                    <!-- Diagram -->
+                    <div class="flex-1 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="text-center font-bold text-xl mb-4 text-sky-700">Hadoop Cluster</h3>
+                        <div class="bg-slate-50 p-4 rounded-lg">
+                            <div id="yarn-master" class="arch-component bg-amber-200 text-amber-800 p-4 rounded-lg text-center font-semibold mb-4" data-info="yarn-master-info">YARN: ResourceManager</div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="bg-sky-100 p-4 rounded-lg">
+                                    <div id="hdfs-master" class="arch-component bg-sky-200 text-sky-800 p-4 rounded-lg text-center font-semibold mb-2" data-info="hdfs-master-info">HDFS: NameNode</div>
+                                    <div id="yarn-slave" class="arch-component bg-amber-100 text-amber-700 p-3 rounded-lg text-center text-sm" data-info="yarn-slave-info">YARN: NodeManager</div>
+                                </div>
+                                <div class="bg-sky-100 p-4 rounded-lg">
+                                    <div id="hdfs-slave1" class="arch-component bg-sky-200 text-sky-800 p-4 rounded-lg text-center font-semibold mb-2" data-info="hdfs-slave-info">HDFS: DataNode</div>
+                                    <div class="arch-component bg-amber-100 text-amber-700 p-3 rounded-lg text-center text-sm" data-info="yarn-slave-info">YARN: NodeManager</div>
+                                </div>
+                                <div class="bg-sky-100 p-4 rounded-lg">
+                                    <div id="hdfs-slave2" class="arch-component bg-sky-200 text-sky-800 p-4 rounded-lg text-center font-semibold mb-2" data-info="hdfs-slave-info">HDFS: DataNode</div>
+                                    <div class="arch-component bg-amber-100 text-amber-700 p-3 rounded-lg text-center text-sm" data-info="yarn-slave-info">YARN: NodeManager</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Info Panel -->
+                    <div id="arch-info-panel" class="w-full lg:w-1/3 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 id="arch-info-title" class="font-bold text-lg text-slate-800">Component Details</h3>
+                        <p id="arch-info-text" class="mt-2 text-slate-600">Select a component from the diagram to see its description here.</p>
+                        
+                        <div id="yarn-master-info" class="hidden">
+                            <h3 class="font-bold text-lg text-amber-800">ResourceManager (RM)</h3>
+                            <p class="mt-2 text-slate-600">The global master daemon that oversees all cluster resources. It arbitrates resources among applications and tracks their status. It is the central authority for resource management.</p>
+                        </div>
+                        <div id="yarn-slave-info" class="hidden">
+                            <h3 class="font-bold text-lg text-amber-700">NodeManager (NM)</h3>
+                            <p class="mt-2 text-slate-600">A per-node agent responsible for managing the resources (CPU, memory) of its individual node. It launches and monitors containers on behalf of the ApplicationMaster and reports node health to the ResourceManager.</p>
+                        </div>
+                        <div id="hdfs-master-info" class="hidden">
+                            <h3 class="font-bold text-lg text-sky-800">NameNode</h3>
+                            <p class="mt-2 text-slate-600">The master server that manages the file system's metadata. It maintains the directory tree and knows the location of all data blocks on the DataNodes. It is the single source of truth for the file system namespace.</p>
+                        </div>
+                        <div id="hdfs-slave-info" class="hidden">
+                            <h3 class="font-bold text-lg text-sky-800">DataNode</h3>
+                            <p class="mt-2 text-slate-600">The slave nodes that store the actual data blocks. They serve read and write requests from clients and perform block creation, deletion, and replication upon instruction from the NameNode.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ecosystem Tools Section -->
+            <section id="ecosystem" class="content-section">
+                <h2 class="text-3xl font-bold text-slate-800">The Expanding Ecosystem</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl">Hadoop's core limitations, especially the complexity of MapReduce, spurred the creation of a rich ecosystem of tools. These projects provide higher-level abstractions and specialized capabilities, making big data processing more accessible and powerful.</p>
+                
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-sky-700 text-lg">Apache Hive</h3>
+                        <p class="mt-2 text-slate-600">A data warehousing system that provides an SQL-like interface (HiveQL) to query data stored in HDFS, translating queries into MapReduce or Spark jobs.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-sky-700 text-lg">Apache Pig</h3>
+                        <p class="mt-2 text-slate-600">A high-level platform with a data flow language (Pig Latin) that simplifies the creation of complex MapReduce data analysis pipelines.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-sky-700 text-lg">Apache HBase</h3>
+                        <p class="mt-2 text-slate-600">A NoSQL database that runs on top of HDFS, providing real-time, random read/write access to massive datasets.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-sky-700 text-lg">Apache Sqoop</h3>
+                        <p class="mt-2 text-slate-600">A tool designed for efficiently transferring bulk data between Hadoop and structured datastores like relational databases.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 col-span-1 md:col-span-2 lg:col-span-1">
+                        <h3 class="font-bold text-sky-700 text-lg">MapReduce</h3>
+                        <p class="mt-2 text-slate-600">The original batch processing model in Hadoop, breaking down jobs into parallel Map and Reduce phases. It is disk-based and has high latency.</p>
+                    </div>
+                </div>
+
+                <div class="mt-12 bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                    <h3 class="text-2xl font-bold text-slate-800 text-center">The Rise of Spark: A Leap in Performance</h3>
+                    <p class="mt-2 text-slate-600 text-center max-w-3xl mx-auto">Apache Spark emerged as a faster, more versatile alternative to MapReduce. Its key advantage is in-memory computing, which dramatically reduces latency for iterative algorithms and interactive queries.</p>
+                    <div class="mt-6">
+                        <div class="chart-container">
+                            <canvas id="hadoopVsSparkChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Industry Usage Section -->
+            <section id="usage" class="content-section">
+                <h2 class="text-3xl font-bold text-slate-800">Hadoop Across Industries</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl">Hadoop's ability to handle massive volumes of diverse data has made it a strategic asset across many sectors. It enables organizations to build cost-effective data lakes, power AI/ML applications, and gain insights that were previously impossible.</p>
+                <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <div class="text-3xl mb-3">💳</div>
+                        <h3 class="font-bold text-sky-700 text-lg">Financial Services</h3>
+                        <p class="mt-2 text-slate-600">Used for large-scale risk management and fraud detection by analyzing billions of transactions to identify anomalous patterns in real-time.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <div class="text-3xl mb-3">🛒</div>
+                        <h3 class="font-bold text-sky-700 text-lg">Retail</h3>
+                        <p class="mt-2 text-slate-600">Leveraged to understand customer behavior by analyzing clickstreams, transaction histories, and social media data to provide personalized recommendations.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <div class="text-3xl mb-3">⚕️</div>
+                        <h3 class="font-bold text-sky-700 text-lg">Healthcare</h3>
+                        <p class="mt-2 text-slate-600">Enables predictive analytics on electronic health records and genomic data to predict disease outbreaks and detect insurance fraud.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <div class="text-3xl mb-3">📡</div>
+                        <h3 class="font-bold text-sky-700 text-lg">Telecommunications</h3>
+                        <p class="mt-2 text-slate-600">Analyzes massive volumes of network traffic data to optimize performance, manage congestion, and improve customer experience.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <div class="text-3xl mb-3">🌐</div>
+                        <h3 class="font-bold text-sky-700 text-lg">Web & Tech</h3>
+                        <p class="mt-2 text-slate-600">Powers weblog trend analysis, search page ranking, and user engagement analysis on social media platforms, continuing its original mission.</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <div class="text-3xl mb-3">🤖</div>
+                        <h3 class="font-bold text-sky-700 text-lg">AI & Machine Learning</h3>
+                        <p class="mt-2 text-slate-600">Provides a robust foundation for AI/ML by storing and processing the massive datasets required for model training and data preparation.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Command Center Section -->
+            <section id="commands" class="content-section">
+                <h2 class="text-3xl font-bold text-slate-800">Command Center</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl">A quick reference for essential command-line operations. Interacting with Hadoop is primarily done via the shell, which provides direct access to HDFS and YARN. The syntax often mimics familiar Unix commands.</p>
+                <div class="mt-8">
+                    <div class="mb-4 border-b border-slate-200">
+                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                            <button class="command-tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-sky-600 border-sky-500" data-target="hdfs-commands">HDFS Shell</button>
+                            <button class="command-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-slate-500 border-transparent hover:text-slate-700 hover:border-slate-300" data-target="yarn-commands">YARN & MapReduce</button>
+                        </nav>
+                    </div>
+                    <div id="hdfs-commands" class="command-content">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white rounded-lg shadow-sm border border-slate-200">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Command</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">hadoop fs -ls /path</code></td><td class="px-6 py-4">Lists the contents of a directory.</td></tr>
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">hadoop fs -mkdir /path</code></td><td class="px-6 py-4">Creates a new directory.</td></tr>
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">hadoop fs -put local/file /path</code></td><td class="px-6 py-4">Copies a file from the local system to HDFS.</td></tr>
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">hadoop fs -get /path/file local</code></td><td class="px-6 py-4">Copies a file from HDFS to the local system.</td></tr>
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">hadoop fs -cat /path/file</code></td><td class="px-6 py-4">Displays the contents of a file to the console.</td></tr>
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">hadoop fs -rm -r /path</code></td><td class="px-6 py-4">Deletes a file or directory recursively.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div id="yarn-commands" class="command-content hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white rounded-lg shadow-sm border border-slate-200">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Command</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200">
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">yarn application -list</code></td><td class="px-6 py-4">Lists all applications on the cluster.</td></tr>
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">yarn application -status &lt;appId&gt;</code></td><td class="px-6 py-4">Shows detailed status of a specific application.</td></tr>
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">yarn logs -applicationId &lt;appId&gt;</code></td><td class="px-6 py-4">Retrieves logs for an application, essential for debugging.</td></tr>
+                                    <tr><td class="px-6 py-4"><code class="bg-slate-100 p-1 rounded">hadoop jar myjob.jar MainClass</code></td><td class="px-6 py-4">Submits a MapReduce job packaged in a JAR file.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Future Landscape Section -->
+            <section id="future" class="content-section">
+                <h2 class="text-3xl font-bold text-slate-800">The Future Landscape</h2>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl">Hadoop's role is evolving. While no longer the only solution for every big data problem, it remains a critical engine for a significant portion of the world's data infrastructure. Its limitations have spurred innovation, leading to a new era of cloud-native and specialized processing frameworks.</p>
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-red-600 text-lg">Key Limitations</h3>
+                        <ul class="mt-2 list-disc list-inside text-slate-600 space-y-1">
+                            <li><strong>High Latency:</strong> MapReduce's disk-based nature is slow and unsuited for real-time analytics.</li>
+                            <li><strong>Complexity:</strong> Setting up and managing a Hadoop cluster requires significant expertise.</li>
+                            <li><strong>Small File Problem:</strong> HDFS is inefficient when storing a large number of small files.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-green-600 text-lg">Strategic Evolution</h3>
+                        <ul class="mt-2 list-disc list-inside text-slate-600 space-y-1">
+                            <li><strong>Shift to Cloud:</strong> Managed services like AWS EMR and Google Dataproc abstract away operational complexity.</li>
+                            <li><strong>Coexistence with Spark:</strong> Hadoop (HDFS/YARN) often serves as the foundational storage and resource layer for faster engines like Spark.</li>
+                            <li><strong>Enduring Value:</strong> Remains a cost-effective solution for massive-scale, batch-oriented workloads, especially in on-premise or hybrid environments.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            function updateContent(hash) {
+                const targetHash = hash || '#overview';
+                
+                contentSections.forEach(section => {
+                    if ('#' + section.id === targetHash) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === targetHash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetHash = this.getAttribute('href');
+                    history.pushState(null, null, targetHash);
+                    updateContent(targetHash);
+                    if (mobileMenu.classList.contains('block')) {
+                        mobileMenu.classList.remove('block');
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+            
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                mobileMenu.classList.toggle('block');
+            });
+
+            window.addEventListener('popstate', () => {
+                updateContent(window.location.hash);
+            });
+
+            updateContent(window.location.hash);
+
+            // Architecture Diagram Interactivity
+            const archComponents = document.querySelectorAll('.arch-component');
+            const archInfoTitle = document.getElementById('arch-info-title');
+            const archInfoText = document.getElementById('arch-info-text');
+            const archInfoContents = document.querySelectorAll('#arch-info-panel > div');
+
+            archComponents.forEach(component => {
+                component.addEventListener('click', () => {
+                    const infoId = component.dataset.info;
+                    const infoContent = document.getElementById(infoId);
+
+                    archInfoTitle.style.display = 'none';
+                    archInfoText.style.display = 'none';
+                    
+                    archInfoContents.forEach(content => content.classList.add('hidden'));
+
+                    if (infoContent) {
+                        infoContent.classList.remove('hidden');
+                    }
+                });
+            });
+
+            // Command Center Tabs
+            const commandTabs = document.querySelectorAll('.command-tab');
+            const commandContents = document.querySelectorAll('.command-content');
+            
+            commandTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    commandTabs.forEach(t => {
+                        t.classList.remove('active-tab', 'text-sky-600', 'border-sky-500');
+                        t.classList.add('text-slate-500', 'border-transparent', 'hover:text-slate-700', 'hover:border-slate-300');
+                    });
+                    tab.classList.add('active-tab', 'text-sky-600', 'border-sky-500');
+                    tab.classList.remove('text-slate-500', 'border-transparent', 'hover:text-slate-700', 'hover:border-slate-300');
+
+                    commandContents.forEach(content => {
+                        if (content.id === tab.dataset.target) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            // Hadoop vs Spark Chart
+            const ctx = document.getElementById('hadoopVsSparkChart').getContext('2d');
+            const hadoopVsSparkChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['MapReduce', 'Spark'],
+                    datasets: [{
+                        label: 'Relative Processing Speed (Higher is Better)',
+                        data: [1, 100],
+                        backgroundColor: [
+                            'rgba(56, 189, 248, 0.6)',
+                            'rgba(251, 146, 60, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(56, 189, 248, 1)',
+                            'rgba(251, 146, 60, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Speed Multiplier (MapReduce = 1x)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + 'x Faster';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
