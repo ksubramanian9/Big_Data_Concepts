@@ -190,6 +190,16 @@
           </div>
         </details>
 
+        <details>
+          <summary>Cloud Costs (INR/month)</summary>
+          <div class="content" style="padding-top:12px;">
+            <div class="row"><label>Cloud cost per DataNode (₹/mo)</label><input id="cloudCostDataNode" type="number" min="0" step="500" value="40000"/></div>
+            <div class="row"><label>Cloud cost per Master (NN/RM) (₹/mo)</label><input id="cloudCostMaster" type="number" min="0" step="500" value="45000"/></div>
+            <div class="row"><label>Cloud cost per ZooKeeper (₹/mo)</label><input id="cloudCostZK" type="number" min="0" step="500" value="15000"/></div>
+            <div class="row"><label>Cloud cost per Edge/Gateway (₹/mo)</label><input id="cloudCostEdge" type="number" min="0" step="500" value="30000"/></div>
+          </div>
+        </details>
+
         <div class="content" style="padding-top:6px;">
           <div class="buttons">
             <button id="recalcBtn">Recalculate</button>
@@ -211,6 +221,7 @@
           <div class="card small"><h3>Masters & Services</h3><div class="metric" id="mMasters">—</div><div class="muted" id="mMastersDetail"></div></div>
           <div class="card small"><h3>CapEx (approx)</h3><div class="metric" id="mCapex">—</div><div class="muted" id="mCapexDetail"></div></div>
           <div class="card small"><h3>Monthly OpEx (approx)</h3><div class="metric" id="mOpex">—</div><div class="muted" id="mOpexDetail"></div></div>
+          <div class="card small"><h3>Cloud Monthly (approx)</h3><div class="metric" id="mCloud">—</div><div class="muted" id="mCloudDetail"></div></div>
         </div>
 
         <div class="viz-wrapper">
@@ -243,6 +254,7 @@
               <li><b>Final DataNodes:</b> max(storage‑driven, compute‑driven).</li>
               <li><b>CapEx (₹):</b> DataNodes×costDN + (NN+RM)×costMaster + ZK×costZK + Edge×costEdge.</li>
               <li><b>Monthly OpEx (₹):</b> (DataNodes + NN + RM + ZK + Edge) × opexPerNode.</li>
+              <li><b>Cloud Monthly (₹):</b> DataNodes×cloudCostDN + (NN+RM)×cloudCostMaster + ZK×cloudCostZK + Edge×cloudCostEdge.</li>
               <li>Prices are placeholders. Adjust to your vendor quotes. Formatting uses Indian comma grouping (en‑IN).</li>
             </ul>
           </div>
@@ -293,6 +305,11 @@
     costZK: 80000,
     costEdge: 150000,
     opexPerNode: 5000,
+
+    cloudCostDataNode: 40000,
+    cloudCostMaster: 45000,
+    cloudCostZK: 15000,
+    cloudCostEdge: 30000,
 
     // starter data model rows
     model: [
@@ -347,6 +364,11 @@
     $("costEdge").value = c.costEdge;
     $("opexPerNode").value = c.opexPerNode;
 
+    $("cloudCostDataNode").value = c.cloudCostDataNode;
+    $("cloudCostMaster").value = c.cloudCostMaster;
+    $("cloudCostZK").value = c.cloudCostZK;
+    $("cloudCostEdge").value = c.cloudCostEdge;
+
     $("useModel").checked = !!c.useModel;
 
     // table
@@ -385,7 +407,12 @@
       costMaster: getN('costMaster'),
       costZK: getN('costZK'),
       costEdge: getN('costEdge'),
-      opexPerNode: getN('opexPerNode')
+      opexPerNode: getN('opexPerNode'),
+
+      cloudCostDataNode: getN('cloudCostDataNode'),
+      cloudCostMaster: getN('cloudCostMaster'),
+      cloudCostZK: getN('cloudCostZK'),
+      cloudCostEdge: getN('cloudCostEdge')
     };
     state.cfg = cfg;
     return cfg;
@@ -485,7 +512,8 @@
     const capex = (counts.dataNodes * cfg.costDataNode) + (mastersTotal * cfg.costMaster) + (counts.zk * cfg.costZK) + (counts.edge * cfg.costEdge);
     const totalNodes = counts.dataNodes + mastersTotal + counts.zk + counts.edge;
     const opex = totalNodes * cfg.opexPerNode;
-    return { capex, opex, totalNodes, mastersTotal };
+    const cloud = (counts.dataNodes * cfg.cloudCostDataNode) + (mastersTotal * cfg.cloudCostMaster) + (counts.zk * cfg.cloudCostZK) + (counts.edge * cfg.cloudCostEdge);
+    return { capex, opex, cloud, totalNodes, mastersTotal };
   }
 
   function calculate(){
@@ -522,6 +550,9 @@
 
     $("mOpex").textContent = formatINR(costs.opex) + ' / month';
     $("mOpexDetail").textContent = `${costs.totalNodes} nodes × ${formatINR(state.cfg.opexPerNode)}/mo`;
+
+    $("mCloud").textContent = formatINR(costs.cloud) + ' / month';
+    $("mCloudDetail").textContent = `DN×${formatINR(state.cfg.cloudCostDataNode)} + (NN+RM)×${formatINR(state.cfg.cloudCostMaster)} + ZK×${formatINR(state.cfg.cloudCostZK)} + Edge×${formatINR(state.cfg.cloudCostEdge)}`;
   }
 
   // ---------- SVG rendering ----------
@@ -606,7 +637,7 @@
   function resetDefaults(){ loadInputs(defaults()); $("presets").value = 'custom'; calculate(); }
 
   function hookInputs(){
-    ['dailyIngest','retentionDays','compression','replication','etlOverhead','headroom','procWindow','complexity','efficiency','nodeStorageTB','nodeVCores','nodeMemGB','nodesPerRack','haNN','haRM','zkCount','edgeCount','costDataNode','costMaster','costZK','costEdge','opexPerNode'].forEach(id => $(id).addEventListener('input', calculate));
+    ['dailyIngest','retentionDays','compression','replication','etlOverhead','headroom','procWindow','complexity','efficiency','nodeStorageTB','nodeVCores','nodeMemGB','nodesPerRack','haNN','haRM','zkCount','edgeCount','costDataNode','costMaster','costZK','costEdge','opexPerNode','cloudCostDataNode','cloudCostMaster','cloudCostZK','cloudCostEdge'].forEach(id => $(id).addEventListener('input', calculate));
     $("useModel").addEventListener('change', ()=>{ updateDailyIngestFromModel(); calculate(); });
     $("recalcBtn").addEventListener('click', calculate);
     $("saveBtn").addEventListener('click', saveInputs);
