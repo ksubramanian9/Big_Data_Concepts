@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide to Apache Cassandra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Slate & Sky -->
+    <!-- Application Structure Plan: A single-page application with a fixed horizontal navigation bar at the top. This structure allows the user to scroll through a long-form document while providing persistent access to the major sections. This design is highly intuitive for web users and provides a clear mental model of the content's organization. Key interactions remain the same: an interactive architecture diagram, an animated read/write path simulation, and a dynamic database comparison chart, all designed to make complex, technical information more accessible and engaging on a single page. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Core Features -> Goal: Inform -> Viz/Method: Interactive Cards (HTML/Tailwind) -> Interaction: Hover to reveal details -> Justification: Provides a quick, high-level summary.
+        - Report Info: Ring Architecture -> Goal: Organize/Explain -> Viz/Method: Interactive Diagram (HTML/Tailwind divs) -> Interaction: Click on a component (e.g., Node, Partitioner) to display its definition -> Justification: Visually simplifies a complex, foundational concept.
+        - Report Info: Read/Write Process -> Goal: Explain Process -> Viz/Method: Step-by-step animated diagram (JS-controlled CSS classes) -> Interaction: Buttons to trigger write/read simulation steps -> Justification: Clarifies dynamic processes that are hard to grasp from static text.
+        - Report Info: Database Comparisons -> Goal: Compare -> Viz/Method: Radar Chart (Chart.js Canvas) -> Interaction: Dropdown to select a database, dynamically updating the chart and text -> Justification: Offers a direct, data-driven visual comparison of strengths.
+        - Report Info: Use Cases -> Goal: Inform/Organize -> Viz/Method: Filterable Card Gallery (HTML/JS) -> Interaction: Category buttons filter the displayed cards -> Justification: Allows users to explore real-world applications relevant to their interests. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .nav-link {
+            transition: all 0.2s ease-in-out;
+            position: relative;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 3px;
+            left: 50%;
+            bottom: -5px;
+            transform: translateX(-50%);
+            background-color: #0ea5e9;
+            transition: width 0.3s ease-in-out;
+        }
+        .nav-link:hover::after, .nav-link.active::after {
+            width: 100%;
+        }
+        .diagram-node {
+            transition: all 0.3s ease-in-out;
+        }
+        .path-step {
+            opacity: 0.3;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .path-step.active {
+            opacity: 1;
+        }
+        .content-section {
+            min-height: calc(100vh - 80px); /* Adjust for header height */
+            padding-top: 80px;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="bg-slate-800 text-slate-100 p-4 fixed top-0 left-0 right-0 z-50 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#overview" class="text-2xl font-bold text-sky-400">Cassandra Guide</a>
+            <nav id="top-nav" class="hidden md:flex space-x-6">
+            </nav>
+            <button id="mobile-menu-btn" class="md:hidden text-sky-400 text-2xl">☰</button>
+        </div>
+        <nav id="mobile-nav" class="hidden md:hidden absolute top-full left-0 right-0 bg-slate-800 shadow-md flex flex-col items-center py-4 space-y-2">
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 md:p-10 mt-16">
+        
+        <section id="overview" class="content-section">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">What is Apache Cassandra?</h2>
+            <p class="text-lg text-slate-600 mb-8">This guide provides an interactive exploration of Apache Cassandra, a free and open-source, distributed, wide-column store, NoSQL database management system. It is designed to handle large amounts of data across many commodity servers, providing high availability with no single point of failure. This application breaks down its core concepts, architecture, and use cases into digestible, interactive modules.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Decentralized by Design</h3>
+                    <p class="text-slate-600">Every node in the cluster is identical. There are no master nodes, meaning there is no single point of failure. This peer-to-peer architecture simplifies operations and enhances fault tolerance.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Linear Scalability</h3>
+                    <p class="text-slate-600">Cassandra scales horizontally by adding more machines to the cluster. This allows for predictable increases in performance and capacity as your data grows, without downtime.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">High Availability & Fault Tolerance</h3>
+                    <p class="text-slate-600">Data is replicated to multiple nodes across the cluster (and even data centers). If a node fails, data can still be served from its replicas, ensuring continuous uptime for applications.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Tunable Consistency</h3>
+                    <p class="text-slate-600">You can control the consistency level for each read or write operation, balancing between data accuracy and performance based on your application's specific requirements.</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Wide-Column Store Model</h3>
+                    <p class="text-slate-600">Cassandra's data model is more flexible than traditional relational databases. It organizes data into tables with rows and a variable set of columns, ideal for handling sparse data and evolving schemas.</p>
+                </div>
+                 <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl hover:-translate-y-1 transition-all">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Cassandra Query Language (CQL)</h3>
+                    <p class="text-slate-600">Provides a familiar, SQL-like interface for interacting with the database, making the transition easier for developers accustomed to relational databases.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="content-section">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Interactive Ring Architecture</h2>
+            <p class="text-lg text-slate-600 mb-8">Cassandra organizes nodes in a cluster into a "ring". There is no master node; all nodes are peers. Click on the different components of the architecture diagram below to learn about their roles in the system. This visual representation helps clarify how Cassandra achieves its scalability and fault tolerance.</p>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <div class="flex-1 min-w-0">
+                        <div class="relative w-full max-w-lg mx-auto aspect-square rounded-full border-4 border-dashed border-slate-300 flex items-center justify-center">
+                            <span class="text-slate-400 font-bold">Cluster Ring</span>
+                            <div class="diagram-node absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-sky-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-sky-600" data-component="node">Node</div>
+                            <div class="diagram-node absolute top-1/4 right-0 translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-sky-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-sky-600" data-component="node">Node</div>
+                            <div class="diagram-node absolute bottom-1/4 right-0 translate-x-1/2 translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-sky-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-sky-600" data-component="node">Node</div>
+                            <div class="diagram-node absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-sky-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-sky-600" data-component="node">Node</div>
+                            <div class="diagram-node absolute bottom-1/4 left-0 -translate-x-1/2 translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-sky-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-sky-600" data-component="node">Node</div>
+                            <div class="diagram-node absolute top-1/4 left-0 -translate-x-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-sky-500 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-sky-600" data-component="node">Node</div>
+
+                            <div class="absolute w-48 h-32 md:w-64 md:h-40 bg-slate-100 border-2 border-slate-300 rounded-lg p-3 text-center flex flex-col items-center justify-center shadow-inner">
+                                <div class="diagram-node w-full p-2 mb-2 bg-slate-600 text-white rounded cursor-pointer hover:bg-slate-700" data-component="partitioner">Partitioner</div>
+                                <div class="diagram-node w-full p-2 mb-2 bg-slate-600 text-white rounded cursor-pointer hover:bg-slate-700" data-component="gossip">Gossip Protocol</div>
+                                <div class="diagram-node w-full p-2 bg-slate-600 text-white rounded cursor-pointer hover:bg-slate-700" data-component="snitch">Snitch</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="component-details" class="lg:w-1/3 bg-slate-100 p-6 rounded-lg">
+                        <h3 id="details-title" class="text-2xl font-bold text-slate-800 mb-3">Select a component</h3>
+                        <p id="details-text" class="text-slate-600">Click on any of the blue 'Node' circles or the gray components in the center to learn about their function within the Cassandra cluster.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="read-write" class="content-section">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Visualizing the Read/Write Path</h2>
+            <p class="text-lg text-slate-600 mb-8">Understanding how Cassandra handles read and write requests is key to appreciating its performance and durability. This interactive simulation walks you through the steps of each process. Use the buttons to simulate a write or a read operation and watch the data flow through the system's components.</p>
+            <div class="flex justify-center space-x-4 mb-8">
+                <button id="simulate-write" class="bg-sky-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-sky-700 transition-colors">Simulate Write Path</button>
+                <button id="simulate-read" class="bg-slate-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-700 transition-colors">Simulate Read Path</button>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-start relative">
+                    <div class="path-step flex flex-col items-center text-center p-3" data-step="client">
+                        <div class="text-5xl mb-2">💻</div>
+                        <h4 class="font-bold">1. Client</h4>
+                        <p class="text-sm text-slate-500">Sends request</p>
+                    </div>
+                    <div class="path-step flex flex-col items-center text-center p-3" data-step="coordinator">
+                        <div class="text-5xl mb-2">📍</div>
+                        <h4 class="font-bold">2. Coordinator Node</h4>
+                        <p class="text-sm text-slate-500">Receives request</p>
+                    </div>
+                    <div class="path-step flex flex-col items-center text-center p-3" data-step="memtable">
+                        <div class="text-5xl mb-2">📝</div>
+                        <h4 class="font-bold">3. Memtable</h4>
+                        <p class="text-sm text-slate-500">Writes to memory</p>
+                    </div>
+                    <div class="path-step flex flex-col items-center text-center p-3" data-step="commitlog">
+                        <div class="text-5xl mb-2">💾</div>
+                        <h4 class="font-bold">4. Commit Log</h4>
+                        <p class="text-sm text-slate-500">Appends to disk</p>
+                    </div>
+                    <div class="path-step flex flex-col items-center text-center p-3" data-step="sstable">
+                        <div class="text-5xl mb-2">🗄️</div>
+                        <h4 class="font-bold">5. SSTable</h4>
+                        <p class="text-sm text-slate-500">Flushed to disk</p>
+                    </div>
+                    <div class="path-step hidden flex-col items-center text-center p-3" data-step="bloom">
+                        <div class="text-5xl mb-2">🔍</div>
+                        <h4 class="font-bold">3. Bloom Filter</h4>
+                        <p class="text-sm text-slate-500">Checks for data existence</p>
+                    </div>
+                     <div class="path-step hidden flex-col items-center text-center p-3" data-step="cache">
+                        <div class="text-5xl mb-2">⚡️</div>
+                        <h4 class="font-bold">4. Key/Row Cache</h4>
+                        <p class="text-sm text-slate-500">Checks memory cache</p>
+                    </div>
+                </div>
+                <div id="path-explanation" class="mt-6 bg-slate-100 p-6 rounded-lg min-h-[100px]">
+                    <p class="text-slate-700 text-center">Click a simulation button to begin.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="data-management" class="content-section">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Data Definition and Management (CQL)</h2>
+            <p class="text-lg text-slate-600 mb-8">
+                Cassandra Query Language (CQL) provides a familiar, SQL-like syntax for defining and manipulating data. This section covers the fundamental DDL (Data Definition Language) and DML (Data Manipulation Language) commands you'll use to interact with your data in Cassandra.
+            </p>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-2xl font-bold text-sky-600 mb-4">DDL: Data Definition Language</h3>
+                <p class="text-slate-600 mb-4">
+                    DDL commands are used to define the schema of your database, including keyspaces (like schemas in SQL) and tables.
+                </p>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">1. CREATE KEYSPACE</h4>
+                        <p class="text-slate-500">Defines a keyspace, which is a top-level container for tables. It specifies the replication strategy and replication factor.</p>
+                        <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg overflow-x-auto"><code class="language-cql">CREATE KEYSPACE IF NOT EXISTS my_app WITH replication = {'class': 'SimpleStrategy', 'replication_factor': '3'};</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">2. CREATE TABLE</h4>
+                        <p class="text-slate-500">Creates a table within a keyspace. You must define a primary key, which is critical for distributing data across the cluster.</p>
+                        <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg overflow-x-auto"><code class="language-cql">CREATE TABLE IF NOT EXISTS my_app.users (
+    user_id UUID,
+    username TEXT,
+    email TEXT,
+    created_at TIMESTAMP,
+    PRIMARY KEY (user_id)
+);</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">3. ALTER TABLE</h4>
+                        <p class="text-slate-500">Modifies the schema of an existing table, for example, to add a new column.</p>
+                        <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg overflow-x-auto"><code class="language-cql">ALTER TABLE my_app.users ADD last_login_date TIMESTAMP;</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">4. DROP TABLE</h4>
+                        <p class="text-slate-500">Deletes an entire table and all of its data.</p>
+                        <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg overflow-x-auto"><code class="language-cql">DROP TABLE my_app.users;</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-2xl font-bold text-sky-600 mb-4">DML: Data Manipulation Language</h3>
+                <p class="text-slate-600 mb-4">
+                    DML commands are used to interact with the data stored in your tables.
+                </p>
+                <div class="space-y-6">
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">1. INSERT</h4>
+                        <p class="text-slate-500">Adds new data to a table. Note that in Cassandra, `INSERT` is an "upsert" operation—if the data already exists, it will be updated.</p>
+                        <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg overflow-x-auto"><code class="language-cql">INSERT INTO my_app.users (user_id, username, email, created_at)
+VALUES (uuid(), 'janedoe', 'jane@example.com', toTimestamp(now()));</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">2. SELECT</h4>
+                        <p class="text-slate-500">Retrieves data from a table. Queries must always include the partition key in the `WHERE` clause for efficient data retrieval.</p>
+                        <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg overflow-x-auto"><code class="language-cql">SELECT username, email FROM my_app.users
+WHERE user_id = e29b3506-6966-41f2-9844-42b719463990;</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">3. UPDATE</h4>
+                        <p class="text-slate-500">Modifies existing data in a table. It also requires the full primary key in the `WHERE` clause.</p>
+                        <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg overflow-x-auto"><code class="language-cql">UPDATE my_app.users SET email = 'jane.doe@example.com'
+WHERE user_id = e29b3506-6966-41f2-9844-42b719463990;</code></pre>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-2">4. DELETE</h4>
+                        <p class="text-slate-500">Removes data from a table. You can delete entire rows or specific columns.</p>
+                        <pre class="bg-slate-800 text-slate-200 p-4 rounded-lg overflow-x-auto"><code class="language-cql">DELETE FROM my_app.users
+WHERE user_id = e29b3506-6966-41f2-9844-42b719463990;</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section id="usecases" class="content-section">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Real-World Applications</h2>
+            <p class="text-lg text-slate-600 mb-8">Cassandra's unique architecture makes it an ideal choice for a variety of modern, data-intensive applications. Its ability to handle massive write volumes and maintain availability is critical for many industries. Explore the use cases below to see where Cassandra shines. Use the filters to narrow down by category.</p>
+            <div id="usecase-filters" class="flex flex-wrap justify-center gap-2 mb-8">
+                <button class="usecase-filter-btn active bg-sky-600 text-white font-semibold py-2 px-4 rounded-full" data-filter="all">All</button>
+                <button class="usecase-filter-btn bg-white text-slate-700 font-semibold py-2 px-4 rounded-full border border-slate-300" data-filter="iot">IoT & Time Series</button>
+                <button class="usecase-filter-btn bg-white text-slate-700 font-semibold py-2 px-4 rounded-full border border-slate-300" data-filter="messaging">Messaging</button>
+                <button class="usecase-filter-btn bg-white text-slate-700 font-semibold py-2 px-4 rounded-full border border-slate-300" data-filter="personalization">Personalization</button>
+                <button class="usecase-filter-btn bg-white text-slate-700 font-semibold py-2 px-4 rounded-full border border-slate-300" data-filter="social">Social Media</button>
+            </div>
+            <div id="usecase-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="usecase-card bg-white p-6 rounded-lg shadow-md" data-category="iot">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">IoT Data Collection</h3>
+                    <p class="text-slate-600">Handles massive, continuous streams of data from sensors and devices. Its high write throughput and linear scalability are perfect for ingesting time-series data without data loss.</p>
+                </div>
+                <div class="usecase-card bg-white p-6 rounded-lg shadow-md" data-category="messaging">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Messaging Platforms</h3>
+                    <p class="text-slate-600">Powers applications like chat and email where messages must be reliably stored and retrieved in chronological order. High availability ensures users can always access their messages.</p>
+                </div>
+                <div class="usecase-card bg-white p-6 rounded-lg shadow-md" data-category="personalization">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Recommendation Engines</h3>
+                    <p class="text-slate-600">Stores user profiles, product catalogs, and interaction data. Its fast read performance allows for real-time recommendations and personalized user experiences at scale.</p>
+                </div>
+                <div class="usecase-card bg-white p-6 rounded-lg shadow-md" data-category="social">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Social Media Feeds</h3>
+                    <p class="text-slate-600">Manages user activity feeds, posts, and social graphs. Its data model is flexible enough to handle diverse content types, and its write performance easily supports high user engagement.</p>
+                </div>
+                 <div class="usecase-card bg-white p-6 rounded-lg shadow-md" data-category="iot">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">Fraud Detection Systems</h3>
+                    <p class="text-slate-600">Processes and analyzes large volumes of transactional data in near real-time to identify suspicious patterns. The ability to quickly write and read data is crucial for timely fraud prevention.</p>
+                </div>
+                 <div class="usecase-card bg-white p-6 rounded-lg shadow-md" data-category="personalization">
+                    <h3 class="text-xl font-bold text-sky-600 mb-2">E-commerce Catalogs</h3>
+                    <p class="text-slate-600">Manages large, frequently updated product catalogs and user shopping carts. High availability is critical to ensure a seamless shopping experience and prevent lost sales during node failures.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="comparison" class="content-section">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Cassandra vs. Other Databases</h2>
+            <p class="text-lg text-slate-600 mb-8">Choosing the right database depends on the specific needs of your application. Cassandra excels in certain areas but may not be the best fit for others. This comparison tool helps you visualize the strengths and weaknesses of Cassandra relative to other popular NoSQL databases. Select a database from the dropdown to compare.</p>
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <div class="flex flex-col lg:flex-row gap-8 items-center">
+                    <div class="w-full lg:w-1/2">
+                        <div class="chart-container">
+                            <canvas id="comparison-chart"></canvas>
+                        </div>
+                    </div>
+                    <div id="comparison-text" class="w-full lg:w-1/2">
+                        <h3 id="comparison-title" class="text-2xl font-bold text-slate-800 mb-3"></h3>
+                        <p id="comparison-desc" class="text-slate-600"></p>
+                    </div>
+                </div>
+                <div class="text-center mt-6">
+                    <label for="db-select" class="mr-2 font-semibold">Compare with:</label>
+                    <select id="db-select" class="p-2 border border-slate-300 rounded-md">
+                        <option value="mongodb">MongoDB</option>
+                        <option value="hbase">HBase</option>
+                        <option value="redis">Redis</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const appData = {
+            sections: [
+                { id: 'overview', title: 'Overview' },
+                { id: 'architecture', title: 'Architecture Deep Dive' },
+                { id: 'read-write', title: 'Read/Write Path' },
+                { id: 'data-management', title: 'Data Management' },
+                { id: 'usecases', title: 'Use Cases Gallery' },
+                { id: 'comparison', title: 'Database Showdown' },
+            ],
+            architectureDetails: {
+                node: {
+                    title: "Node",
+                    text: "A node is a single server or machine where Cassandra is installed. It's the basic unit of a Cassandra cluster. All nodes in a cluster are equal; there is no master node, which eliminates a single point of failure."
+                },
+                partitioner: {
+                    title: "Partitioner",
+                    text: "The partitioner is a hash function that determines how data is distributed across the nodes in the cluster. It takes a row's primary key and computes a token, which dictates which node is responsible for storing that row."
+                },
+                gossip: {
+                    title: "Gossip Protocol",
+                    text: "Gossip is a peer-to-peer communication protocol used by nodes to exchange state information about themselves and other nodes in the cluster. This is how nodes discover each other's status, ensuring the cluster remains synchronized."
+                },
+                snitch: {
+                    title: "Snitch",
+                    text: "A snitch defines the network topology of the cluster. It determines which nodes are in which data centers and racks. This information is crucial for routing requests efficiently and distributing replicas intelligently to ensure high availability."
+                }
+            },
+            pathExplanations: {
+                write: [
+                    "The client sends a write request to any node in the cluster, which acts as the coordinator.",
+                    "The coordinator determines which replica nodes should receive the data based on the partition key.",
+                    "On each replica node, the data is first written to an in-memory structure called the Memtable.",
+                    "Simultaneously, the data is appended to the Commit Log on disk for durability. If a node crashes, the commit log can be replayed to recover writes.",
+                    "When the Memtable is full, its contents are flushed to disk as an immutable file called an SSTable (Sorted String Table). Acknowledgment is sent to the client after Step 4."
+                ],
+                read: [
+                    "The client sends a read request to any node, which acts as the coordinator.",
+                    "The coordinator identifies the replica nodes for the requested data and sends them the read request.",
+                    "On each replica, Cassandra first checks the Bloom Filter, a probabilistic data structure, to see if the data is likely to exist in this SSTable.",
+                    "If the Bloom Filter is positive, it checks the Key Cache and then the Row Cache in memory for the data. If found (a cache hit), data is returned quickly.",
+                    "If not in cache, Cassandra reads the relevant SSTables from disk to find the data. It then merges data from the Memtable and multiple SSTables to return the most current version to the client."
+                ]
+            },
+            comparisonData: {
+                labels: ['Write Perf.', 'Read Perf.', 'Scalability', 'Consistency', 'Data Model', 'Availability'],
+                cassandra: [10, 7, 10, 6, 7, 10],
+                mongodb: {
+                    data: [7, 9, 8, 9, 9, 8],
+                    title: 'Cassandra vs. MongoDB',
+                    text: "MongoDB is a document-oriented database, great for applications needing flexible schemas and powerful querying capabilities. Cassandra often wins on write performance, linear scalability, and multi-datacenter availability. MongoDB typically provides stronger consistency guarantees and a richer query language out of the box."
+                },
+                hbase: {
+                    data: [8, 6, 9, 9, 6, 8],
+                    title: 'Cassandra vs. HBase',
+                    text: "HBase is also a wide-column store built on top of HDFS, tightly integrated with the Hadoop ecosystem. It provides strong consistency per-row. Cassandra offers a masterless architecture for higher availability and simpler operations, whereas HBase relies on master nodes and Zookeeper."
+                },
+                redis: {
+                    data: [9, 10, 6, 5, 5, 7],
+                    title: 'Cassandra vs. Redis',
+                    text: "Redis is an in-memory data structure store, used as a database, cache, and message broker. It offers unparalleled read/write speeds for smaller datasets that fit in memory. Cassandra is a persistent disk-based database designed for petabyte-scale durability and horizontal scalability far beyond what a single Redis instance can handle."
+                }
+            }
+        };
+
+        class CassandraApp {
+            constructor(data) {
+                this.data = data;
+                this.topNav = document.getElementById('top-nav');
+                this.mobileMenuBtn = document.getElementById('mobile-menu-btn');
+                this.mobileNav = document.getElementById('mobile-nav');
+                this.chart = null;
+                this.currentPath = null;
+                this.currentPathStep = 0;
+                this.pathInterval = null;
+            }
+
+            init() {
+                this.setupNavigation();
+                this.setupScrollSpy();
+                this.initSectionJS();
+            }
+            
+            setupNavigation() {
+                this.data.sections.forEach(section => {
+                    const navLink = document.createElement('a');
+                    navLink.href = `#${section.id}`;
+                    navLink.textContent = section.title;
+                    navLink.className = `nav-link text-lg p-3 rounded-md hover:text-sky-300`;
+                    navLink.dataset.section = section.id;
+                    this.topNav.appendChild(navLink);
+
+                    const mobileNavLink = navLink.cloneNode(true);
+                    this.mobileNav.appendChild(mobileNavLink);
+                });
+
+                this.mobileMenuBtn.addEventListener('click', () => {
+                    this.mobileNav.classList.toggle('hidden');
+                });
+                
+                this.mobileNav.addEventListener('click', () => {
+                    this.mobileNav.classList.add('hidden');
+                });
+            }
+
+            setupScrollSpy() {
+                const observerOptions = {
+                    root: null,
+                    rootMargin: '-50% 0% -50% 0%',
+                    threshold: 0
+                };
+
+                const observerCallback = (entries) => {
+                    entries.forEach(entry => {
+                        const targetId = entry.target.id;
+                        const navLinks = document.querySelectorAll('.nav-link');
+                        if (entry.isIntersecting) {
+                            navLinks.forEach(link => {
+                                link.classList.remove('active');
+                                if (link.dataset.section === targetId) {
+                                    link.classList.add('active');
+                                }
+                            });
+                        }
+                    });
+                };
+
+                const observer = new IntersectionObserver(observerCallback, observerOptions);
+                this.data.sections.forEach(section => {
+                    const el = document.getElementById(section.id);
+                    if (el) observer.observe(el);
+                });
+            }
+
+            initSectionJS() {
+                this.initArchitectureDiagram();
+                this.initComparisonChart();
+                this.initUsecaseFilters();
+                this.initReadWritePath();
+            }
+
+            initArchitectureDiagram() {
+                const nodes = document.querySelectorAll('.diagram-node');
+                const titleEl = document.getElementById('details-title');
+                const textEl = document.getElementById('details-text');
+
+                nodes.forEach(node => {
+                    node.addEventListener('click', () => {
+                        const component = this.data.architectureDetails[node.dataset.component];
+                        if (component) {
+                            titleEl.textContent = component.title;
+                            textEl.textContent = component.text;
+                        }
+                    });
+                });
+            }
+            
+            initReadWritePath() {
+                document.getElementById('simulate-write').addEventListener('click', () => this.startPathSimulation('write'));
+                document.getElementById('simulate-read').addEventListener('click', () => this.startPathSimulation('read'));
+            }
+
+            startPathSimulation(type) {
+                clearInterval(this.pathInterval);
+                this.currentPath = type;
+                this.currentPathStep = 0;
+                
+                const steps = document.querySelectorAll('.path-step');
+                steps.forEach(s => s.classList.remove('active'));
+
+                const writeSteps = ['client', 'coordinator', 'memtable', 'commitlog', 'sstable'];
+                const readSteps = ['client', 'coordinator', 'bloom', 'cache', 'sstable'];
+                
+                document.querySelector('[data-step="memtable"]').style.display = 'flex';
+                document.querySelector('[data-step="commitlog"]').style.display = 'flex';
+                document.querySelector('[data-step="bloom"]').style.display = 'none';
+                document.querySelector('[data-step="cache"]').style.display = 'none';
+
+                if(type === 'read') {
+                    document.querySelector('[data-step="memtable"]').style.display = 'none';
+                    document.querySelector('[data-step="commitlog"]').style.display = 'none';
+                    document.querySelector('[data-step="bloom"]').style.display = 'flex';
+                    document.querySelector('[data-step="cache"]').style.display = 'flex';
+                }
+
+                this.pathInterval = setInterval(() => {
+                    const currentSteps = type === 'write' ? writeSteps : readSteps;
+                    if(this.currentPathStep < currentSteps.length) {
+                        const stepNode = document.querySelector(`[data-step="${currentSteps[this.currentPathStep]}"]`);
+                        if(stepNode) stepNode.classList.add('active');
+                        document.getElementById('path-explanation').innerHTML = `<p class="font-semibold text-lg">${this.currentPathStep + 1}. ${this.data.pathExplanations[type][this.currentPathStep]}</p>`;
+                        this.currentPathStep++;
+                    } else {
+                        clearInterval(this.pathInterval);
+                    }
+                }, 1500);
+            }
+
+            initUsecaseFilters() {
+                const filterBtns = document.querySelectorAll('.usecase-filter-btn');
+                const cards = document.querySelectorAll('.usecase-card');
+
+                filterBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        filterBtns.forEach(b => {
+                           b.classList.remove('active', 'bg-sky-600', 'text-white');
+                           b.classList.add('bg-white', 'text-slate-700', 'border', 'border-slate-300');
+                        });
+                        btn.classList.add('active', 'bg-sky-600', 'text-white');
+                        btn.classList.remove('bg-white', 'text-slate-700', 'border', 'border-slate-300');
+
+                        const filter = btn.dataset.filter;
+                        cards.forEach(card => {
+                            if (filter === 'all' || card.dataset.category === filter) {
+                                card.style.display = 'block';
+                            } else {
+                                card.style.display = 'none';
+                            }
+                        });
+                    });
+                });
+            }
+
+            initComparisonChart() {
+                const ctx = document.getElementById('comparison-chart').getContext('2d');
+                const dbSelect = document.getElementById('db-select');
+                
+                const chartConfig = {
+                    type: 'radar',
+                    data: {
+                        labels: this.data.comparisonData.labels,
+                        datasets: [
+                            {
+                                label: 'Cassandra',
+                                data: this.data.comparisonData.cassandra,
+                                backgroundColor: 'rgba(2, 132, 199, 0.2)',
+                                borderColor: 'rgb(2, 132, 199)',
+                                pointBackgroundColor: 'rgb(2, 132, 199)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgb(2, 132, 199)'
+                            },
+                            {
+                                label: 'Selected DB',
+                                data: [],
+                                backgroundColor: 'rgba(100, 116, 139, 0.2)',
+                                borderColor: 'rgb(100, 116, 139)',
+                                pointBackgroundColor: 'rgb(100, 116, 139)',
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: 'rgb(100, 116, 139)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                         scales: {
+                            r: {
+                                beginAtZero: true,
+                                max: 10,
+                                ticks: {
+                                    stepSize: 2,
+                                    backdropColor: 'rgba(0,0,0,0)'
+                                },
+                                pointLabels: {
+                                  font: {
+                                    size: 12
+                                  }
+                                }
+                            }
+                        },
+                        plugins: {
+                           legend: {
+                                position: 'top',
+                            }
+                        }
+                    }
+                };
+
+                if (this.chart) {
+                    this.chart.destroy();
+                }
+                this.chart = new Chart(ctx, chartConfig);
+                
+                const updateChart = () => {
+                    const selectedDb = dbSelect.value;
+                    const dbData = this.data.comparisonData[selectedDb];
+                    this.chart.data.datasets[1].data = dbData.data;
+                    this.chart.data.datasets[1].label = selectedDb.charAt(0).toUpperCase() + selectedDb.slice(1);
+                    this.chart.update();
+
+                    document.getElementById('comparison-title').textContent = dbData.title;
+                    document.getElementById('comparison-desc').textContent = dbData.text;
+                };
+
+                dbSelect.addEventListener('change', updateChart);
+                updateChart();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new CassandraApp(appData);
+            app.init();
+        });
+    </script>
+</body>
+</html>
