@@ -35,6 +35,31 @@
     </style>
 </head>
 <body>
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-slate-800">Hadoop Cluster Setup</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="index.html" class="nav-link text-slate-600 font-medium">Home</a>
+                <a href="#prerequisites" class="nav-link text-slate-600 font-medium">Prerequisites</a>
+                <a href="#installation" class="nav-link text-slate-600 font-medium">Installation</a>
+                <a href="#configuration" class="nav-link text-slate-600 font-medium">Configuration</a>
+                <a href="#daemon-management" class="nav-link text-slate-600 font-medium">Daemons</a>
+                <a href="#test-job" class="nav-link text-slate-600 font-medium">Test Jobs</a>
+            </div>
+            <button id="mobile-menu-button" class="md:hidden text-slate-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden">
+            <a href="index.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Home</a>
+            <a href="#prerequisites" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Prerequisites</a>
+            <a href="#installation" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Installation</a>
+            <a href="#configuration" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Configuration</a>
+            <a href="#daemon-management" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Daemons</a>
+            <a href="#test-job" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Test Jobs</a>
+        </div>
+    </header>
+
     <div class="flex flex-col md:flex-row">
         <!-- Sidebar Navigation -->
         <nav class="md:w-1/4 lg:w-1/5 bg-gray-100 p-6 md:sticky top-0 h-screen overflow-y-auto hidden md:block">
@@ -254,6 +279,11 @@
             </section>
         </main>
     </div>
+    <footer class="bg-slate-800 text-white mt-20">
+        <div class="container mx-auto px-6 py-8 text-center">
+            <p>&copy; 2025 Big Data Navigation. Licensed under the <a href="LICENSE">MIT License</a>.</p>
+        </div>
+    </footer>
 
     <script>
         const navLinks = document.querySelectorAll('.nav-link');
@@ -278,6 +308,12 @@
 
         window.addEventListener('scroll', updateActiveLink);
         window.addEventListener('load', updateActiveLink);
+
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
 
     </script>
 </body>
