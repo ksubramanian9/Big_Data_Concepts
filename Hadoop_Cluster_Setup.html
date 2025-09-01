@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hadoop Cluster Setup Guide</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #333;
+        }
+        .code-block {
+            background-color: #2d3748;
+            color: #cbd5e0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+        .nav-link.active {
+            font-weight: 600;
+            color: #2b6cb0;
+            border-left: 4px solid #2b6cb0;
+        }
+        .nav-link:not(.active) {
+            transition: color 0.2s;
+        }
+        .nav-link:not(.active):hover {
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <div class="flex flex-col md:flex-row">
+        <!-- Sidebar Navigation -->
+        <nav class="md:w-1/4 lg:w-1/5 bg-gray-100 p-6 md:sticky top-0 h-screen overflow-y-auto hidden md:block">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Cluster Guide</h2>
+            <ul class="space-y-3">
+                <li><a href="#intro" class="nav-link block text-gray-600 pl-4 py-2 rounded">Introduction</a></li>
+                <li><a href="#prerequisites" class="nav-link block text-gray-600 pl-4 py-2 rounded">1. Prerequisites</a></li>
+                <li><a href="#installation" class="nav-link block text-gray-600 pl-4 py-2 rounded">2. Installation</a></li>
+                <li><a href="#configuration" class="nav-link block text-gray-600 pl-4 py-2 rounded">3. Configuration</a></li>
+                <li><a href="#daemon-management" class="nav-link block text-gray-600 pl-4 py-2 rounded">4. Daemon Management</a></li>
+                <li><a href="#test-job" class="nav-link block text-gray-600 pl-4 py-2 rounded">5. Test Job Examples</a>
+                    <ul class="ml-4 mt-2 space-y-2">
+                        <li><a href="#wordcount" class="nav-link block text-gray-500 pl-4 py-2 rounded text-sm">WordCount</a></li>
+                        <li><a href="#pi-estimator" class="nav-link block text-gray-500 pl-4 py-2 rounded text-sm">PiEstimator</a></li>
+                        <li><a href="#grep" class="nav-link block text-gray-500 pl-4 py-2 rounded text-sm">Grep</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="md:w-3/4 lg:w-4/5 p-8">
+            <section id="intro" class="mb-12">
+                <h1 class="text-4xl font-bold mb-4">Hadoop Cluster Setup Guide</h1>
+                <p class="text-lg text-gray-700">This guide provides a step-by-step walkthrough for setting up a multi-node Hadoop cluster, assuming you have access to a virtual machine environment. We'll cover everything from prerequisites to running a simple test job.</p>
+            </section>
+
+            <section id="prerequisites" class="mb-12">
+                <h2 class="text-3xl font-semibold mb-6">1. Prerequisites</h2>
+                <p class="mb-4">Before you can install Hadoop, you need to ensure Java and passwordless SSH are set up on all your machines.</p>
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-2xl font-medium mb-3">Install Java</h3>
+                    <p class="text-gray-700 mb-4">Hadoop is written in Java, so it's a necessary dependency. The following command installs OpenJDK 11 on an Ubuntu/Debian system.</p>
+                    <div class="code-block">
+                        <pre>sudo apt update</pre>
+                        <pre>sudo apt install openjdk-11-jdk -y</pre>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-2xl font-medium mb-3">Set up Passwordless SSH</h3>
+                    <p class="text-gray-700 mb-4">The NameNode needs to communicate with DataNodes without requiring a password. Run the following on the NameNode machine to generate a key pair and copy it to all nodes.</p>
+                    <div class="code-block mb-4">
+                        <pre>ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa</pre>
+                    </div>
+                    <p class="text-gray-700 mb-4">Copy the public key to all nodes in the cluster (including the NameNode itself):</p>
+                    <div class="code-block">
+                        <pre>ssh-copy-id hadoop_user@&lt;node_ip&gt;</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="installation" class="mb-12">
+                <h2 class="text-3xl font-semibold mb-6">2. Hadoop Installation</h2>
+                <p class="mb-4">Next, you'll download and extract the Hadoop binaries. This should be done on all nodes in the cluster.</p>
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-2xl font-medium mb-3">Download & Extract</h3>
+                    <div class="code-block mb-4">
+                        <pre>wget https://dlcdn.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz</pre>
+                        <pre>tar -xzvf hadoop-3.3.6.tar.gz</pre>
+                        <pre>sudo mv hadoop-3.3.6 /usr/local/hadoop</pre>
+                    </div>
+                    <h3 class="text-2xl font-medium mb-3">Set Environment Variables</h3>
+                    <p class="text-gray-700 mb-4">Add the following lines to your <code class="bg-gray-200 px-1 py-0.5 rounded text-sm">~/.bashrc</code> file to set up environment variables.</p>
+                    <div class="code-block">
+                        <pre>export HADOOP_HOME=/usr/local/hadoop</pre>
+                        <pre>export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin</pre>
+                        <pre>export HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop</pre>
+                        <pre>export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="configuration" class="mb-12">
+                <h2 class="text-3xl font-semibold mb-6">3. Configuration</h2>
+                <p class="mb-4">Hadoop's behavior is controlled by several key XML files. You'll need to edit these on the NameNode and then distribute them to the other nodes.</p>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-2xl font-medium mb-3"><span class="text-gray-500 font-normal">etc/hadoop/</span>core-site.xml</h3>
+                    <p class="text-gray-700 mb-4">This file specifies the NameNode's default file system URI.</p>
+                    <div class="code-block">
+                        <pre>&lt;configuration&gt;</pre>
+                        <pre>    &lt;property&gt;</pre>
+                        <pre>        &lt;name&gt;fs.defaultFS&lt;/name&gt;</pre>
+                        <pre>        &lt;value&gt;hdfs://&lt;namenode_ip&gt;:9000&lt;/value&gt;</pre>
+                        <pre>    &lt;/property&gt;</pre>
+                        <pre>&lt;/configuration&gt;</pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-2xl font-medium mb-3"><span class="text-gray-500 font-normal">etc/hadoop/</span>hdfs-site.xml</h3>
+                    <p class="text-gray-700 mb-4">This file defines the replication factor and the local directories for the NameNode and DataNode.</p>
+                    <div class="code-block">
+                        <pre>&lt;configuration&gt;</pre>
+                        <pre>    &lt;property&gt;</pre>
+                        <pre>        &lt;name&gt;dfs.replication&lt;/name&gt;</pre>
+                        <pre>        &lt;value&gt;2&lt;/value&gt;</pre>
+                        <pre>    &lt;/property&gt;</pre>
+                        <pre>    &lt;property&gt;</pre>
+                        <pre>        &lt;name&gt;dfs.namenode.name.dir&lt;/name&gt;</pre>
+                        <pre>        &lt;value&gt;file:///usr/local/hadoop/hdfs/namenode&lt;/value&gt;</pre>
+                        <pre>    &lt;/property&gt;</pre>
+                        <pre>    &lt;property&gt;</pre>
+                        <pre>        &lt;name&gt;dfs.datanode.data.dir&lt;/name&gt;</pre>
+                        <pre>        &lt;value&gt;file:///usr/local/hadoop/hdfs/datanode&lt;/value&gt;</pre>
+                        <pre>    &lt;/property&gt;</pre>
+                        <pre>&lt;/configuration&gt;</pre>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-2xl font-medium mb-3"><span class="text-gray-500 font-normal">etc/hadoop/</span>yarn-site.xml</h3>
+                    <p class="text-gray-700 mb-4">This file configures the YARN framework, which manages resources for running applications.</p>
+                    <div class="code-block">
+                        <pre>&lt;configuration&gt;</pre>
+                        <pre>    &lt;property&gt;</pre>
+                        <pre>        &lt;name&gt;yarn.nodemanager.aux-services&lt;/name&gt;</pre>
+                        <pre>        &lt;value&gt;mapreduce_shuffle&lt;/value&gt;</pre>
+                        <pre>    &lt;/property&gt;</pre>
+                        <pre>    &lt;property&gt;</pre>
+                        <pre>        &lt;name&gt;yarn.resourcemanager.hostname&lt;/name&gt;</pre>
+                        <pre>        &lt;value&gt;&lt;namenode_ip&gt;&lt;/value&gt;</pre>
+                        <pre>    &lt;/property&gt;</pre>
+                        <pre>&lt;/configuration&gt;</pre>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-2xl font-medium mb-3"><span class="text-gray-500 font-normal">etc/hadoop/</span>mapred-site.xml</h3>
+                    <p class="text-gray-700 mb-4">This file specifies the MapReduce framework to be used (in this case, YARN).</p>
+                    <div class="code-block">
+                        <pre>&lt;configuration&gt;</pre>
+                        <pre>    &lt;property&gt;</pre>
+                        <pre>        &lt;name&gt;mapreduce.framework.name&lt;/name&gt;</pre>
+                        <pre>        &lt;value&gt;yarn&lt;/value&gt;</pre>
+                        <pre>    &lt;/property&gt;</pre>
+                        <pre>&lt;/configuration&gt;</pre>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-2xl font-medium mb-3"><span class="text-gray-500 font-normal">etc/hadoop/</span>workers</h3>
+                    <p class="text-gray-700 mb-4">This plain text file lists all the DataNode hostnames or IP addresses in your cluster. It is located on the NameNode.</p>
+                    <div class="code-block">
+                        <pre>&lt;datanode1_ip&gt;</pre>
+                        <pre>&lt;datanode2_ip&gt;</pre>
+                        <pre>...</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="daemon-management" class="mb-12">
+                <h2 class="text-3xl font-semibold mb-6">4. Format HDFS & Start Daemons</h2>
+                <p class="mb-4">Once your configuration files are set, you can format the NameNode and start the cluster services.</p>
+                <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-2xl font-medium mb-3">Format the NameNode</h3>
+                    <p class="text-gray-700 mb-4">This command formats the file system and should only be run once.</p>
+                    <div class="code-block">
+                        <pre>hdfs namenode -format</pre>
+                    </div>
+                </div>
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-2xl font-medium mb-3">Start All Daemons</h3>
+                    <p class="text-gray-700 mb-4">Run this command from the <code class="bg-gray-200 px-1 py-0.5 rounded text-sm">$HADOOP_HOME/sbin</code> directory on the NameNode to start all services.</p>
+                    <div class="code-block mb-4">
+                        <pre>start-all.sh</pre>
+                    </div>
+                    <p class="text-gray-700 mb-4">You can verify that all daemons are running using the <code class="bg-gray-200 px-1 py-0.5 rounded text-sm">jps</code> command.</p>
+                    <div class="code-block">
+                        <pre>jps</pre>
+                    </div>
+                    <p class="mt-4 text-gray-700">You should see NameNode, SecondaryNameNode, ResourceManager, NodeManager, and DataNode processes running on the respective machines.</p>
+                </div>
+            </section>
+
+            <section id="test-job" class="mb-12">
+                <h2 class="text-3xl font-semibold mb-6">5. Run a Test Job Examples</h2>
+
+                <!-- WordCount -->
+                <div id="wordcount" class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-2xl font-medium mb-3">WordCount Example</h3>
+                    <p class="mb-4 text-gray-700">This is the classic "Hello, World!" of MapReduce. It counts the occurrences of each word in the input file.</p>
+                    <h4 class="text-xl font-medium mb-2">Instructions:</h4>
+                    <p class="mb-4 text-gray-700">First, create a sample file and put it into HDFS:</p>
+                    <div class="code-block mb-4">
+                        <pre>hdfs dfs -mkdir /input</pre>
+                        <pre>echo "Hello Hadoop Cluster" > test.txt</pre>
+                        <pre>hdfs dfs -put test.txt /input</pre>
+                    </div>
+                    <p class="mb-4 text-gray-700">Now, run the `wordcount` job using the example jar:</p>
+                    <div class="code-block">
+                        <pre>hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.6.jar wordcount /input /output</pre>
+                    </div>
+                </div>
+
+                <!-- Pi Estimator -->
+                <div id="pi-estimator" class="bg-white rounded-lg shadow-sm p-6 mb-6">
+                    <h3 class="text-2xl font-medium mb-3">PiEstimator Example</h3>
+                    <p class="mb-4 text-gray-700">This job estimates the value of $\pi$ using a Monte Carlo method. It's a great way to test the computational power of your cluster.</p>
+                    <h4 class="text-xl font-medium mb-2">Instructions:</h4>
+                    <p class="mb-4 text-gray-700">Run the `pi` job with two arguments: the number of maps to run and the number of samples per map. More samples will give a more accurate result.</p>
+                    <div class="code-block">
+                        <pre>hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.6.jar pi 10 1000</pre>
+                    </div>
+                </div>
+
+                <!-- Grep -->
+                <div id="grep" class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-2xl font-medium mb-3">Grep Example</h3>
+                    <p class="mb-4 text-gray-700">This job searches for a regular expression in the input files and returns the matching lines. You must provide a regular expression and an output path.</p>
+                    <h4 class="text-xl font-medium mb-2">Instructions:</h4>
+                    <p class="mb-4 text-gray-700">To find all lines containing the word "Hadoop" in the `/input` directory, run the following command:</p>
+                    <div class="code-block">
+                        <pre>hadoop jar $HADOOP_HOME/share/hadoop/mapreduce/hadoop-mapreduce-examples-3.3.6.jar grep /input /output-grep 'Hadoop'</pre>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sections = document.querySelectorAll('section, section > div[id]');
+
+        function updateActiveLink() {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (window.scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').substring(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveLink);
+        window.addEventListener('load', updateActiveLink);
+
+    </script>
+</body>
+</html>

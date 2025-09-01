@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Big Data Business Value Modeler — v0.1</title>
+  <style>
+    :root{
+      --bg:#0f172a;         /* slate-900 */
+      --panel:#111827;      /* gray-900 */
+      --muted:#94a3b8;      /* slate-400 */
+      --text:#e5e7eb;       /* gray-200 */
+      --accent:#22d3ee;     /* cyan-400 */
+      --accent-2:#a78bfa;   /* violet-400 */
+      --good:#34d399;       /* green-400 */
+      --warn:#f59e0b;       /* amber-400 */
+      --bad:#f87171;        /* red-400 */
+      --card:#0b1220;       /* deep panel */
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    html, body { height: 100%; }
+    body{
+      margin:0; background: radial-gradient(1200px 600px at 80% -10%, rgba(34,211,238,.10), transparent),
+                                  radial-gradient(900px 400px at -10% 10%, rgba(167,139,250,.10), transparent),
+                                  var(--bg);
+      color:var(--text); font: 15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    .wrap{ max-width:1200px; margin:0 auto; padding:24px; }
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px;
+    }
+    .title{ font-size: clamp(20px, 3vw, 32px); font-weight:700; letter-spacing:.3px; }
+    .subtitle{ color:var(--muted); font-size:13px; }
+
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin: 8px 0 16px; }
+    .tab{ border:1px solid rgba(255,255,255,.08); background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)); color:var(--text);
+          padding:10px 14px; border-radius:12px; cursor:pointer; user-select:none; transition:transform .05s ease; }
+    .tab:hover{ transform: translateY(-1px); }
+    .tab.active{ border-color: var(--accent); box-shadow: inset 0 0 0 1px rgba(34,211,238,.35), 0 0 15px rgba(34,211,238,.15); }
+
+    .panel{
+      border:1px solid rgba(255,255,255,.08); background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-radius:16px; box-shadow: var(--shadow);
+    }
+    .grid{ display:grid; grid-template-columns: 1.1fr .9fr; gap:18px; padding:18px; }
+    @media (max-width: 960px){ .grid{ grid-template-columns: 1fr; } }
+
+    .card{ background: var(--card); border:1px solid rgba(255,255,255,.06); border-radius:16px; padding:16px; }
+    .card h3{ margin:0 0 10px; font-size:16px; letter-spacing:.2px; }
+
+    .form-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px 14px; }
+    .field{ display:flex; flex-direction:column; gap:6px; }
+    .field label{ font-size:12px; color: var(--muted); display:flex; align-items:center; gap:6px; }
+    .field input, .field select{ background: #0a0f1a; color: var(--text); border:1px solid rgba(255,255,255,.08);
+      padding:10px 12px; border-radius:10px; outline:none; }
+    .field input:focus, .field select:focus{ border-color: var(--accent); box-shadow: 0 0 0 3px rgba(34,211,238,.15); }
+    .suffix{ color:var(--muted); font-size:12px; margin-left:6px; }
+    .row{ display:flex; align-items:center; gap:10px; }
+
+    .kpis{ display:grid; grid-template-columns: repeat(3, 1fr); gap:12px; }
+    .kpi{ background: #0d1626; border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:12px; }
+    .kpi .label{ color:var(--muted); font-size:11px; }
+    .kpi .value{ font-size:18px; font-weight:700; margin-top:6px; }
+    .kpi.good .value{ color: var(--good); }
+    .kpi.warn .value{ color: var(--warn); }
+    .kpi.bad .value{ color: var(--bad); }
+
+    .charts{ display:grid; grid-template-columns: 1fr; gap:12px; }
+    .chart{ background:#0c1423; border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:12px; }
+    .chart h4{ margin:0 0 6px; font-size:13px; color:var(--muted); }
+    .legend{ display:flex; gap:12px; font-size:12px; color:var(--muted); margin:6px 0 0; }
+    .legend span{ display:inline-flex; align-items:center; gap:6px; }
+    .swatch{ width:10px; height:10px; border-radius:2px; display:inline-block; }
+
+    .toolbar{ display:flex; gap:8px; flex-wrap:wrap; }
+    .btn{ background:#0a0f1a; color:var(--text); border:1px solid rgba(255,255,255,.08); padding:10px 12px; border-radius:10px; cursor:pointer; }
+    .btn:hover{ border-color: var(--accent-2); }
+
+    footer{ margin: 14px 0 24px; color: var(--muted); font-size:12px; text-align:center; }
+    .muted{ color: var(--muted); }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .tip{ font-size:12px; color: var(--muted); margin-top:8px; }
+
+    /* Small info chip */
+    .chip{ background:rgba(34,211,238,.12); color:#bff5ff; border:1px solid rgba(34,211,238,.3); padding:2px 8px; border-radius:999px; font-size:11px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="title">Big Data Business Value Modeler <span class="chip">v0.1</span></div>
+        <div class="subtitle">Estimate ROI, NPV & payback for data/AI investments. Start with one use case; extend across industries.</div>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="saveScenario">Save Scenario</button>
+        <button class="btn" id="loadScenario">Load Scenario</button>
+        <input type="file" id="fileInput" accept="application/json" style="display:none" />
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab active" data-tab="ecom">e‑Commerce — Recommender</button>
+      <button class="tab" data-tab="fraud">Banking — Fraud Management</button>
+      <button class="tab" data-tab="about">About & Assumptions</button>
+    </nav>
+
+    <section id="ecom" class="panel">
+      <div class="grid">
+        <div class="card">
+          <h3>Inputs — Market, Uplift, Costs</h3>
+          <div class="form-grid">
+            <div class="field"><label>Visitors / month</label><input id="e_visitors" type="number" value="200000" min="0" step="1000"/></div>
+            <div class="field"><label>Baseline conversion <span class="suffix">%</span></label><input id="e_baseConv" type="number" value="2.0" min="0" max="100" step="0.1"/></div>
+            <div class="field"><label>Uplift from recommender <span class="suffix">pp (absolute)</span></label><input id="e_uplift" type="number" value="0.6" min="0" max="100" step="0.1"/></div>
+            <div class="field"><label>Average order value (AOV) <span class="suffix">₹</span></label><input id="e_aov" type="number" value="1800" min="0" step="10"/></div>
+            <div class="field"><label>Gross margin <span class="suffix">%</span></label><input id="e_margin" type="number" value="35" min="0" max="100" step="0.5"/></div>
+            <div class="field"><label>Traffic growth / month <span class="suffix">%</span></label><input id="e_growth" type="number" value="1.0" min="0" step="0.1"/></div>
+
+            <div class="field"><label>Infra cost / month <span class="suffix">₹</span></label><input id="e_costInfra" type="number" value="400000" min="0" step="1000"/></div>
+            <div class="field"><label>Team cost / month <span class="suffix">₹</span></label><input id="e_costTeam" type="number" value="900000" min="0" step="1000"/></div>
+            <div class="field"><label>Vendor / tooling / month <span class="suffix">₹</span></label><input id="e_costVendor" type="number" value="150000" min="0" step="1000"/></div>
+            <div class="field"><label>One‑time setup (CapEx) <span class="suffix">₹</span></label><input id="e_capex" type="number" value="2500000" min="0" step="10000"/></div>
+
+            <div class="field"><label>Discount rate (annual) <span class="suffix">%</span></label><input id="e_discount" type="number" value="12" min="0" step="0.5"/></div>
+            <div class="field"><label>Horizon <span class="suffix">months</span></label><input id="e_horizon" type="number" value="24" min="1" max="120" step="1"/></div>
+
+            <div class="field"><label>Scenario</label>
+              <select id="e_scenario">
+                <option value="conservative">Conservative</option>
+                <option value="base" selected>Base</option>
+                <option value="aggressive">Aggressive</option>
+              </select>
+            </div>
+            <div class="tip">Uplift is absolute percentage points added to conversion (e.g., +0.6pp turns 2.0% → 2.6%).</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>KPIs — Outcomes</h3>
+          <div class="kpis" style="margin-bottom:10px">
+            <div class="kpi"><div class="label">Monthly margin uplift</div><div id="e_kpiMargin" class="value">–</div></div>
+            <div class="kpi"><div class="label">Monthly run‑rate costs</div><div id="e_kpiCosts" class="value">–</div></div>
+            <div class="kpi"><div class="label">Monthly net benefit</div><div id="e_kpiNet" class="value">–</div></div>
+            <div class="kpi"><div class="label">Payback period</div><div id="e_kpiPayback" class="value">–</div></div>
+            <div class="kpi"><div class="label">ROI (horizon)</div><div id="e_kpiROI" class="value">–</div></div>
+            <div class="kpi"><div class="label">NPV (₹)</div><div id="e_kpiNPV" class="value">–</div></div>
+          </div>
+          <div class="charts">
+            <div class="chart">
+              <h4>Cashflow over time</h4>
+              <svg id="e_chartCash" viewBox="0 0 800 220" width="100%" height="220" role="img" aria-label="Cumulative cashflow chart"></svg>
+              <div class="legend"><span><i class="swatch" style="background:var(--accent)"></i>Cumulative Cashflow</span> <span><i class="swatch" style="background:var(--good)"></i>Monthly Net</span></div>
+            </div>
+            <div class="chart">
+              <h4>Benefits vs Costs (monthly)</h4>
+              <svg id="e_chartBars" viewBox="0 0 800 220" width="100%" height="220" role="img" aria-label="Benefit cost bars"></svg>
+              <div class="legend"><span><i class="swatch" style="background:var(--good)"></i>Margin Uplift</span> <span><i class="swatch" style="background:var(--bad)"></i>Run‑rate Costs</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="fraud" class="panel" style="display:none">
+      <div class="grid">
+        <div class="card">
+          <h3>Inputs — Volume, Fraud, Costs</h3>
+          <div class="form-grid">
+            <div class="field"><label>Transactions / month</label><input id="f_txns" type="number" value="500000" min="0" step="1000"/></div>
+            <div class="field"><label>Avg transaction value <span class="suffix">₹</span></label><input id="f_atv" type="number" value="1200" min="0" step="10"/></div>
+            <div class="field"><label>Baseline fraud rate <span class="suffix">%</span></label><input id="f_rate" type="number" value="0.35" min="0" step="0.01"/></div>
+            <div class="field"><label>Fraud prevented by model <span class="suffix">%</span></label><input id="f_prevent" type="number" value="45" min="0" max="100" step="1"/></div>
+            <div class="field"><label>Chargeback fee / fraud txn <span class="suffix">₹</span></label><input id="f_cbFee" type="number" value="500" min="0" step="10"/></div>
+            <div class="field"><label>False‑positive cases / month</label><input id="f_fpCount" type="number" value="600" min="0" step="10"/></div>
+            <div class="field"><label>Cost / false positive <span class="suffix">₹</span></label><input id="f_fpCost" type="number" value="120" min="0" step="10"/></div>
+            <div class="field"><label>Ops savings / month (automation) <span class="suffix">₹</span></label><input id="f_opsSave" type="number" value="150000" min="0" step="1000"/></div>
+
+            <div class="field"><label>Infra cost / month <span class="suffix">₹</span></label><input id="f_costInfra" type="number" value="500000" min="0" step="1000"/></div>
+            <div class="field"><label>Team cost / month <span class="suffix">₹</span></label><input id="f_costTeam" type="number" value="1100000" min="0" step="1000"/></div>
+            <div class="field"><label>Vendor / tooling / month <span class="suffix">₹</span></label><input id="f_costVendor" type="number" value="200000" min="0" step="1000"/></div>
+            <div class="field"><label>One‑time setup (CapEx) <span class="suffix">₹</span></label><input id="f_capex" type="number" value="3000000" min="0" step="10000"/></div>
+
+            <div class="field"><label>Discount rate (annual) <span class="suffix">%</span></label><input id="f_discount" type="number" value="12" min="0" step="0.5"/></div>
+            <div class="field"><label>Horizon <span class="suffix">months</span></label><input id="f_horizon" type="number" value="24" min="1" max="120" step="1"/></div>
+            <div class="field"><label>Txn growth / month <span class="suffix">%</span></label><input id="f_growth" type="number" value="1.2" min="0" step="0.1"/></div>
+            <div class="tip">Benefit ≈ avoided fraud loss + ops savings − false‑positive handling cost.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>KPIs — Outcomes</h3>
+          <div class="kpis" style="margin-bottom:10px">
+            <div class="kpi"><div class="label">Monthly benefit</div><div id="f_kpiBenefit" class="value">–</div></div>
+            <div class="kpi"><div class="label">Monthly run‑rate costs</div><div id="f_kpiCosts" class="value">–</div></div>
+            <div class="kpi"><div class="label">Monthly net benefit</div><div id="f_kpiNet" class="value">–</div></div>
+            <div class="kpi"><div class="label">Payback period</div><div id="f_kpiPayback" class="value">–</div></div>
+            <div class="kpi"><div class="label">ROI (horizon)</div><div id="f_kpiROI" class="value">–</div></div>
+            <div class="kpi"><div class="label">NPV (₹)</div><div id="f_kpiNPV" class="value">–</div></div>
+          </div>
+          <div class="charts">
+            <div class="chart">
+              <h4>Cashflow over time</h4>
+              <svg id="f_chartCash" viewBox="0 0 800 220" width="100%" height="220" role="img" aria-label="Cumulative cashflow chart"></svg>
+              <div class="legend"><span><i class="swatch" style="background:var(--accent)"></i>Cumulative Cashflow</span> <span><i class="swatch" style="background:var(--good)"></i>Monthly Net</span></div>
+            </div>
+            <div class="chart">
+              <h4>Benefits vs Costs (monthly)</h4>
+              <svg id="f_chartBars" viewBox="0 0 800 220" width="100%" height="220" role="img" aria-label="Benefit cost bars"></svg>
+              <div class="legend"><span><i class="swatch" style="background:var(--good)"></i>Benefits</span> <span><i class="swatch" style="background:var(--bad)"></i>Run‑rate Costs</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" class="panel" style="display:none">
+      <div class="card" style="margin:12px">
+        <h3>About, Assumptions & Extensibility</h3>
+        <p class="muted">This single‑file modeler estimates business value for Big Data / ML initiatives. It is intentionally opinionated yet extensible. Edit numbers to fit your context; results update live.</p>
+        <ul>
+          <li>NPV uses monthly discount rate r = (1 + annual)^(1/12) − 1. Cashflow includes monthly net benefit; CapEx is applied at month 0.</li>
+          <li>ROI (horizon) = (Total benefits − Total run‑rate costs − CapEx) / (Total run‑rate costs + CapEx).</li>
+          <li>Payback = first month where cumulative cashflow ≥ 0; reported as months from start; shows “No payback” if never.</li>
+          <li>Charts: bars show typical month at t=0; line shows cumulative over horizon.</li>
+          <li>Persistence: use <em>Save Scenario</em> to download JSON; <em>Load Scenario</em> to restore.</li>
+        </ul>
+        <p>To add more industries (e.g., <em>Churn prediction</em>, <em>Demand forecasting</em>, <em>Predictive maintenance</em>), duplicate a section and plug in a compute function following the patterns in <span class="mono">updateEcom()</span> / <span class="mono">updateFraud()</span>.</p>
+      </div>
+    </section>
+
+    <footer>
+      Built with vanilla HTML/CSS/JS/SVG. No external dependencies. © You.
+    </footer>
+  </div>
+
+  <script>
+    // ---------- Utilities ----------
+    const fmtINR = (n) => {
+      if (!isFinite(n)) return '–';
+      const sign = n < 0 ? '-' : '';
+      const v = Math.abs(n);
+      return sign + '₹' + v.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    };
+    const fmtPct = (n, d=1) => isFinite(n) ? (n).toFixed(d) + '%' : '–';
+
+    const monthlyRate = (annualPct) => Math.pow(1 + (annualPct/100), 1/12) - 1;
+
+    const sum = (arr) => arr.reduce((a,b)=>a+b,0);
+
+    function paybackMonths(cash){
+      let cum = 0;
+      for (let i=0;i<cash.length;i++){
+        cum += cash[i];
+        if (cum >= 0) return i; // month index where ≥ 0
+      }
+      return null;
+    }
+
+    function sparkline(svg, series, netSeries){
+      const W=800, H=220, P=24; // viewBox size
+      svg.innerHTML='';
+      if (!series || series.length===0) return;
+      const max = Math.max(...series, 0);
+      const min = Math.min(...series, 0);
+      const yScale = (v)=>{
+        if (max===min) return H/2; // flat
+        return H - P - ( (v - min) / (max - min) ) * (H - 2*P);
+      };
+      const xScale = (i)=> P + i * ( (W - 2*P) / Math.max(1, series.length-1) );
+
+      // grid line at 0
+      const y0 = yScale(0);
+      const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      grid.setAttribute('x1', 0); grid.setAttribute('x2', W); grid.setAttribute('y1', y0); grid.setAttribute('y2', y0);
+      grid.setAttribute('stroke', 'rgba(255,255,255,.15)'); grid.setAttribute('stroke-dasharray', '4 4');
+      svg.appendChild(grid);
+
+      // Monthly net bars
+      if (netSeries){
+        const barW = (W - 2*P) / netSeries.length * .6;
+        netSeries.forEach((v,i)=>{
+          const x = xScale(i) - barW/2;
+          const y = v>=0 ? yScale(v) : y0;
+          const h = Math.abs(yScale(v) - y0);
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', x); rect.setAttribute('y', y);
+          rect.setAttribute('width', barW); rect.setAttribute('height', h);
+          rect.setAttribute('fill', 'rgb(52,211,153)'); // green
+          rect.setAttribute('opacity', .35);
+          svg.appendChild(rect);
+        });
+      }
+
+      // Path for cumulative
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      let d = '';
+      series.forEach((v,i)=>{ const x=xScale(i), y=yScale(v); d += (i? ' L ':'M ') + x + ' ' + y; });
+      path.setAttribute('d', d);
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke', 'rgb(34,211,238)'); path.setAttribute('stroke-width', 2.5);
+      svg.appendChild(path);
+    }
+
+    function bars(svg, benefit, cost){
+      const W=800, H=220, P=28; svg.innerHTML='';
+      const max = Math.max(benefit, cost, 1);
+      const bx = P + 80, cx = P + 240; const barW = 90;
+      const yScale = (v)=> H - P - (v/max)*(H - 2*P);
+      const y0 = yScale(0);
+      const grid = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      grid.setAttribute('x1', 0); grid.setAttribute('x2', W); grid.setAttribute('y1', y0); grid.setAttribute('y2', y0);
+      grid.setAttribute('stroke', 'rgba(255,255,255,.15)'); grid.setAttribute('stroke-dasharray', '4 4');
+      svg.appendChild(grid);
+      function drawBar(x, v, color){
+        const y = yScale(v); const h = y0 - y;
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', x); rect.setAttribute('y', y); rect.setAttribute('width', barW); rect.setAttribute('height', h);
+        rect.setAttribute('fill', color); rect.setAttribute('rx', 6);
+        svg.appendChild(rect);
+      }
+      drawBar(bx, benefit, 'rgb(52,211,153)'); // green
+      drawBar(cx, cost, 'rgb(248,113,113)');   // red
+      // Labels
+      function label(x, text){
+        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', x + barW/2); t.setAttribute('y', H - P/2);
+        t.setAttribute('fill', 'rgba(255,255,255,.8)'); t.setAttribute('font-size', '12px'); t.setAttribute('text-anchor', 'middle');
+        t.textContent = text; svg.appendChild(t);
+      }
+      label(bx, 'Benefits'); label(cx, 'Costs');
+    }
+
+    // ---------- e‑Commerce model ----------
+    function scenarioTweaksEcom(s){
+      if (s==='conservative') return { upliftPP: 0.3, growthPct: 0.5 };
+      if (s==='aggressive')   return { upliftPP: 1.0, growthPct: 2.0 };
+      return { upliftPP: 0.6, growthPct: 1.0 }; // base
+    }
+
+    function updateEcom(){
+      const visitors = +document.getElementById('e_visitors').value;
+      const baseConv = (+document.getElementById('e_baseConv').value)/100; // decimal
+      let upliftPP = +document.getElementById('e_uplift').value; // pp
+      let growthPct = +document.getElementById('e_growth').value; // %
+      const aov = +document.getElementById('e_aov').value;
+      const margin = (+document.getElementById('e_margin').value)/100;
+      const costInfra = +document.getElementById('e_costInfra').value;
+      const costTeam = +document.getElementById('e_costTeam').value;
+      const costVendor = +document.getElementById('e_costVendor').value;
+      const capex = +document.getElementById('e_capex').value;
+      const discount = +document.getElementById('e_discount').value;
+      const horizon = Math.max(1, +document.getElementById('e_horizon').value|0);
+      const scen = document.getElementById('e_scenario').value;
+
+      // Apply scenario hints (additive, but user can override by editing fields after selection)
+      const hints = scenarioTweaksEcom(scen);
+      if (document.activeElement === document.getElementById('e_scenario')){
+        // Only nudge on change of scenario control
+        document.getElementById('e_uplift').value = upliftPP = hints.upliftPP;
+        document.getElementById('e_growth').value = growthPct = hints.growthPct;
+      }
+
+      const runCost = costInfra + costTeam + costVendor;
+      const mr = monthlyRate(discount);
+      const trafficGrowth = 1 + (growthPct/100);
+
+      const monthlyMargin = []; // benefits (margin uplift)
+      const monthlyNet = [];
+      const cash = []; // net including capex at t0
+      let cum = -capex; // apply capex at start
+      const cumulative = [cum];
+
+      for (let m=0; m<horizon; m++){
+        const t = visitors * Math.pow(trafficGrowth, m);
+        const incrOrders = t * (baseConv + upliftPP/100) - t * baseConv; // visitors*(newConv - base)
+        const revUplift = incrOrders * aov;
+        const marginUplift = revUplift * margin;
+        monthlyMargin.push(marginUplift);
+        const net = marginUplift - runCost;
+        monthlyNet.push(net);
+        const cf = (m===0? -capex:0) + net;
+        cash.push(cf);
+        if (m>0){ cum += net; cumulative.push(cum); }
+      }
+
+      const npv = monthlyNet.reduce((acc, n, i)=> acc + n / Math.pow(1+mr, i+1), -capex);
+      const pay = paybackMonths(cash);
+      const roi = (sum(monthlyMargin) - horizon*runCost - capex) / (horizon*runCost + capex);
+
+      // KPIs
+      document.getElementById('e_kpiMargin').textContent = fmtINR(monthlyMargin[0]);
+      document.getElementById('e_kpiCosts').textContent = fmtINR(runCost);
+      const net0 = monthlyNet[0];
+      document.getElementById('e_kpiNet').textContent = fmtINR(net0);
+      document.getElementById('e_kpiNet').parentElement.classList.toggle('good', net0>0);
+      document.getElementById('e_kpiNet').parentElement.classList.toggle('bad', net0<0);
+      document.getElementById('e_kpiPayback').textContent = pay===null? 'No payback in horizon' : (pay + ' months');
+      document.getElementById('e_kpiROI').textContent = isFinite(roi)? fmtPct(roi*100,1) : '–';
+      document.getElementById('e_kpiNPV').textContent = fmtINR(npv);
+
+      // Charts
+      const cumSeries = cumulative;
+      sparkline(document.getElementById('e_chartCash'), cumSeries, monthlyNet);
+      bars(document.getElementById('e_chartBars'), monthlyMargin[0], runCost);
+    }
+
+    // ---------- Fraud model ----------
+    function updateFraud(){
+      const txns = +document.getElementById('f_txns').value;
+      const atv = +document.getElementById('f_atv').value;
+      const rate = (+document.getElementById('f_rate').value) / 100;
+      const preventedPct = (+document.getElementById('f_prevent').value) / 100;
+      const cbFee = +document.getElementById('f_cbFee').value;
+      const fpCount = +document.getElementById('f_fpCount').value;
+      const fpCost = +document.getElementById('f_fpCost').value;
+      const opsSave = +document.getElementById('f_opsSave').value;
+
+      const costInfra = +document.getElementById('f_costInfra').value;
+      const costTeam = +document.getElementById('f_costTeam').value;
+      const costVendor = +document.getElementById('f_costVendor').value;
+      const capex = +document.getElementById('f_capex').value;
+
+      const discount = +document.getElementById('f_discount').value;
+      const horizon = Math.max(1, +document.getElementById('f_horizon').value|0);
+      const growthPct = +document.getElementById('f_growth').value;
+
+      const runCost = costInfra + costTeam + costVendor;
+      const mr = monthlyRate(discount);
+      const txnGrowth = 1 + (growthPct/100);
+
+      const monthlyBenefit = []; // avoided loss + ops save − FP cost
+      const monthlyNet = [];
+      const cash = []; let cum = -capex; const cumulative=[cum];
+
+      for (let m=0; m<horizon; m++){
+        const t = txns * Math.pow(txnGrowth, m);
+        const fraudTxns = t * rate;
+        const lossPerFraud = atv + cbFee;
+        const baselineLoss = fraudTxns * lossPerFraud;
+        const avoided = baselineLoss * preventedPct;
+        const fpHandling = fpCount * fpCost; // simple model (constant); could scale with t
+        const benefit = avoided + opsSave - fpHandling;
+        monthlyBenefit.push(benefit);
+        const net = benefit - runCost;
+        monthlyNet.push(net);
+        const cf = (m===0? -capex:0) + net;
+        cash.push(cf);
+        if (m>0){ cum += net; cumulative.push(cum); }
+      }
+
+      const npv = monthlyNet.reduce((acc, n, i)=> acc + n / Math.pow(1+mr, i+1), -capex);
+      const pay = paybackMonths(cash);
+      const roi = (sum(monthlyBenefit) - horizon*runCost - capex) / (horizon*runCost + capex);
+
+      document.getElementById('f_kpiBenefit').textContent = fmtINR(monthlyBenefit[0]);
+      document.getElementById('f_kpiCosts').textContent = fmtINR(runCost);
+      const net0 = monthlyNet[0];
+      document.getElementById('f_kpiNet').textContent = fmtINR(net0);
+      document.getElementById('f_kpiNet').parentElement.classList.toggle('good', net0>0);
+      document.getElementById('f_kpiNet').parentElement.classList.toggle('bad', net0<0);
+      document.getElementById('f_kpiPayback').textContent = pay===null? 'No payback in horizon' : (pay + ' months');
+      document.getElementById('f_kpiROI').textContent = isFinite(roi)? fmtPct(roi*100,1) : '–';
+      document.getElementById('f_kpiNPV').textContent = fmtINR(npv);
+
+      sparkline(document.getElementById('f_chartCash'), cumulative, monthlyNet);
+      bars(document.getElementById('f_chartBars'), monthlyBenefit[0], runCost);
+    }
+
+    // ---------- Tabs & wiring ----------
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t=> t.addEventListener('click', ()=>{
+      tabs.forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+      ['ecom','fraud','about'].forEach(id=> document.getElementById(id).style.display = (t.dataset.tab===id? 'block':'none'));
+      // Trigger update for visible tab to ensure charts scale correctly
+      if (t.dataset.tab==='ecom') updateEcom();
+      if (t.dataset.tab==='fraud') updateFraud();
+    }));
+
+    // Input listeners (delegate by section)
+    document.getElementById('ecom').addEventListener('input', (e)=> updateEcom());
+    document.getElementById('fraud').addEventListener('input', (e)=> updateFraud());
+    document.getElementById('e_scenario').addEventListener('change', updateEcom);
+
+    // Save / Load
+    document.getElementById('saveScenario').addEventListener('click', ()=>{
+      const data = {
+        ecom: {
+          visitors: +e_visitors.value, baseConv:+e_baseConv.value, uplift:+e_uplift.value, aov:+e_aov.value, margin:+e_margin.value, growth:+e_growth.value,
+          costInfra:+e_costInfra.value, costTeam:+e_costTeam.value, costVendor:+e_costVendor.value, capex:+e_capex.value,
+          discount:+e_discount.value, horizon:+e_horizon.value, scenario:e_scenario.value
+        },
+        fraud: {
+          txns:+f_txns.value, atv:+f_atv.value, rate:+f_rate.value, prevent:+f_prevent.value, cbFee:+f_cbFee.value, fpCount:+f_fpCount.value, fpCost:+f_fpCost.value,
+          opsSave:+f_opsSave.value, costInfra:+f_costInfra.value, costTeam:+f_costTeam.value, costVendor:+f_costVendor.value, capex:+f_capex.value,
+          discount:+f_discount.value, horizon:+f_horizon.value, growth:+f_growth.value
+        }
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'bigdata_value_model_scenario.json'; a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('loadScenario').addEventListener('click', ()=> document.getElementById('fileInput').click());
+    document.getElementById('fileInput').addEventListener('change', (e)=>{
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ()=> {
+        try{
+          const d = JSON.parse(reader.result);
+          const E = d.ecom||{}; const F = d.fraud||{};
+          // ecom
+          if (E.visitors!==undefined){
+            e_visitors.value=E.visitors; e_baseConv.value=E.baseConv; e_uplift.value=E.uplift; e_aov.value=E.aov; e_margin.value=E.margin; e_growth.value=E.growth;
+            e_costInfra.value=E.costInfra; e_costTeam.value=E.costTeam; e_costVendor.value=E.costVendor; e_capex.value=E.capex; e_discount.value=E.discount; e_horizon.value=E.horizon; e_scenario.value=E.scenario||'base';
+          }
+          if (F.txns!==undefined){
+            f_txns.value=F.txns; f_atv.value=F.atv; f_rate.value=F.rate; f_prevent.value=F.prevent; f_cbFee.value=F.cbFee; f_fpCount.value=F.fpCount; f_fpCost.value=F.fpCost;
+            f_opsSave.value=F.opsSave; f_costInfra.value=F.costInfra; f_costTeam.value=F.costTeam; f_costVendor.value=F.costVendor; f_capex.value=F.capex; f_discount.value=F.discount; f_horizon.value=F.horizon; f_growth.value=F.growth;
+          }
+          updateEcom(); updateFraud();
+        }catch(err){ alert('Invalid scenario file'); }
+      };
+      reader.readAsText(file);
+    });
+
+    // Initial paint
+    updateEcom(); updateFraud();
+  </script>
+</body>
+</html>
