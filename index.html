@@ -35,16 +35,9 @@
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <h1 class="text-2xl font-bold text-slate-800">Big Data Concepts</h1>
             <div class="hidden md:flex space-x-8">
-                <a href="Big_Data_Processing.html" class="nav-link text-slate-600 font-medium">Big Data Processing</a>
-                <a href="Big_Data_Storage_Concepts.html" class="nav-link text-slate-600 font-medium">Big Data Storage</a>
-                <a href="Hadoop_Fundamentals.html" class="nav-link text-slate-600 font-medium">Hadoop Fundamentals</a>
-                <a href="Hadoop_Ecosystem.html" class="nav-link text-slate-600 font-medium">Hadoop Ecosystem</a>
-                <a href="Map_Reduce.html" class="nav-link text-slate-600 font-medium">Map Reduce</a>
-                <a href="Apache_Spark.html" class="nav-link text-slate-600 font-medium">Apache Spark</a>
-                <a href="NoSQL_Deep_Dive.html" class="nav-link text-slate-600 font-medium">NoSQL Deep Dive</a>
-                <a href="Levels_of_Data_Analytics.html" class="nav-link text-slate-600 font-medium">Levels of Data Analytics</a>
-                <a href="Hadoop_Cluster_Setup.html" class="nav-link text-slate-600 font-medium">Hadoop Setup</a>
-                <a href="Business_Value_Modeler.html" class="nav-link text-slate-600 font-medium">Business Value Modeler</a>
+                <a href="#foundational" class="nav-link text-slate-600 font-medium">Foundational Concepts</a>
+                <a href="#hadoop" class="nav-link text-slate-600 font-medium">Hadoop Ecosystem</a>
+                <a href="#advanced-tech" class="nav-link text-slate-600 font-medium">Advanced Technologies</a>
                 <a href="#tools" class="nav-link text-slate-600 font-medium">Tools</a>
             </div>
             <button id="mobile-menu-button" class="md:hidden text-slate-600">
@@ -52,16 +45,9 @@
             </button>
         </nav>
         <div id="mobile-menu" class="hidden md:hidden">
-            <a href="Big_Data_Processing.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Big Data Processing</a>
-            <a href="Big_Data_Storage_Concepts.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Big Data Storage</a>
-            <a href="Hadoop_Fundamentals.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Hadoop Fundamentals</a>
-            <a href="Hadoop_Ecosystem.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Hadoop Ecosystem</a>
-            <a href="Map_Reduce.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Map Reduce</a>
-            <a href="Apache_Spark.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Apache Spark</a>
-            <a href="NoSQL_Deep_Dive.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">NoSQL Deep Dive</a>
-            <a href="Levels_of_Data_Analytics.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Levels of Data Analytics</a>
-            <a href="Hadoop_Cluster_Setup.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Hadoop Setup</a>
-            <a href="Business_Value_Modeler.html" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Business Value Modeler</a>
+            <a href="#foundational" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Foundational Concepts</a>
+            <a href="#hadoop" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Hadoop Ecosystem</a>
+            <a href="#advanced-tech" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Advanced Technologies</a>
             <a href="#tools" class="block py-2 px-4 text-sm text-slate-600 hover:bg-slate-100">Tools</a>
         </div>
     </header>
@@ -70,44 +56,59 @@
         <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mb-8">Welcome to Your Big Data Resources</h2>
         <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-12">Use the navigation bar above or click on the cards below to explore various aspects of Big Data processing and management concepts.</p>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <a href="Big_Data_Processing.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">Big Data Processing</h3>
-                <p class="text-slate-600">Dive into how large datasets are processed and analyzed.</p>
-            </a>
-            <a href="Big_Data_Storage_Concepts.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">Big Data Storage Concepts</h3>
-                <p class="text-slate-600">Understand the foundational ideas behind storing massive amounts of data.</p>
-            </a>
-            <a href="Hadoop_Fundamentals.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">Hadoop Fundamentals</h3>
-                <p class="text-slate-600">Learn the basics of the Hadoop ecosystem and its key components.</p>
-            </a>
-            <a href="Hadoop_Ecosystem.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">Hadoop Ecosystem</h3>
-                <p class="text-slate-600">Explore an interactive guide to the broader Hadoop ecosystem.</p>
-            </a>
-            <a href="Map_Reduce.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">Map Reduce</h3>
-                <p class="text-slate-600">Explore the core programming model for processing large data sets with a parallel, distributed algorithm.</p>
-            </a>
-            <a href="Apache_Spark.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">Apache Spark</h3>
-                <p class="text-slate-600">Discover the unified analytics engine for large-scale data processing.</p>
-            </a>
-            <a href="NoSQL_Deep_Dive.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">NoSQL Deep Dive</h3>
-                <p class="text-slate-600">Get an in-depth look at non-relational databases, designed for handling large volumes of unstructured data.</p>
-            </a>
-            <a href="Levels_of_Data_Analytics.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">Levels of Data Analytics</h3>
-                <p class="text-slate-600">Explore the progression from descriptive to prescriptive analytics.</p>
-            </a>
-            <a href="Hadoop_Cluster_Setup.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
-                <h3 class="text-2xl font-bold text-amber-500 mb-2">Hadoop Cluster Setup</h3>
-                <p class="text-slate-600">Step-by-step guide to building a multi-node Hadoop cluster.</p>
-            </a>
-        </div>
+        <section id="foundational" class="mt-12">
+            <h3 class="text-3xl font-bold text-slate-800 mb-8">Foundational Concepts</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <a href="Big_Data_Processing.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Big Data Processing</h3>
+                    <p class="text-slate-600">Dive into how large datasets are processed and analyzed.</p>
+                </a>
+                <a href="Big_Data_Storage_Concepts.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Big Data Storage Concepts</h3>
+                    <p class="text-slate-600">Understand the foundational ideas behind storing massive amounts of data.</p>
+                </a>
+                <a href="Levels_of_Data_Analytics.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Levels of Data Analytics</h3>
+                    <p class="text-slate-600">Explore the progression from descriptive to prescriptive analytics.</p>
+                </a>
+            </div>
+        </section>
+
+        <section id="hadoop" class="mt-16">
+            <h3 class="text-3xl font-bold text-slate-800 mb-8">Hadoop Ecosystem</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <a href="Hadoop_Fundamentals.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Hadoop Fundamentals</h3>
+                    <p class="text-slate-600">Learn the basics of the Hadoop ecosystem and its key components.</p>
+                </a>
+                <a href="Hadoop_Ecosystem.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Hadoop Ecosystem</h3>
+                    <p class="text-slate-600">Explore an interactive guide to the broader Hadoop ecosystem.</p>
+                </a>
+                <a href="Map_Reduce.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Map Reduce</h3>
+                    <p class="text-slate-600">Explore the core programming model for processing large data sets with a parallel, distributed algorithm.</p>
+                </a>
+                <a href="Hadoop_Cluster_Setup.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Hadoop Cluster Setup</h3>
+                    <p class="text-slate-600">Step-by-step guide to building a multi-node Hadoop cluster.</p>
+                </a>
+            </div>
+        </section>
+
+        <section id="advanced-tech" class="mt-16">
+            <h3 class="text-3xl font-bold text-slate-800 mb-8">Advanced Technologies</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <a href="Apache_Spark.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">Apache Spark</h3>
+                    <p class="text-slate-600">Discover the unified analytics engine for large-scale data processing.</p>
+                </a>
+                <a href="NoSQL_Deep_Dive.html" class="card bg-white p-6 rounded-lg shadow-md flex flex-col items-center justify-center text-center hover:shadow-xl">
+                    <h3 class="text-2xl font-bold text-amber-500 mb-2">NoSQL Deep Dive</h3>
+                    <p class="text-slate-600">Get an in-depth look at non-relational databases, designed for handling large volumes of unstructured data.</p>
+                </a>
+            </div>
+        </section>
 
         <h3 id="tools" class="text-3xl font-bold text-slate-800 mt-16 mb-8">Interactive Tools</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
