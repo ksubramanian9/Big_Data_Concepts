@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Big Data - MongoDB Practice Questions - Flash Cards</title>
+<style>
+  :root{
+    --bg:#0f172a;           /* slate-900 */
+    --panel:#111827;        /* gray-900 */
+    --muted:#94a3b8;        /* slate-400 */
+    --text:#e5e7eb;         /* gray-200 */
+    --accent:#22d3ee;       /* cyan-400 */
+    --accent2:#a78bfa;      /* violet-400 */
+    --ok:#34d399;           /* emerald-400 */
+    --warn:#fbbf24;         /* amber-400 */
+    --danger:#f87171;       /* red-400 */
+    --card:#0b1220;         /* deep panel */
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body{
+    margin:0;
+    background: linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    line-height: 1.5;
+  }
+
+  header{
+    display:flex; align-items:center; gap:16px;
+    padding:16px 20px; border-bottom:1px solid #1f2937;
+    background: radial-gradient(1200px 400px at 10% -30%, rgba(34,211,238,.15), transparent 60%),
+                radial-gradient(900px 500px at 90% -30%, rgba(167,139,250,.12), transparent 60%);
+  }
+  .brand{ display:flex; align-items:center; gap:12px; }
+  .title{ font-size: clamp(18px, 2.6vw, 28px); font-weight: 700; letter-spacing:.2px; }
+  .sub{ font-size: 12px; color: var(--muted); margin-top:2px; }
+
+  .container{ display:grid; grid-template-columns: 280px 1fr; gap:0; min-height: calc(100vh - 70px); }
+  nav{
+    border-right:1px solid #1f2937; padding:16px;
+    background: linear-gradient(180deg, rgba(17,24,39,.8), rgba(17,24,39,.6));
+    position: sticky; top:0; align-self:start; height: 100%;
+  }
+  .nav-title{ font-size:12px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom:10px; }
+  .nav-btn{
+    width:100%; text-align:left; padding:10px 12px; border-radius:12px; border:1px solid #1f2937;
+    background:#0b1220; color:var(--text); cursor:pointer; margin-bottom:10px;
+    transition:transform .05s ease, border-color .2s ease, background .2s ease;
+    display:flex; align-items:center; gap:10px;
+  }
+  .nav-btn:hover{ transform: translateY(-1px); border-color:#293548; }
+  .nav-btn.active{ border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34,211,238,.15) inset; }
+
+  .main{ padding:18px 20px; }
+  .controls{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .leftControls{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .pill{ padding:6px 10px; border-radius: 999px; background: #0b1220; border:1px solid #1f2937; color:var(--muted); font-size:12px; }
+  .refresh, .export, .mode{
+    padding:10px 14px; border-radius:12px; border:none; cursor:pointer; font-weight:700;
+  }
+  .refresh{ background: linear-gradient(90deg, var(--accent), var(--accent2)); color:#0b1020; box-shadow: 0 8px 24px rgba(34,211,238,.15); }
+  .export{ background:#0b1220; border:1px solid #1f2937; color:var(--text); }
+  .modebar{ display:flex; gap:8px; }
+  .mode{ background:#0b1220; border:1px solid #1f2937; color:var(--text); }
+  .mode.active{ border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34,211,238,.15) inset; }
+
+  .grid{ display:grid; gap:16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .stack{ display:grid; gap:12px; }
+
+  /* Card (flip) */
+  .card{ perspective: 1200px; height: 280px; }
+  .inner{ position:relative; width:100%; height:100%; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
+  .card.flipped .inner{ transform: rotateY(180deg); }
+  .face{
+    position:absolute; inset:0; border-radius:16px; padding:14px; background: var(--card);
+    border:1px solid #1f2937; backface-visibility: hidden; display:flex; flex-direction:column; gap:10px;
+  }
+  .face.back{ transform: rotateY(180deg); background: linear-gradient(180deg, #07101f, #0b1220); }
+  .q{ font-weight:700; font-size: 14px; }
+  .choices{ display:flex; flex-direction:column; gap:6px; margin-top:6px; }
+  .choice{ font-size:13px; padding:8px 10px; border-radius:10px; border:1px solid #1f2937; background:#0d1526; }
+  .answer-box{ margin-top:auto; padding:10px; border-radius:12px; background:#0d1526; border:1px solid #1f2937; }
+  .answer-label{ font-size:12px; color:var(--muted); text-transform: uppercase; letter-spacing:.8px; }
+  .answer{ font-size:14px; font-weight:700; color: var(--ok); }
+  .footnote{ font-size:11px; color: var(--muted); }
+
+  /* QUIZ styles */
+  .qcard{
+    border:1px solid #1f2937; border-radius:14px; padding:14px; background:#0b1220;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .opt{
+    display:flex; gap:8px; align-items:flex-start; padding:8px 10px; border-radius:10px; border:1px solid #1f2937; background:#0d1526;
+    cursor:pointer;
+  }
+  .opt input{ margin-top:2px; }
+  .opt.correct{ border-color: rgba(52,211,153,.6); box-shadow: 0 0 0 2px rgba(52,211,153,.15) inset; }
+  .opt.incorrect{ border-color: rgba(248,113,113,.6); box-shadow: 0 0 0 2px rgba(248,113,113,.1) inset; }
+  .quizActions{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn{
+    padding:10px 14px; border-radius:12px; border:none; cursor:pointer; font-weight:700;
+    background: linear-gradient(90deg, var(--accent), var(--accent2)); color:#0b1020;
+  }
+  .btn.secondary{ background:#0b1220; color:var(--text); border:1px solid #1f2937; }
+  .scoreBox{ padding:10px 12px; border:1px solid #1f2937; background:#0b1220; border-radius:12px; color:var(--text); }
+  .explain{ font-size:12px; color: var(--muted); }
+
+  /* Badges/legend */
+  .badge{ display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:6px 10px; border-radius:999px; background:#0b1220; border:1px solid #1f2937; color: var(--muted); }
+  .legend{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  @media (max-width: 920px){
+    .container{ grid-template-columns: 1fr; }
+    nav{ position: static; }
+  }
+
+  /* PRINT (Export to PDF) */
+  @media print{
+    body{ background:#ffffff; color:#000; }
+    header, nav, .controls{ display:none !important; }
+    .main{ padding:0; }
+    .qcard{ break-inside: avoid; border:1px solid #aaa; background:#fff; }
+    .opt{ background:#fff; border-color:#ddd; }
+    .scoreBox{ border-color:#aaa; }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <!-- Tiny SVG mark -->
+      <svg width="40" height="40" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="64" y2="64">
+            <stop offset="0" stop-color="#22d3ee"/>
+            <stop offset="1" stop-color="#a78bfa"/>
+          </linearGradient>
+        </defs>
+        <circle cx="32" cy="32" r="30" stroke="url(#g)" stroke-width="2" fill="none"/>
+        <path d="M18 38c10-16 18-16 28 0" stroke="url(#g)" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <circle cx="24" cy="26" r="3" fill="#22d3ee"/>
+        <circle cx="40" cy="26" r="3" fill="#a78bfa"/>
+      </svg>
+      <div>
+        <div class="title">Big Data - MongoDB Practice Questions - Flash Cards</div>
+        <div class="sub">Pick a category → choose Flashcards or Quiz → draw 5 → practice</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav>
+      <div class="nav-title">Categories</div>
+      <button class="nav-btn" data-cat="Basics">
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="#22d3ee"/></svg>
+        Basics
+      </button>
+      <button class="nav-btn" data-cat="CRUD">
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="#22d3ee"/></svg>
+        CRUD Operations
+      </button>
+      <button class="nav-btn" data-cat="Indexing & Aggregation">
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="#22d3ee"/></svg>
+        Indexing &amp; Aggregation
+      </button>
+      <button class="nav-btn" data-cat="Replication & Sharding">
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="#22d3ee"/></svg>
+        Replication &amp; Sharding
+      </button>
+      <button class="nav-btn" data-cat="Advanced & Admin">
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6" fill="#22d3ee"/></svg>
+        Advanced &amp; Admin
+      </button>
+      <div style="height:10px"></div>
+      <div class="legend">
+        <span class="badge">Flashcards: Click card to flip</span>
+        <span class="badge">Quiz: Select → Submit → Review</span>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="controls">
+        <div class="leftControls">
+          <div class="pill" id="currentCat">Choose a category</div>
+          <div class="modebar" role="tablist" aria-label="Mode">
+            <button id="modeFlash" class="mode active" role="tab" aria-selected="true">Flashcards</button>
+            <button id="modeQuiz" class="mode" role="tab" aria-selected="false">Quiz</button>
+          </div>
+        </div>
+        <div class="rightControls" style="display:flex; gap:8px;">
+          <button class="export" id="exportBtn" title="Export current view to PDF">Export to PDF</button>
+          <button class="refresh" id="refreshBtn" disabled>Draw 5 New</button>
+        </div>
+      </div>
+
+      <!-- Flashcards view -->
+      <section id="flashView" class="grid" aria-live="polite"></section>
+
+      <!-- Quiz view -->
+      <section id="quizView" class="stack" aria-live="polite" style="display:none;">
+        <div class="quizActions">
+          <button class="btn" id="submitQuiz" disabled>Submit Answers</button>
+          <button class="btn secondary" id="showAnswers" disabled>Show Answers</button>
+          <div class="scoreBox" id="scoreBox" aria-live="polite">Score: — / 5</div>
+        </div>
+        <div id="quizStack" class="stack"></div>
+      </section>
+    </main>
+  </div>
+
+<script>
+/* ===========================
+   MongoDB Question Bank (100)
+   =========================== */
+const QUESTION_BANK = {
+  "Basics": [
+    { q:"MongoDB is classified as a:", choices:["Relational Database","Graph Database","Document Database","Key-Value Store","Columnar Database"], answer:2 },
+    { q:"Default data format used by MongoDB for storing documents is:", choices:["XML","BSON","JSON","CSV","YAML"], answer:1 },
+    { q:"Which company originally developed MongoDB?", choices:["Oracle","10gen","Microsoft","IBM","Facebook"], answer:1 },
+    { q:"MongoDB is best suited for:", choices:["Highly normalized data","Complex transactions across many tables","Semi-structured and unstructured data","Data warehousing only","Mainframe batch processing"], answer:2 },
+    { q:"The default port on which MongoDB server runs is:", choices:["1433","1521","27017","8080","3306"], answer:2 },
+    { q:"MongoDB database names cannot contain:", choices:["Lowercase letters","Numbers","Underscores","Spaces","Dots"], answer:3 },
+    { q:"In MongoDB, a \"collection\" is equivalent to:", choices:["A row in SQL","A database in SQL","A table in SQL","A schema in SQL","A column in SQL"], answer:2 },
+    { q:"The command to show all databases is:", choices:["list databases","show databases","get dbs","db.show()","get databases"], answer:1 },
+    { q:"MongoDB Compass is:", choices:["Command-line tool only","Official GUI client for MongoDB","Data replication tool","Backup utility","Security module"], answer:1 },
+    { q:"MongoDB Atlas is:", choices:["On-premise MongoDB installer","Managed cloud MongoDB service","BI Connector","Visualization tool","Mobile SDK"], answer:1 },
+    { q:"The maximum document size in MongoDB is:", choices:["2 MB","8 MB","16 MB","32 MB","Unlimited"], answer:2 },
+    { q:"MongoDB stores data in:", choices:["Rows and columns","Documents and collections","Pages and blocks","Tuples and relations","Records and files"], answer:1 },
+    { q:"BSON extends JSON by supporting:", choices:["Only text data","Additional data types","Less data types","Only binary files","XML conversion"], answer:1 },
+    { q:"To check the current database in MongoDB shell:", choices:["get db()","db.getName()","db","current.db","database()"], answer:2 },
+    { q:"In MongoDB, `_id` field:", choices:["Is optional","Must be unique within a collection","Can be duplicated","Is always an integer","Cannot be indexed"], answer:1 },
+  ],
+  "CRUD": [
+    { q:"Insert a single document using:", choices:["db.collection.add()","db.collection.save()","db.collection.insertOne()","db.collection.insertMany()","db.collection.updateOne()"], answer:2 },
+    { q:"Which method inserts multiple documents?", choices:["insertOne","insertMany","insertBatch","insertMultiple","save"], answer:1 },
+    { q:"Which operator is used in MongoDB for \"greater than\"?", choices:["$lt","$gt","$gte","$eq","$ne"], answer:1 },
+    { q:"To find all documents in a collection:", choices:["db.collection.find({})","db.collection.getAll()","db.collection.show()","db.collection.findAll()","db.collection.documents()"], answer:0 },
+    { q:"Which method replaces an entire document?", choices:["updateOne","updateMany","replaceOne","save","modifyOne"], answer:2 },
+    { q:"$set operator is used to:", choices:["Delete a field","Add new documents","Update specific fields","Rename a collection","Create an index"], answer:2 },
+    { q:"Which method deletes all matching documents?", choices:["deleteOne","deleteMany","removeAll","drop","purge"], answer:1 },
+    { q:"To count documents:", choices:["db.collection.count()","db.collection.length()","db.collection.total()","db.collection.size()","db.collection.countDocs()"], answer:0 },
+    { q:"Which operator matches multiple possible values?", choices:["$and","$in","$or","$set","$nor"], answer:1 },
+    { q:"To search documents where a field exists:", choices:["$has","$exist","$exists","$in","$present"], answer:2 },
+    { q:"Which operator performs regex search?", choices:["$text","$regex","$like","$match","$expr"], answer:1 },
+    { q:"findOne() returns:", choices:["All documents","The first matching document","Last document","Random document","Count of documents"], answer:1 },
+    { q:"Projection in MongoDB means:", choices:["Filtering fields to return","Sorting results","Joining tables","Aggregating values","Removing indexes"], answer:0 },
+    { q:"$unset operator is used for:", choices:["Adding new field","Removing field","Updating field","Projecting fields","Renaming collection"], answer:1 },
+    { q:"To update multiple documents:", choices:["updateOne","updateMany","replaceOne","modify","insertMany"], answer:1 },
+  ],
+  "Indexing & Aggregation": [
+    { q:"Indexes in MongoDB improve:", choices:["Storage size","Query performance","Replication","Data sharding","Backup"], answer:1 },
+    { q:"The default index created is on:", choices:["All fields","_id","name","First field in schema","timestamp"], answer:1 },
+    { q:"A compound index is created on:", choices:["Single field","Multiple fields","Collection","Database","Primary key"], answer:1 },
+    { q:"Which index supports text search?", choices:["Hash index","Text index","Wildcard index","Multikey index","Sparse index"], answer:1 },
+    { q:"$group stage in aggregation is similar to:", choices:["SQL ORDER BY","SQL GROUP BY","SQL WHERE","SQL LIMIT","SQL JOIN"], answer:1 },
+    { q:"$match stage is equivalent to:", choices:["WHERE clause","SELECT clause","ORDER BY clause","GROUP BY clause","HAVING clause"], answer:0 },
+    { q:"$sort stage in aggregation sorts documents by:", choices:["Ascending only","Descending only","Ascending/Descending","Random","Hash order"], answer:2 },
+    { q:"Aggregation pipeline is:", choices:["Collection of indexes","Sequence of stages","Backup tool","Query optimizer","Shard balancer"], answer:1 },
+    { q:"$limit stage restricts:", choices:["Fields","Documents","Databases","Indexes","Joins"], answer:1 },
+    { q:"$lookup operator is used for:", choices:["Aggregation grouping","Performing a join","Sorting documents","Updating fields","Creating index"], answer:1 },
+    { q:"Which operator calculates average?", choices:["$avg","$mean","$median","$calc","$sum"], answer:0 },
+    { q:"Multikey index supports:", choices:["Arrays","Numbers only","Strings only","Dates only","Binary"], answer:0 },
+    { q:"Sparse index indexes:", choices:["All documents","Only documents with indexed field","Only empty fields","All arrays","None"], answer:1 },
+    { q:"Unique index ensures:", choices:["No duplicate documents","No duplicate values in indexed field","Faster writes","Replica set consistency","Larger storage"], answer:1 },
+    { q:"Wildcard index is useful when:", choices:["Schema is known","Schema is unpredictable","Only numbers are used","Text search needed","Sharding required"], answer:1 },
+  ],
+  "Replication & Sharding": [
+    { q:"Replica set in MongoDB is for:", choices:["Indexing","High availability","Backup only","Sharding","Transactions"], answer:1 },
+    { q:"Default number of members recommended in a replica set:", choices:["1","2","Odd number (3,5,7)","Even number (2,4,6)","Unlimited"], answer:2 },
+    { q:"In replica sets, primary:", choices:["Can’t accept writes","Accepts all writes","Only reads","No data storage","Only indexes"], answer:1 },
+    { q:"Secondaries in replica set:", choices:["Accept writes","Replicate from primary","Create indexes only","Act as arbiters","Do nothing"], answer:1 },
+    { q:"Arbiter node:", choices:["Stores data","Only votes in elections","Creates indexes","Stores logs","Acts as secondary"], answer:1 },
+    { q:"Sharding is used for:", choices:["High availability","Horizontal scaling","Indexing","Backups","Security"], answer:1 },
+    { q:"Shard key must be:", choices:["Unique and immutable","Random","Always numeric","Always a date","Optional"], answer:0 },
+    { q:"Config servers in sharding store:", choices:["User data","Metadata","Indexes","Aggregations","Backup"], answer:1 },
+    { q:"Mongos in sharding is:", choices:["Query router","Storage node","Config server","Arbiter","Backup node"], answer:0 },
+    { q:"Balancer in sharding ensures:", choices:["Indexing","Even data distribution","Backup consistency","Aggregation optimization","Query parsing"], answer:1 },
+    { q:"Which is NOT a sharding strategy?", choices:["Range-based","Hash-based","Zone-based","Tuple-based","Tag-aware"], answer:3 },
+    { q:"Which factor affects shard key choice most?", choices:["Color of field","Query patterns","Index size","Server brand","Log level"], answer:1 },
+    { q:"Shard key once chosen:", choices:["Can be changed anytime","Cannot be changed","Can be partially modified","Is optional","Is auto-generated"], answer:1 },
+    { q:"In replica set failover, a new primary is elected:", choices:["Immediately","After election process","Never","Only manually","Every hour"], answer:1 },
+    { q:"To initiate a replica set:", choices:["rs.initiate()","db.startReplica()","mongo.replicate()","db.replicaInit()","setReplica()"], answer:0 },
+    { q:"Priority field in replica config decides:", choices:["Voting rights","Likelihood of becoming primary","Shard balancing","Index type","Backup schedule"], answer:1 },
+    { q:"Read preference controls:", choices:["Write routing","Read routing","Index choice","Backup replication","Aggregation stage"], answer:1 },
+    { q:"Journaling in MongoDB ensures:", choices:["Faster reads","Durability","Index creation","Backup only","Sharding"], answer:1 },
+    { q:"Replica set oplog stores:", choices:["Logs for queries","Operations for replication","Index definitions","Config metadata","User accounts"], answer:1 },
+    { q:"Hidden members in replica set:", choices:["Can’t replicate","Replicate but not visible to client","Act as arbiters","Don’t store data","Are only config servers"], answer:1 },
+  ],
+  "Advanced & Admin": [
+    { q:"MongoDB supports ACID transactions since version:", choices:["2.6","3.0","4.0","4.4","5.0"], answer:2 },
+    { q:"Which engine replaced MMAPv1?", choices:["RocksDB","WiredTiger","InnoDB","LevelDB","MyISAM"], answer:1 },
+    { q:"WiredTiger provides:", choices:["Row-level locking","Collection-level locking","Database-level locking","No locking","File-level locking"], answer:0 },
+    { q:"MongoDB backups are recommended using:", choices:["mongobackup","mongodump","mongorestore","mongocopy","mongosave"], answer:1 },
+    { q:"To restore from backup:", choices:["mongodump","mongorestore","mongoreplica","mongoload","mongoimport"], answer:1 },
+    { q:"mongoexport is used for:", choices:["Exporting data to JSON/CSV","Creating indexes","Aggregation","Importing data","Replication"], answer:0 },
+    { q:"mongoimport is used for:", choices:["Export data","Import data from JSON/CSV","Backup oplog","Restore replica set","Shard balancing"], answer:1 },
+    { q:"Which MongoDB role allows full control?", choices:["read","readWrite","dbAdmin","root","userAdmin"], answer:3 },
+    { q:"Authentication mechanism in MongoDB:", choices:["Kerberos","SCRAM","LDAP","All of the above","None"], answer:3 },
+    { q:"GridFS is used to:", choices:["Store logs","Store large files (>16 MB)","Store indexes","Backup data","Cache documents"], answer:1 },
+    { q:"$text operator supports:", choices:["Regular expressions","Full-text search","Aggregation only","Numeric ranges","Indexing"], answer:1 },
+    { q:"Capped collections are:", choices:["Fixed size collections","Index-only","Temporary","System collections","Unlimited"], answer:0 },
+    { q:"Change streams allow:", choices:["Real-time notifications on data changes","Index creation","Replication only","Backups","Journaling"], answer:0 },
+    { q:"TTL indexes are used for:", choices:["Expiring documents","Backups","Replication","Aggregations","GridFS"], answer:0 },
+    { q:"Which command shows collection stats?", choices:["db.stats()","db.collection.stats()","db.info()","db.collection.info()","db.showStats()"], answer:1 },
+    { q:"The explain() method provides:", choices:["Query plan","Backup status","Replica info","Shard balancing","Index count"], answer:0 },
+    { q:"Which driver is official for Python?", choices:["PyMongo","mongo-py","mongokit","SQLAlchemy","DJongo"], answer:0 },
+    { q:"Which driver is official for Node.js?", choices:["mongoose","mongodb","mongo-driver","express-mongo","native-mongo"], answer:1 },
+    { q:"MongoDB shell prior to version 5 was:", choices:["mongosh","mongo","mongocli","mongoctl","mongoterm"], answer:1 },
+    { q:"MongoDB provides BI Connector to connect with:", choices:["Hadoop","SQL-based tools","Cloud storage","LDAP","Kerberos"], answer:1 },
+    { q:"Compass allows:", choices:["Visual schema exploration","Shard balancing","Replica set management","Backup scheduling","Index-only operations"], answer:0 },
+    { q:"$sample stage in aggregation:", choices:["Samples documents randomly","Sorts documents","Groups documents","Filters documents","Joins documents"], answer:0 },
+    { q:"$merge stage writes results into:", choices:["File","Another collection","Index","Backup","GridFS"], answer:1 },
+    { q:"$out stage is similar to:", choices:["$merge","$sort","$limit","$lookup","$group"], answer:0 },
+    { q:"Atlas provides:", choices:["Fully managed MongoDB clusters","Backup only","Index creation only","Replication only","CLI only"], answer:0 },
+    { q:"Which cloud providers support Atlas?", choices:["AWS","Azure","GCP","All of the above","None"], answer:3 },
+    { q:"Aggregation framework introduced in version:", choices:["1.8","2.2","3.0","3.4","4.0"], answer:1 },
+    { q:"$facet stage allows:", choices:["Parallel aggregations","Text search","Sorting","Index creation","Transactions"], answer:0 },
+    { q:"Which operator converts string to date?", choices:["$toDate","$date","$strToDate","$cast","$dateTime"], answer:0 },
+    { q:"$bucket groups documents by:", choices:["Ranges","Arrays","Joins","Indexes","Queries"], answer:0 },
+    { q:"$cond is used for:", choices:["Conditional expressions","Indexing","Replication","Backup","Sorting"], answer:0 },
+    { q:"$unwind is used to:", choices:["Deconstruct arrays","Merge collections","Backup indexes","Replicate oplog","Encrypt fields"], answer:0 },
+    { q:"Field-level encryption in MongoDB is:", choices:["Automatic client-side encryption","Server-only","Index-only","Optional journaling","None"], answer:0 },
+    { q:"MongoDB version 6.0 introduced:", choices:["Time-series collections","Replica sets","Aggregation pipeline","GridFS","WiredTiger"], answer:0 },
+    { q:"Which is true about MongoDB?", choices:["It requires fixed schema","It is schema-less","It doesn’t support indexing","Only works on Linux","Doesn’t support transactions"], answer:1 },
+  ]
+};
+
+/* ========= Helpers ========= */
+function sampleFive(arr){
+  const copy = arr.slice();
+  for(let i=copy.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, Math.min(5, copy.length));
+}
+const letter = idx => ["A","B","C","D","E"][idx] ?? "?";
+
+/* ========= Elements ========= */
+const cardsGrid = document.getElementById('flashView');
+const quizView = document.getElementById('quizView');
+const quizStack = document.getElementById('quizStack');
+const currentCatEl = document.getElementById('currentCat');
+const refreshBtn = document.getElementById('refreshBtn');
+const exportBtn = document.getElementById('exportBtn');
+const navButtons = Array.from(document.querySelectorAll('.nav-btn'));
+const modeFlash = document.getElementById('modeFlash');
+const modeQuiz = document.getElementById('modeQuiz');
+const submitQuiz = document.getElementById('submitQuiz');
+const showAnswers = document.getElementById('showAnswers');
+const scoreBox = document.getElementById('scoreBox');
+
+let activeCategory = null;
+let currentFive = [];
+let mode = 'flash'; // 'flash' | 'quiz'
+
+/* ========= Mode & Category ========= */
+function setMode(newMode){
+  mode = newMode;
+  modeFlash.classList.toggle('active', mode==='flash');
+  modeQuiz.classList.toggle('active', mode==='quiz');
+  document.getElementById('flashView').style.display = mode==='flash' ? '' : 'none';
+  document.getElementById('quizView').style.display = mode==='quiz' ? '' : 'none';
+  refreshBtn.textContent = mode==='flash' ? 'Draw 5 New' : 'Regenerate 5';
+  if(activeCategory) drawFive();
+}
+modeFlash.addEventListener('click', ()=> setMode('flash'));
+modeQuiz.addEventListener('click', ()=> setMode('quiz'));
+
+function setActive(cat){
+  activeCategory = cat;
+  navButtons.forEach(b => b.classList.toggle('active', b.dataset.cat===cat));
+  currentCatEl.textContent = `Category: ${cat}`;
+  refreshBtn.disabled = false;
+  drawFive();
+}
+navButtons.forEach(btn=> btn.addEventListener('click', ()=> setActive(btn.dataset.cat)));
+
+/* ========= Draw & Render ========= */
+function drawFive(){
+  if(!activeCategory) return;
+  currentFive = sampleFive(QUESTION_BANK[activeCategory] || []);
+  if(mode==='flash') renderFlashcards(currentFive);
+  else renderQuiz(currentFive);
+}
+refreshBtn.addEventListener('click', drawFive);
+
+/* ---------- Flashcards ---------- */
+function renderFlashcards(items){
+  cardsGrid.innerHTML = '';
+  for(const item of items){
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.tabIndex = 0;
+    card.setAttribute('role','button');
+    card.setAttribute('aria-label','Flip card to reveal answer');
+
+    const inner = document.createElement('div');
+    inner.className = 'inner';
+
+    // FRONT
+    const front = document.createElement('div');
+    front.className = 'face front';
+    const q = document.createElement('div');
+    q.className = 'q';
+    q.textContent = item.q;
+    const choices = document.createElement('div');
+    choices.className = 'choices';
+    item.choices.forEach((c,i)=>{
+      const ch = document.createElement('div');
+      ch.className = 'choice';
+      ch.textContent = `${letter(i)}. ${c}`;
+      choices.appendChild(ch);
+    });
+    const hint = document.createElement('div');
+    hint.className = 'footnote';
+    hint.textContent = 'Click to flip and see the answer';
+    front.appendChild(q); front.appendChild(choices); front.appendChild(hint);
+
+    // BACK
+    const back = document.createElement('div');
+    back.className = 'face back';
+    const aq = document.createElement('div');
+    aq.className = 'q';
+    aq.textContent = 'Answer';
+    const box = document.createElement('div');
+    box.className = 'answer-box';
+    const lab = document.createElement('div');
+    lab.className = 'answer-label';
+    lab.textContent = 'Correct Option';
+    const ans = document.createElement('div');
+    ans.className = 'answer';
+    const idx = item.answer;
+    ans.textContent = `${letter(idx)}. ${item.choices[idx]}`;
+    box.appendChild(lab); box.appendChild(ans);
+    const backnote = document.createElement('div');
+    backnote.className = 'footnote';
+    backnote.textContent = 'Click again to flip back';
+    back.appendChild(aq); back.appendChild(box); back.appendChild(backnote);
+
+    inner.appendChild(front); inner.appendChild(back);
+    card.appendChild(inner);
+
+    // Flip handlers
+    function toggleFlip(){ card.classList.toggle('flipped'); }
+    card.addEventListener('click', toggleFlip);
+    card.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggleFlip(); } });
+
+    cardsGrid.appendChild(card);
+  }
+}
+
+/* ---------- Quiz ---------- */
+let quizSelections = []; // per-question selected index or null
+
+function renderQuiz(items){
+  quizStack.innerHTML = '';
+  quizSelections = new Array(items.length).fill(null);
+  submitQuiz.disabled = false;
+  showAnswers.disabled = true;
+  scoreBox.textContent = 'Score: — / 5';
+
+  items.forEach((item, qi)=>{
+    const qc = document.createElement('div');
+    qc.className = 'qcard';
+
+    const q = document.createElement('div');
+    q.className = 'q';
+    q.textContent = `${qi+1}. ${item.q}`;
+    qc.appendChild(q);
+
+    item.choices.forEach((c,i)=>{
+      const id = `q${qi}_opt${i}`;
+      const label = document.createElement('label');
+      label.className = 'opt';
+      label.setAttribute('for', id);
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = `q${qi}`;
+      radio.id = id;
+      radio.value = String(i);
+
+      radio.addEventListener('change', ()=>{
+        quizSelections[qi] = i;
+      });
+
+      const txt = document.createElement('div');
+      txt.innerHTML = `<strong>${letter(i)}.</strong> ${c}`;
+      label.appendChild(radio);
+      label.appendChild(txt);
+      qc.appendChild(label);
+    });
+
+    // hidden explanation area (answers)
+    const expl = document.createElement('div');
+    expl.className = 'explain';
+    expl.style.display = 'none';
+    expl.dataset.correct = item.answer;
+    expl.textContent = `Answer: ${letter(item.answer)}. ${item.choices[item.answer]}`;
+    qc.appendChild(expl);
+
+    quizStack.appendChild(qc);
+  });
+}
+
+function gradeQuiz(){
+  let score = 0;
+  const cards = Array.from(quizStack.children);
+  cards.forEach((qc, qi)=>{
+    const selected = quizSelections[qi];
+    const correct = currentFive[qi].answer;
+    const opts = qc.querySelectorAll('.opt');
+    opts.forEach((opt, i)=>{
+      opt.classList.remove('correct','incorrect');
+      if(i===correct) opt.classList.add('correct');
+      if(selected!==null && i===selected && selected!==correct) opt.classList.add('incorrect');
+    });
+    if(selected===correct) score++;
+  });
+  scoreBox.textContent = `Score: ${score} / ${currentFive.length}`;
+  showAnswers.disabled = false;
+}
+
+function toggleAnswers(show){
+  const cards = Array.from(quizStack.children);
+  cards.forEach((qc)=> {
+    const expl = qc.querySelector('.explain');
+    if(expl) expl.style.display = show ? '' : 'none';
+  });
+}
+
+submitQuiz.addEventListener('click', gradeQuiz);
+let answersVisible = false;
+showAnswers.addEventListener('click', ()=>{
+  answersVisible = !answersVisible;
+  toggleAnswers(answersVisible);
+  showAnswers.textContent = answersVisible ? 'Hide Answers' : 'Show Answers';
+});
+
+/* ========= Export to PDF ========= */
+exportBtn.addEventListener('click', ()=> window.print());
+
+/* ========= Init ========= */
+setTimeout(()=>{
+  const first = navButtons[0];
+  if(first) setActive(first.dataset.cat);
+}, 0);
+</script>
+</body>
+</html>
