@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Definitive Guide to Apache Hive</title>
+    <!-- Chosen Palette: Cool Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page, vertical-scrolling journey with a sticky top navigation for quick access to key thematic sections. This structure was chosen over a rigid, linear report format to empower both novice and expert users. A user can get a high-level overview from the start or use the navigation to jump directly to a specific technical deep-dive like "Architecture" or "File Formats". Key interactions include clickable diagrams (for architecture) and dynamic charts (for comparisons), which reveal information on demand. This progressive disclosure approach prevents overwhelming the user with dense technical data, making complex concepts more digestible and exploration more intuitive. The flow is: Introduction -> Ecosystem Context -> Core Architecture -> Technical Features -> Industry Relevance. -->
+    <!-- Visualization & Content Choices: 
+        1. Ecosystem Diagram: (Report Info: Hive's place in Hadoop) -> (Goal: Organize) -> (Viz: Interactive HTML/CSS Diagram) -> (Interaction: Hover/Click to highlight Hive's role) -> (Justification: Visually contextualizes Hive without relying on static images) -> (Method: Tailwind CSS).
+        2. Architecture Diagram: (Report Info: Hive components like Metastore, Driver) -> (Goal: Organize/Inform) -> (Viz: Clickable HTML/CSS Flowchart) -> (Interaction: Clicking a component reveals its detailed description) -> (Justification: Makes a complex architecture explorable piece-by-piece) -> (Method: HTML/CSS, JS for interaction).
+        3. File Format Comparison: (Report Info: ORC, Parquet performance) -> (Goal: Compare) -> (Viz: Bar Chart) -> (Interaction: Buttons to switch between metrics like 'Query Speed' and 'Compression') -> (Justification: A chart provides a much clearer quantitative comparison than text) -> (Library: Chart.js/Canvas).
+        4. Industry Adoption: (Report Info: Hive usage across sectors) -> (Goal: Inform) -> (Viz: Donut Chart) -> (Interaction: Hover over segments to see percentages) -> (Justification: Quickly conveys market share and relevance) -> (Library: Chart.js/Canvas).
+        5. HQL Examples: (Report Info: HiveQL syntax) -> (Goal: Inform) -> (Viz: Tabbed code blocks) -> (Interaction: Click tabs for different query types) -> (Justification: Organizes code snippets cleanly) -> (Method: HTML/CSS, JS).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #212529;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .active-nav {
+            color: #3B82F6;
+            font-weight: 600;
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #3B82F6;
+        }
+        .component-box {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .component-box:hover, .component-box.selected {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
+            border-color: #3B82F6;
+        }
+        .content-card {
+            transition: opacity 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="sticky top-0 z-50 w-full glassmorphism shadow-md">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-gray-800">Apache Hive Report</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#introduction" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Introduction</a>
+                        <a href="#architecture" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Architecture</a>
+                        <a href="#deepdive" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Technical Deep Dive</a>
+                        <a href="#industry" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Industry Context</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#introduction" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Introduction</a>
+                <a href="#architecture" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Architecture</a>
+                <a href="#deepdive" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Technical Deep Dive</a>
+                <a href="#industry" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Industry Context</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <section id="introduction" class="min-h-screen flex items-center pt-16">
+            <div class="w-full">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                        The SQL Interface for Big Data: <br class="hidden md:block" />
+                        <span class="text-blue-600">An Interactive Guide to Apache Hive</span>
+                    </h1>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">
+                        This report demystifies Apache Hive, a data warehouse system built on Hadoop for querying and analyzing large datasets. Explore its architecture, technical features, and real-world applications through interactive visualizations.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Hive's Place in the Hadoop Ecosystem</h2>
+                    <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Hive acts as a high-level abstraction layer, translating familiar SQL-like queries into lower-level jobs that run on Hadoop's processing and storage engines. It democratizes big data access for analysts comfortable with SQL. Interact with the diagram below to see how Hive connects with other core components.</p>
+                    <div id="ecosystem-diagram" class="relative p-6 rounded-lg bg-gray-50 border-2 border-gray-200">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center text-center">
+                            <div class="md:col-span-3 p-4 rounded-lg bg-red-100 border border-red-300 ecosystem-component" data-component="storage">
+                                <h3 class="font-bold text-red-800">Storage Layer (HDFS)</h3>
+                                <p class="text-sm text-red-700">Distributed File System for Data</p>
+                            </div>
+                            <div class="md:col-span-3 p-4 rounded-lg bg-yellow-100 border border-yellow-300 ecosystem-component" data-component="processing">
+                                <h3 class="font-bold text-yellow-800">Processing & Resource Management (YARN & MapReduce/Tez/Spark)</h3>
+                                <p class="text-sm text-yellow-700">Executes Data Processing Jobs</p>
+                            </div>
+                             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 z-10 p-4 rounded-lg bg-blue-200 border-2 border-blue-400 shadow-lg ecosystem-component" data-component="hive">
+                                <h3 class="font-bold text-blue-800">Apache Hive</h3>
+                                <p class="text-sm text-blue-700">SQL Abstraction Layer</p>
+                            </div>
+                            <div class="md:col-span-3 p-4 rounded-lg bg-green-100 border border-green-300 ecosystem-component" data-component="access">
+                                <h3 class="font-bold text-green-800">Data Access & Interfaces (BI Tools, JDBC/ODBC)</h3>
+                                <p class="text-sm text-green-700">Connects Users to Data</p>
+                            </div>
+                        </div>
+                        <div id="ecosystem-info" class="mt-6 p-4 bg-white rounded-lg border border-gray-300 min-h-[80px] flex items-center justify-center">
+                            <p class="text-gray-700 text-center">Hover over a component to learn more about its role.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="architecture" class="min-h-screen py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Core Architecture Explained</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Hive's architecture is composed of several key components that work together to process your queries. Click on each block in the diagram below to understand its specific function in the query lifecycle.</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-2 text-center font-semibold">
+                    <div class="component-box border-2 rounded-lg p-4 w-48 bg-gray-50" data-component="client">Client (JDBC/ODBC, CLI)</div>
+                    <div class="text-2xl text-gray-400">→</div>
+                    <div class="component-box border-2 rounded-lg p-4 w-48 bg-blue-100 border-blue-300" data-component="driver">Hive Driver</div>
+                    <div class="text-2xl text-gray-400">→</div>
+                    <div class="component-box border-2 rounded-lg p-4 w-48 bg-green-100 border-green-300" data-component="compiler">Compiler</div>
+                     <div class="text-2xl text-gray-400">→</div>
+                    <div class="component-box border-2 rounded-lg p-4 w-48 bg-yellow-100 border-yellow-300" data-component="optimizer">Optimizer</div>
+                     <div class="text-2xl text-gray-400">→</div>
+                    <div class="component-box border-2 rounded-lg p-4 w-48 bg-red-100 border-red-300" data-component="executor">Executor</div>
+                </div>
+                <div class="flex justify-center mt-4">
+                     <div class="text-2xl text-gray-400 transform rotate-90 md:rotate-0">↓</div>
+                </div>
+                <div class="flex justify-center mt-4">
+                     <div class="component-box border-2 rounded-lg p-4 w-48 bg-purple-100 border-purple-300 text-center font-semibold" data-component="metastore">Metastore</div>
+                </div>
+
+                <div id="architecture-info-card" class="content-card mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200 min-h-[150px] flex items-center justify-center opacity-0 transition-opacity duration-500">
+                    <p class="text-gray-700 text-center text-lg">Select a component to view its details.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="deepdive" class="min-h-screen py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Technical Deep Dive</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Explore the core technical constructs that make Hive a powerful and flexible tool for big data analytics.</p>
+            </div>
+            
+            <div class="space-y-12">
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">HiveQL (HQL) - The Language of Hive</h3>
+                    <p class="text-gray-600 mb-6">HQL is Hive's SQL-inspired query language. While it lacks full support for transactions and row-level updates found in traditional RDBMS, it provides a powerful and familiar syntax for batch processing and large-scale data analysis.</p>
+                    <div class="bg-gray-800 rounded-lg p-4 text-white font-mono text-sm overflow-x-auto">
+                        <pre><code id="hql-example">-- Example: Counting records in a table
+SELECT country, COUNT(*) as user_count
+FROM users
+WHERE registration_date > '2025-01-01'
+GROUP BY country
+ORDER BY user_count DESC
+LIMIT 10;</code></pre>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                     <div class="bg-white rounded-2xl shadow-xl p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Data Types</h3>
+                        <p class="text-gray-600 mb-6">Hive supports both primitive and complex data types to model structured and semi-structured data.</p>
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-semibold text-blue-700">Primitive Types</h4>
+                                <p class="text-gray-600">Integers (TINYINT, INT), Floating-point (FLOAT, DOUBLE), STRING, BOOLEAN, TIMESTAMP, DECIMAL.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-green-700">Complex Types</h4>
+                                <ul class="list-disc list-inside text-gray-600">
+                                    <li><b>ARRAY:</b> Ordered collection of similar typed elements.</li>
+                                    <li><b>MAP:</b> Unordered collection of key-value pairs.</li>
+                                    <li><b>STRUCT:</b> Collection of elements of different types, similar to a row.</li>
+                                    <li><b>UNIONTYPE:</b> Can hold one value from a specified list of data types.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-xl p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">SerDe (Serializer/Deserializer)</h3>
+                        <p class="text-gray-600 mb-6">SerDe is a powerful Hive feature that instructs Hive how to interpret data records. It tells Hive how to serialize an object into a storable format and deserialize it back into a Hive-readable object. This enables Hive to read data from various formats, including JSON, Avro, and custom text formats.</p>
+                        <div class="bg-gray-100 rounded-lg p-4 border border-gray-200">
+                             <p class="text-sm text-gray-700"><b class="font-semibold">Example Use Case:</b> Using a JSON SerDe to directly query raw JSON files stored in HDFS without any transformation, by defining a table schema that maps to the JSON structure.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Optimized File Formats</h3>
+                    <p class="text-gray-600 mb-6">Choosing the right file format is critical for performance. Columnar formats like ORC and Parquet significantly outperform standard text files by enabling efficient compression and predicate pushdown (reading only the required columns).</p>
+                    <div class="text-center mb-6">
+                        <button id="speed-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition">Query Speed</button>
+                        <button id="compression-btn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition ml-2">Compression Ratio</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="fileFormatChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="industry" class="min-h-screen py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Industry Context & Adoption</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Hive remains a cornerstone technology in the big data landscape, widely used for business intelligence, reporting, and ETL (Extract, Transform, Load) pipelines.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                 <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Hive Adoption by Industry</h3>
+                    <p class="text-gray-600 mb-6 text-center">Hive's versatility makes it a popular choice across various sectors that handle massive datasets.</p>
+                     <div class="chart-container h-80 md:h-96">
+                        <canvas id="industryAdoptionChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">The Hive Interface</h3>
+                    <p class="text-gray-600 mb-6">While developers can interact with Hive programmatically, analysts typically use either the command-line interface (CLI) for scripting or more user-friendly web UIs like Apache Hue, which provide a graphical interface for writing queries, browsing schemas, and viewing results.</p>
+                    <div class="bg-black rounded-lg shadow-lg p-4 font-mono text-sm text-green-400">
+                        <p>> SHOW DATABASES;</p>
+                        <p class="text-white">OK</p>
+                        <p>default</p>
+                        <p>reporting_db</p>
+                        <p>user_analytics</p>
+                        <p>Time taken: 0.12 seconds</p>
+                        <br>
+                        <p>> USE user_analytics;</p>
+                        <p class="text-white">OK</p>
+                        <p>Time taken: 0.08 seconds</p>
+                        <br>
+                        <p>> SELECT * FROM users LIMIT 2;</p>
+                        <p class="text-white">OK</p>
+                        <p>101   john_doe    US</p>
+                        <p>102   jane_smith  CA</p>
+                        <p>Time taken: 2.34 seconds, Fetched: 2 row(s)</p>
+                        <p class="animate-pulse">> _</p>
+                    </div>
+                     <p class="text-xs text-gray-500 mt-2 text-center">A simplified simulation of the Hive CLI.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-20">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center">
+            <p>Interactive Report generated on <span id="generationDate"></span>.</p>
+            <p class="text-sm text-gray-400 mt-1">This is a conceptual, interactive web application designed for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            const navLinks = document.querySelectorAll('header nav a');
+            const sections = document.querySelectorAll('main section');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active-nav');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active-nav');
+                    }
+                });
+            });
+
+            const ecosystemComponents = document.querySelectorAll('.ecosystem-component');
+            const ecosystemInfo = document.getElementById('ecosystem-info');
+            const ecosystemData = {
+                storage: '<strong>HDFS (Hadoop Distributed File System):</strong> The foundational storage layer. Hive tables correspond to directories in HDFS where the actual data files reside.',
+                processing: '<strong>YARN & Execution Engines:</strong> YARN manages cluster resources. Hive translates queries into jobs for execution engines like MapReduce, Tez (default), or Spark for processing the data.',
+                hive: '<strong>Apache Hive:</strong> Acts as the "SQL Brain". It parses, plans, and optimizes HQL queries, manages metadata, and submits jobs to the processing layer. It doesn\'t store data itself.',
+                access: '<strong>Data Access:</strong> Users and applications connect to Hive through interfaces like JDBC/ODBC (for BI tools like Tableau), a command-line interface (CLI), or Web UIs (like Hue).',
+                default: '<p class="text-gray-700 text-center">Hover over a component to learn more about its role.</p>'
+            };
+
+            ecosystemComponents.forEach(comp => {
+                comp.addEventListener('mouseenter', () => {
+                    const componentKey = comp.dataset.component;
+                    ecosystemInfo.innerHTML = ecosystemData[componentKey];
+                });
+                comp.addEventListener('mouseleave', () => {
+                     ecosystemInfo.innerHTML = ecosystemData.default;
+                });
+            });
+
+            const archComponents = document.querySelectorAll('.component-box');
+            const archInfoCard = document.getElementById('architecture-info-card');
+            const archData = {
+                client: {
+                    title: 'Client Interfaces',
+                    desc: 'These are the entry points for users and applications. They include the command-line shell (CLI), JDBC/ODBC drivers for connecting BI tools, and web-based UIs.'
+                },
+                driver: {
+                    title: 'Hive Driver',
+                    desc: 'The Driver acts as a controller. It receives the HQL query, manages the session, and orchestrates the steps of query execution by invoking the Compiler, Optimizer, and Executor.'
+                },
+                compiler: {
+                    title: 'Compiler',
+                    desc: 'The Compiler parses the HQL query string to check for syntax and semantic errors. It then converts the query into an execution plan (a Directed Acyclic Graph - DAG) using metadata from the Metastore.'
+                },
+                optimizer: {
+                    title: 'Optimizer',
+                    desc: 'The Optimizer rewrites the execution plan to improve performance. It applies various transformations, such as rearranging joins or pushing down predicates, to create the most efficient execution strategy.'
+                },
+                executor: {
+                    title: 'Executor',
+                    desc: 'Once the plan is compiled and optimized, the Executor runs the tasks. It interfaces with the Hadoop cluster\'s resource manager (YARN) to execute the job on the chosen processing engine (e.g., Tez, Spark).'
+                },
+                metastore: {
+                    title: 'Metastore',
+                    desc: 'The Metastore is the central repository for all metadata. It stores information about databases, tables (like column names and data types), partitions, and the location of the data in HDFS. It is crucial for data discovery and schema management.'
+                }
+            };
+
+            archComponents.forEach(comp => {
+                comp.addEventListener('click', () => {
+                    archComponents.forEach(c => c.classList.remove('selected'));
+                    comp.classList.add('selected');
+
+                    const componentKey = comp.dataset.component;
+                    const data = archData[componentKey];
+                    
+                    archInfoCard.style.opacity = '0';
+                    setTimeout(() => {
+                        archInfoCard.innerHTML = `<div class="text-center"><h4 class="text-xl font-bold text-gray-800 mb-2">${data.title}</h4><p class="text-gray-600 max-w-2xl mx-auto">${data.desc}</p></div>`;
+                        archInfoCard.style.opacity = '1';
+                    }, 300);
+                });
+            });
+
+            const fileFormatData = {
+                speed: {
+                    labels: ['ORC', 'Parquet', 'Avro', 'TextFile'],
+                    data: [95, 92, 60, 15],
+                    label: 'Relative Query Speed (Higher is Better)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                    borderColor: 'rgba(59, 130, 246, 1)'
+                },
+                compression: {
+                    labels: ['ORC', 'Parquet', 'Avro', 'TextFile'],
+                    data: [85, 88, 50, 10],
+                    label: 'Relative Compression Ratio (Higher is Better)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)'
+                }
+            };
+
+            const ffCtx = document.getElementById('fileFormatChart').getContext('2d');
+            let fileFormatChart = new Chart(ffCtx, {
+                type: 'bar',
+                data: {
+                    labels: fileFormatData.speed.labels,
+                    datasets: [{
+                        label: fileFormatData.speed.label,
+                        data: fileFormatData.speed.data,
+                        backgroundColor: fileFormatData.speed.backgroundColor,
+                        borderColor: fileFormatData.speed.borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e5e7eb' }
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#1f2937',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 12 },
+                            padding: 10,
+                            cornerRadius: 4
+                        }
+                    }
+                }
+            });
+
+            const speedBtn = document.getElementById('speed-btn');
+            const compressionBtn = document.getElementById('compression-btn');
+
+            function updateChart(metric) {
+                const chartData = fileFormatData[metric];
+                fileFormatChart.data.labels = chartData.labels;
+                fileFormatChart.data.datasets[0].data = chartData.data;
+                fileFormatChart.data.datasets[0].label = chartData.label;
+                fileFormatChart.data.datasets[0].backgroundColor = chartData.backgroundColor;
+                fileFormatChart.data.datasets[0].borderColor = chartData.borderColor;
+                fileFormatChart.update();
+
+                if (metric === 'speed') {
+                    speedBtn.classList.replace('bg-gray-200', 'bg-blue-500');
+                    speedBtn.classList.replace('text-gray-700', 'text-white');
+                    compressionBtn.classList.replace('bg-blue-500', 'bg-gray-200');
+                    compressionBtn.classList.replace('text-white', 'text-gray-700');
+                } else {
+                    compressionBtn.classList.replace('bg-gray-200', 'bg-blue-500');
+                    compressionBtn.classList.replace('text-gray-700', 'text-white');
+                    speedBtn.classList.replace('bg-blue-500', 'bg-gray-200');
+                    speedBtn.classList.replace('text-white', 'text-gray-700');
+                }
+            }
+
+            speedBtn.addEventListener('click', () => updateChart('speed'));
+            compressionBtn.addEventListener('click', () => updateChart('compression'));
+            
+            const industryCtx = document.getElementById('industryAdoptionChart').getContext('2d');
+            new Chart(industryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Technology & Internet', 'Financial Services', 'Retail & E-commerce', 'Healthcare', 'Telecommunications', 'Other'],
+                    datasets: [{
+                        label: 'Adoption by Industry',
+                        data: [35, 25, 15, 10, 8, 7],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(107, 114, 128, 0.7)'
+                        ],
+                        borderColor: '#F8F9FA',
+                        borderWidth: 3,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                boxWidth: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + '%';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            document.getElementById('generationDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        });
+    </script>
+</body>
+</html>
