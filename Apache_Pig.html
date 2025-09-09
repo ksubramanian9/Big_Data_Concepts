@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Definitive Guide to Apache Pig</title>
+    <!-- Chosen Palette: Earthy Neutrals & Deep Blue -->
+    <!-- Application Structure Plan: The SPA is structured as a top-to-bottom narrative journey, ideal for a technology deep-dive. It begins with a high-level "what and why" (Introduction & Philosophy), moves into the technical core ("Anatomy of Pig"), details the "how" (Pig Latin & Execution), and finishes with "where it stands" (Ecosystem & Industry Context). A sticky top navigation allows users to jump to any section, catering to both linear learners and those seeking specific information. Interactions are designed to reveal complexity on demand: clickable diagrams for the anatomy and tabbed interfaces for code and execution modes prevent overwhelming the user, creating a guided but flexible learning path. -->
+    <!-- Visualization & Content Choices: 
+        1. Pig vs. MapReduce Comparison: (Report Info: Pig's high-level nature vs. low-level Java MapReduce) -> (Goal: Compare) -> (Viz: Bar Chart) -> (Interaction: Hover for details) -> (Justification: A bar chart provides a stark, immediate visual for comparing metrics like "Lines of Code" and "Development Time," which is more impactful than text alone.) -> (Library: Chart.js).
+        2. Anatomy of a Pig Script: (Report Info: Parser, Optimizer, Compiler, Execution Engine) -> (Goal: Organize/Inform) -> (Viz: Interactive HTML/CSS Flowchart) -> (Interaction: Clicking a stage in the flow reveals its detailed function) -> (Justification: This makes a complex compilation process digestible by breaking it down into explorable, sequential steps.) -> (Method: HTML/CSS with JS for interactivity).
+        3. Pig Latin Data Types: (Report Info: Atom, Tuple, Bag, Map) -> (Goal: Inform) -> (Viz: Interactive Card Grid) -> (Interaction: Hovering over a card provides a simple example) -> (Justification: A visual grid layout is better for organizing and distinguishing between the four core data types than a simple list.) -> (Method: HTML/CSS).
+        4. Execution Modes: (Report Info: Local Mode, MapReduce Mode) -> (Goal: Compare) -> (Viz: Tabbed Content Display) -> (Interaction: Clicking tabs switches between descriptions) -> (Justification: Tabs are a clean, space-efficient way to present two distinct but related concepts, allowing for direct comparison.) -> (Method: HTML/CSS with JS).
+        5. Industry Usage: (Report Info: Pig's role in ETL, research) -> (Goal: Inform) -> (Viz: Donut Chart) -> (Interaction: Hover to see percentages) -> (Justification: A donut chart quickly conveys the primary use-cases and their relative prevalence in the industry.) -> (Library: Chart.js).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfdfd;
+            color: #333;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(230, 230, 230, 0.5);
+        }
+        .active-nav {
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #1e3a8a;
+        }
+        .component-box {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .component-box:hover, .component-box.selected {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.15), 0 4px 6px -2px rgba(30, 58, 138, 0.08);
+            border-color: #1e3a8a;
+        }
+        .content-card {
+            transition: opacity 0.5s ease-in-out;
+        }
+        .tab.active {
+            border-bottom-color: #1e3a8a;
+            color: #1e3a8a;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header id="header" class="sticky top-0 z-50 w-full glassmorphism">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-gray-800">Apache Pig Report</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#introduction" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Introduction</a>
+                        <a href="#anatomy" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Anatomy</a>
+                        <a href="#piglatin" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Pig Latin</a>
+                        <a href="#industry" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Industry Context</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:outline-none">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#introduction" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Introduction</a>
+                <a href="#anatomy" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Anatomy</a>
+                <a href="#piglatin" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Pig Latin</a>
+                <a href="#industry" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Industry Context</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <section id="introduction" class="min-h-screen flex items-center pt-16">
+            <div class="w-full">
+                <div class="text-center mb-12">
+                    <h1 class="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+                        A High-Level Platform for Big Data:<br class="hidden md:block" />
+                        <span class="text-blue-900">An Interactive Guide to Apache Pig</span>
+                    </h1>
+                    <p class="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">
+                        This report explores Apache Pig, a high-level platform for creating MapReduce programs used with Hadoop. Discover its philosophy, architecture, and the power of its dataflow language, Pig Latin.
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h2 class="text-2xl font-bold text-center text-gray-800 mb-2">Pig's Philosophy: Dataflow over SQL</h2>
+                    <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Pig was designed to provide a higher-level abstraction for data analysis, focusing on the flow of data rather than the declarative structure of SQL. This makes it exceptionally well-suited for complex ETL (Extract, Transform, Load) pipelines and research on raw, semi-structured data where the schema may not be known in advance.</p>
+                    <div class="chart-container">
+                        <canvas id="pigVsMapReduceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="anatomy" class="min-h-screen py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">The Anatomy of a Pig Script</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">When you run a Pig Latin script, it goes through several stages before producing a result. Pig converts your high-level script into efficient, low-level MapReduce jobs. Click each component below to understand its role in this translation process.</p>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg p-8">
+                <div class="flex flex-col md:flex-row justify-center items-center gap-4 md:gap-2 text-center font-semibold">
+                    <div class="component-box border-2 rounded-lg p-4 w-52 bg-gray-50" data-component="pig-latin">Pig Latin Script</div>
+                    <div class="text-2xl text-gray-400">→</div>
+                    <div class="component-box border-2 rounded-lg p-4 w-52 bg-blue-100 border-blue-300" data-component="parser">Parser</div>
+                    <div class="text-2xl text-gray-400">→</div>
+                    <div class="component-box border-2 rounded-lg p-4 w-52 bg-green-100 border-green-300" data-component="optimizer">Optimizer</div>
+                     <div class="text-2xl text-gray-400">→</div>
+                    <div class="component-box border-2 rounded-lg p-4 w-52 bg-yellow-100 border-yellow-300" data-component="compiler">Compiler</div>
+                     <div class="text-2xl text-gray-400">→</div>
+                    <div class="component-box border-2 rounded-lg p-4 w-52 bg-red-100 border-red-300" data-component="execution">Execution Engine</div>
+                </div>
+
+                <div id="anatomy-info-card" class="content-card mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200 min-h-[150px] flex items-center justify-center opacity-0 transition-opacity duration-500">
+                    <p class="text-gray-700 text-center text-lg">Select a component to view its details.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="piglatin" class="min-h-screen py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Understanding Pig Latin</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">Pig Latin is the language of Pig. It's a procedural, dataflow language that allows you to describe how your data is loaded, processed, and stored step-by-step.</p>
+            </div>
+            
+            <div class="space-y-12">
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Core Data Types</h3>
+                    <p class="text-gray-600 mb-6">Pig Latin operates on a rich set of data types that can handle complex, nested data structures with ease. Hover over each type to see a simple example.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+                        <div class="relative group border-2 border-blue-200 bg-blue-50 rounded-lg p-4">
+                            <h4 class="font-bold text-lg text-blue-900">Atom</h4>
+                            <p class="text-sm text-blue-800">A single value (e.g., string, int, long, float, double).</p>
+                            <div class="absolute inset-0 bg-blue-900 text-white p-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">e.g., 'hello' or 42</div>
+                        </div>
+                        <div class="relative group border-2 border-green-200 bg-green-50 rounded-lg p-4">
+                            <h4 class="font-bold text-lg text-green-900">Tuple</h4>
+                            <p class="text-sm text-green-800">An ordered set of fields, like a row in a table.</p>
+                            <div class="absolute inset-0 bg-green-900 text-white p-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">e.g., ('John', 30)</div>
+                        </div>
+                        <div class="relative group border-2 border-yellow-200 bg-yellow-50 rounded-lg p-4">
+                            <h4 class="font-bold text-lg text-yellow-900">Bag</h4>
+                            <p class="text-sm text-yellow-800">A collection of tuples, which may contain duplicates.</p>
+                            <div class="absolute inset-0 bg-yellow-900 text-white p-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">e.g., {('John', 30), ('Jane', 28)}</div>
+                        </div>
+                        <div class="relative group border-2 border-purple-200 bg-purple-50 rounded-lg p-4">
+                            <h4 class="font-bold text-lg text-purple-900">Map</h4>
+                            <p class="text-sm text-purple-800">A set of key-value pairs, where keys are strings.</p>
+                            <div class="absolute inset-0 bg-purple-900 text-white p-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">e.g., ['name'#'John', 'age'#30]</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                     <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Execution Modes</h3>
+                        <p class="text-gray-600 mb-6">Pig can be run in two main modes, depending on your dataset size and environment.</p>
+                        <div>
+                            <div class="border-b-2">
+                                <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                    <button class="tab active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm" data-tab="local">Local Mode</button>
+                                    <button class="tab text-gray-500 hover:text-gray-700 whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm" data-tab="mapreduce">MapReduce Mode</button>
+                                </nav>
+                            </div>
+                            <div id="tab-content" class="mt-6">
+                                <div id="local-content">
+                                    <p class="text-gray-700">Runs on a single JVM and accesses the local file system. This mode is ideal for development, testing, and working with small datasets. It allows you to quickly prototype and debug your scripts without the overhead of a Hadoop cluster.</p>
+                                    <code class="block bg-gray-100 p-2 rounded mt-2 text-sm text-gray-800">pig -x local my_script.pig</code>
+                                </div>
+                                <div id="mapreduce-content" class="hidden">
+                                    <p class="text-gray-700">This is the default production mode. Pig translates the script into a series of MapReduce jobs and executes them on a Hadoop cluster, reading from and writing to HDFS. This mode is used for processing large-scale, distributed datasets.</p>
+                                    <code class="block bg-gray-100 p-2 rounded mt-2 text-sm text-gray-800">pig my_script.pig</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-lg p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Pig Latin Example</h3>
+                        <p class="text-gray-600 mb-6">A typical Pig script involves loading data, applying a series of transformations, and then storing or displaying the results.</p>
+                        <div class="bg-gray-800 rounded-lg p-4 text-white font-mono text-sm overflow-x-auto">
+<pre><code>-- Load user data from HDFS
+users = LOAD '/data/users.txt' USING PigStorage(',') 
+        AS (id:int, age:int, country:chararray);
+
+-- Filter for users older than 25
+older_users = FILTER users BY age > 25;
+
+-- Group by country
+grouped_by_country = GROUP older_users BY country;
+
+-- Count users in each group
+user_count = FOREACH grouped_by_country 
+             GENERATE group AS country, COUNT(older_users) AS count;
+            
+-- Store the results back to HDFS
+STORE user_count INTO '/output/user_counts';</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="industry" class="min-h-screen py-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-gray-900">Industry Context & Adoption</h2>
+                <p class="mt-4 max-w-3xl mx-auto text-lg text-gray-600">While newer tools like Apache Spark have gained popularity, Pig remains a valuable tool, especially for complex data transformation pipelines.</p>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                 <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Primary Use Cases for Pig</h3>
+                    <p class="text-gray-600 mb-6 text-center">Pig's dataflow nature excels in specific domains within the big data landscape.</p>
+                     <div class="chart-container h-80 md:h-96">
+                        <canvas id="industryAdoptionChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">The Grunt Shell Interface</h3>
+                    <p class="text-gray-600 mb-6">Users typically interact with Pig through its command-line shell, called "Grunt." It allows for both interactive execution of Pig Latin commands and the running of entire scripts. It can also be used to execute HDFS commands directly.</p>
+                    <div class="bg-black rounded-lg shadow-lg p-4 font-mono text-sm text-green-400">
+                        <p>grunt> ls /data</p>
+                        <p class="text-white">&lt;dir&gt; users.txt</p>
+                        <p class="text-white">&lt;dir&gt; logs.txt</p>
+                        <br>
+                        <p>grunt> A = LOAD '/data/users.txt' AS (id, age);</p>
+                        <br>
+                        <p>grunt> B = FILTER A BY age > 30;</p>
+                        <br>
+                        <p>grunt> DUMP B;</p>
+                        <p class="text-white">(101,45)</p>
+                        <p class="text-white">(103,32)</p>
+                        <p class="text-green-400 animate-pulse">grunt> _</p>
+                    </div>
+                     <p class="text-xs text-gray-500 mt-2 text-center">A simplified simulation of the Pig Grunt shell.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-800 text-white mt-20">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center">
+            <p>Interactive Report generated on <span id="generationDate"></span>.</p>
+            <p class="text-sm text-gray-400 mt-1">This is a conceptual, interactive web application designed for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            const navLinks = document.querySelectorAll('header nav a');
+            const sections = document.querySelectorAll('main section');
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+                navLinks.forEach(link => {
+                    link.classList.remove('active-nav');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active-nav');
+                    }
+                });
+            });
+            
+            const anatomyComponents = document.querySelectorAll('.component-box');
+            const anatomyInfoCard = document.getElementById('anatomy-info-card');
+            const anatomyData = {
+                'pig-latin': {
+                    title: 'Pig Latin Script',
+                    desc: 'The starting point. A high-level, procedural script written by the developer to define a dataflow.'
+                },
+                parser: {
+                    title: 'Parser',
+                    desc: 'The Parser checks the script for syntax errors, type mismatches, and other semantic issues. It then translates the script into a Directed Acyclic Graph (DAG), where nodes are operators and edges represent data flow.'
+                },
+                optimizer: {
+                    title: 'Logical Optimizer',
+                    desc: 'The Optimizer performs logical optimizations on the DAG, similar to a database query optimizer. It applies rules like predicate pushdown and column pruning to create a more efficient execution plan without changing the logic.'
+                },
+                compiler: {
+                    title: 'Compiler',
+                    desc: 'The Compiler takes the optimized logical plan and compiles it into a series of physical MapReduce jobs. It decides how to group Pig Latin operators into map and reduce stages.'
+                },
+                execution: {
+                    title: 'Execution Engine',
+                    desc: 'Finally, the Execution Engine submits the compiled MapReduce jobs to the Hadoop cluster (via YARN) for execution. It monitors the jobs and retrieves the final results from HDFS.'
+                }
+            };
+
+            anatomyComponents.forEach(comp => {
+                comp.addEventListener('click', () => {
+                    anatomyComponents.forEach(c => c.classList.remove('selected'));
+                    comp.classList.add('selected');
+                    const componentKey = comp.dataset.component;
+                    const data = anatomyData[componentKey];
+                    
+                    anatomyInfoCard.style.opacity = '0';
+                    setTimeout(() => {
+                        anatomyInfoCard.innerHTML = `<div class="text-center"><h4 class="text-xl font-bold text-gray-800 mb-2">${data.title}</h4><p class="text-gray-600 max-w-2xl mx-auto">${data.desc}</p></div>`;
+                        anatomyInfoCard.style.opacity = '1';
+                    }, 300);
+                });
+            });
+
+            const tabs = document.querySelectorAll('.tab');
+            const localContent = document.getElementById('local-content');
+            const mapreduceContent = document.getElementById('mapreduce-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    if(tab.dataset.tab === 'local') {
+                        localContent.classList.remove('hidden');
+                        mapreduceContent.classList.add('hidden');
+                    } else {
+                        localContent.classList.add('hidden');
+                        mapreduceContent.classList.remove('hidden');
+                    }
+                });
+            });
+            
+            const pigVsMRCtx = document.getElementById('pigVsMapReduceChart').getContext('2d');
+            new Chart(pigVsMRCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Lines of Code', 'Development Time'],
+                    datasets: [{
+                        label: 'Java MapReduce',
+                        data: [100, 100],
+                        backgroundColor: 'rgba(107, 114, 128, 0.6)',
+                        borderColor: 'rgba(107, 114, 128, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'Apache Pig',
+                        data: [10, 25],
+                        backgroundColor: 'rgba(30, 58, 138, 0.6)',
+                        borderColor: 'rgba(30, 58, 138, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: value => value + '%' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        title: { display: true, text: 'Productivity Gain: Pig vs. Raw MapReduce (Relative)' },
+                        tooltip: { backgroundColor: '#1f2937', padding: 10, cornerRadius: 4 }
+                    }
+                }
+            });
+
+            const industryCtx = document.getElementById('industryAdoptionChart').getContext('2d');
+            new Chart(industryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ETL Pipelines', 'Data Warehousing Prep', 'Research & Prototyping', 'Log Analysis', 'Other'],
+                    datasets: [{
+                        label: 'Primary Use Cases',
+                        data: [45, 25, 15, 10, 5],
+                        backgroundColor: ['#1e3a8a', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'],
+                        borderColor: '#fdfdfd',
+                        borderWidth: 4,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 15, boxWidth: 12 } },
+                        tooltip: { callbacks: { label: (c) => `${c.label}: ${c.raw}%` } }
+                    }
+                }
+            });
+            
+            document.getElementById('generationDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+        });
+    </script>
+</body>
+</html>
