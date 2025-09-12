@@ -158,7 +158,8 @@
                         <h4 id="architecture-title" class="text-xl font-bold text-slate-800 mb-2"></h4>
                         <p id="architecture-desc" class="text-slate-600 mb-4"></p>
                         <div id="architecture-pros" class="mb-4"></div>
-                        <div id="architecture-cons"></div>
+                        <div id="architecture-cons" class="mb-4"></div>
+                        <div id="architecture-examples"></div>
                     </div>
                 </div>
             </div>
@@ -258,6 +259,10 @@
                         { icon: '🚦', text: 'High risk of contention and bottlenecks as nodes compete for resources.' },
                         { icon: '🧱', text: 'Scalability is limited by the capacity of the shared resource.' }
                     ],
+                    examples: [
+                        { icon: '🖥️', label: 'Technology', text: 'Oracle Real Application Clusters (RAC) share a central disk so multiple servers act on one database.' },
+                        { icon: '🏦', label: 'Business', text: 'Core banking transactions requiring strict consistency across branches.' }
+                    ],
                     diagram: `
                         <div class="text-center">
                             <div class="flex justify-around mb-4">
@@ -284,6 +289,10 @@
                     cons: [
                         { icon: '🌐', text: 'Cross-node queries can be slow due to network latency.' },
                         { icon: '🧩', text: 'Complex to implement, manage data partitioning, and ensure consistency.' }
+                    ],
+                    examples: [
+                        { icon: '🗃️', label: 'Technology', text: 'Apache Cassandra partitions data across nodes without shared storage.' },
+                        { icon: '🛒', label: 'Business', text: 'Global e-commerce analytics scaling horizontally across regions.' }
                     ],
                     diagram: `
                         <div class="flex justify-around text-center">
@@ -312,6 +321,7 @@
                 document.getElementById('architecture-desc').textContent = data.description;
                 document.getElementById('architecture-pros').innerHTML = '<h5 class="font-semibold text-green-600 mb-2">Advantages:</h5>' + data.pros.map(p => `<div class="flex items-start mb-1"><span class="mr-2">${p.icon}</span><span>${p.text}</span></div>`).join('');
                 document.getElementById('architecture-cons').innerHTML = '<h5 class="font-semibold text-red-600 mb-2">Challenges:</h5>' + data.cons.map(c => `<div class="flex items-start mb-1"><span class="mr-2">${c.icon}</span><span>${c.text}</span></div>`).join('');
+                document.getElementById('architecture-examples').innerHTML = '<h5 class="font-semibold text-amber-600 mb-2">Examples:</h5>' + data.examples.map(e => `<div class="flex items-start mb-1"><span class="mr-2">${e.icon}</span><span><strong>${e.label}:</strong> ${e.text}</span></div>`).join('');
                 
                 document.getElementById('btn-se').classList.toggle('active', type === 'se');
                 document.getElementById('btn-sn').classList.toggle('active', type === 'sn');
