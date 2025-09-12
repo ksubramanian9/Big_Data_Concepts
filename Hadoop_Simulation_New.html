@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Retail/E‑Commerce Recommender on Hadoop – Click‑through Simulation</title>
+  <style>
+    :root{
+      --bg:#0f172a; /* slate-900 */
+      --panel:#111827; /* gray-900 */
+      --muted:#94a3b8; /* slate-400 */
+      --accent:#22d3ee; /* cyan-400 */
+      --accent2:#a78bfa; /* violet-400 */
+      --good:#34d399; /* emerald-400 */
+      --warn:#fbbf24; /* amber-400 */
+      --bad:#fb7185; /* rose-400 */
+      --line:#334155; /* slate-700 */
+    }
+    html,body{height:100%;}
+    body{
+      margin:0; font-family:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      color:#e5e7eb; background:linear-gradient(180deg,#0b1225, #0f172a 40%, #0b1225);
+    }
+    header{position:sticky; top:0; z-index:10; backdrop-filter:saturate(140%) blur(6px); background:rgba(17,24,39,.7); border-bottom:1px solid #1f2937}
+    .wrap{max-width:1100px; margin:0 auto; padding:18px 16px;}
+    h1{font-size:clamp(20px,3.6vw,34px); margin:0 0 6px 0; letter-spacing:.2px}
+    .sub{color:var(--muted); font-size:14px}
+    .controls{display:flex; gap:8px; flex-wrap:wrap; margin-top:12px}
+    button{border:none; padding:10px 14px; border-radius:12px; cursor:pointer; background:#111827; color:#e5e7eb; border:1px solid #374151; transition:transform .06s ease, background .2s}
+    button:hover{transform:translateY(-1px); background:#0b1225}
+    button.primary{background:linear-gradient(135deg,#0891b2,#6366f1); border-color:transparent}
+    button.ghost{background:transparent}
+    .grid{max-width:1100px; margin:24px auto; display:grid; grid-template-columns:1fr; gap:24px}
+    .panel{background:rgba(17,24,39,.6); border:1px solid #1f2937; border-radius:16px; padding:16px}
+    .legend{display:flex; flex-wrap:wrap; gap:10px; font-size:12px; color:var(--muted)}
+    .pill{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:#0b1225; border:1px solid #1f2937}
+    .dot{width:10px; height:10px; border-radius:50%}
+    .cyan{background:var(--accent)}
+    .violet{background:var(--accent2)}
+    .green{background:var(--good)}
+    .amber{background:var(--warn)}
+    .rose{background:var(--bad)}
+    .muted{opacity:.8}
+
+    .stage{display:grid; grid-template-columns: 1fr; gap:12px}
+    .step-title{font-weight:700; font-size:18px}
+    .step-desc{color:var(--muted); font-size:14px}
+
+    /* SVG space */
+    #canvas{width:100%; height:720px; background:radial-gradient(1200px 600px at 50% 20%, rgba(99,102,241,.08), transparent 60%); border-radius:14px; border:1px solid #1f2937}
+
+    .tech{fill:#0b1225; stroke:#374151; stroke-width:1; rx:10; ry:10}
+    .tech.active{stroke:#60a5fa; filter:drop-shadow(0 0 6px rgba(96,165,250,.4))}
+    .tech text{fill:#e5e7eb}
+
+    .node{fill:#0b1225; stroke:#475569; rx:10; ry:10}
+    .node.active{stroke:#22d3ee; filter:drop-shadow(0 0 6px rgba(34,211,238,.5))}
+
+    .arrow{stroke:var(--line); stroke-width:2; marker-end:url(#arrowHead)}
+    .arrow.active{stroke:var(--accent)}
+
+    .chip{fill:#111827; stroke:#374151}
+
+    .datapoint{fill:var(--accent); opacity:.9}
+    .datapoint.alt{fill:var(--accent2)}
+    .datapoint.good{fill:var(--good)}
+
+    .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background:#0b1225; border:1px solid #1f2937; padding:2px 6px; border-radius:8px}
+
+    pre{margin:0; background:#0b1225; border:1px solid #1f2937; padding:12px; border-radius:12px; overflow:auto; max-height:240px}
+    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size:12px}
+
+    .footer{color:#94a3b8; font-size:12px; text-align:center; margin:10px 0 30px}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Retail/E‑Commerce: Hadoop‑based Product Recommendations — Visual Simulation</h1>
+      <div class="sub">Click <span class="kbd">Next</span> to progress step‑by‑step from data generation → ingestion → storage → transformation → model training → serving. Uses only HTML, CSS, JavaScript, and SVG.</div>
+      <div class="controls">
+        <button id="prevBtn" class="ghost">◀︎ Back</button>
+        <button id="nextBtn" class="primary">Next ▶︎</button>
+        <button id="resetBtn">Reset</button>
+        <button id="autoplayBtn" class="ghost">Auto‑play</button>
+        <span id="stepBadge" class="pill">Step <strong id="stepNow">1</strong>/<span id="stepTotal">10</span></span>
+      </div>
+      <div class="legend" style="margin-top:10px">
+        <span class="pill"><span class="dot cyan"></span> Stream/Event</span>
+        <span class="pill"><span class="dot violet"></span> Batch/Files</span>
+        <span class="pill"><span class="dot green"></span> Output/Serving</span>
+        <span class="pill">Replication factor <b>3</b> across 3 DataNodes</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="panel">
+      <svg id="canvas" viewBox="0 0 1100 720" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <marker id="arrowHead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="var(--accent)" />
+          </marker>
+          <linearGradient id="gradHDFS" x1="0" x2="1">
+            <stop offset="0%" stop-color="#22d3ee" stop-opacity=".15" />
+            <stop offset="100%" stop-color="#a78bfa" stop-opacity=".15" />
+          </linearGradient>
+        </defs>
+
+        <!-- Lanes -->
+        <g opacity=".5">
+          <rect x="20" y="60" width="1060" height="80" fill="transparent" stroke="#1f2937" />
+          <rect x="20" y="160" width="1060" height="110" fill="transparent" stroke="#1f2937" />
+          <rect x="20" y="290" width="1060" height="150" fill="transparent" stroke="#1f2937" />
+          <rect x="20" y="460" width="1060" height="110" fill="transparent" stroke="#1f2937" />
+          <rect x="20" y="590" width="1060" height="90" fill="transparent" stroke="#1f2937" />
+        </g>
+
+        <!-- Lane labels -->
+        <g font-size="12" fill="#94a3b8">
+          <text fill="#e5e7eb" x="30" y="50">1) Events & Catalog</text>
+          <text fill="#e5e7eb" x="30" y="150">2) Ingestion</text>
+          <text fill="#e5e7eb" x="30" y="280">3) Storage & Compute</text>
+          <text fill="#e5e7eb" x="30" y="450">4) Modeling</text>
+          <text fill="#e5e7eb" x="30" y="580">5) Serving</text>
+        </g>
+
+        <!-- (1) Events & Catalog -->
+        <g id="eventsRow">
+          <rect class="tech" x="40" y="80" width="200" height="40" />
+          <text fill="#e5e7eb" x="50" y="105">Web/App Events (Clicks, Views, Add‑to‑Cart, Purchases)</text>
+
+          <rect class="tech" x="260" y="80" width="160" height="40" />
+          <text fill="#e5e7eb" x="270" y="105">Product Catalog (CSV/JSON)</text>
+
+          <circle id="ev1" class="datapoint" r="6" cx="90" cy="130" />
+          <circle id="ev2" class="datapoint alt" r="6" cx="130" cy="130" />
+          <circle id="ev3" class="datapoint" r="6" cx="170" cy="130" />
+          <circle id="cat1" class="datapoint alt" r="6" cx="320" cy="130" />
+          <line id="arr1" class="arrow" x1="140" y1="120" x2="160" y2="170" />
+          <line id="arr2" class="arrow" x1="320" y1="120" x2="360" y2="190" />
+        </g>
+
+        <!-- (2) Ingestion: NiFi/Flume -> Kafka -> HDFS/HBase/Hive -->
+        <g id="ingestRow">
+          <rect id="nifi" class="tech" x="420" y="170" width="150" height="40" />
+          <text x="430" y="195" fill="#e5e7eb">Apache NiFi/Flume</text>
+
+          <rect id="kafka" class="tech" x="680" y="170" width="100" height="40" />
+          <text x="690" y="195" fill="#e5e7eb">Apache Kafka</text>
+
+          <line id="arr3" class="arrow" x1="470" y1="210" x2="600" y2="210" />
+          <line id="arr4" class="arrow" x1="690" y1="210" x2="680" y2="245" />
+        </g>
+
+        <!-- (3) Storage & Compute: HDFS + Hive + HBase + Spark cluster (3 DNs) -->
+        <g id="storageRow">
+          <rect id="hdfs" x="700" y="240" width="360" height="180" fill="url(#gradHDFS)" stroke="#374151" />
+          <text x="710" y="255" fill="#e5e7eb">HDFS Cluster (Raw ▸ Curated)</text>
+
+          <!-- NameNode label -->
+          <rect class="chip" x="710" y="265" width="100" height="20" rx="6" ry="6" />
+          <text fill="#e5e7eb" x="718" y="279" font-size="12">NameNode</text>
+
+          <!-- DataNodes -->
+          <g id="dn1">
+            <rect class="node" x="720" y="300" width="90" height="100" />
+            <text fill="#e5e7eb" x="732" y="318" font-size="12">DataNode‑1</text>
+            <rect class="chip" x="732" y="328" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="760" y="328" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="732" y="350" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="760" y="350" width="24" height="16" rx="3" ry="3" />
+          </g>
+          <g id="dn2">
+            <rect class="node" x="840" y="300" width="90" height="100" />
+            <text fill="#e5e7eb" x="852" y="318" font-size="12">DataNode‑2</text>
+            <rect class="chip" x="852" y="328" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="880" y="328" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="852" y="350" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="880" y="350" width="24" height="16" rx="3" ry="3" />
+          </g>
+          <g id="dn3">
+            <rect class="node" x="960" y="300" width="90" height="100" />
+            <text fill="#e5e7eb" x="972" y="318" font-size="12">DataNode‑3</text>
+            <rect class="chip" x="972" y="328" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="1000" y="328" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="972" y="350" width="24" height="16" rx="3" ry="3" />
+            <rect class="chip" x="1000" y="350" width="24" height="16" rx="3" ry="3" />
+          </g>
+
+          <!-- Hive & HBase & Spark labels -->
+          <rect id="hive" class="tech" x="700" y="430" width="100" height="30" />
+          <text fill="#e5e7eb" x="735" y="450" font-size="12" text-anchor="middle">Hive (SQL)</text>
+          <rect id="hbase" class="tech" x="820" y="430" width="100" height="30" />
+          <text fill="#e5e7eb" x="870" y="450" font-size="12" text-anchor="middle">HBase (Key/Value)</text>
+          <rect id="spark" class="tech" x="940" y="430" width="120" height="30" />
+          <text fill="#e5e7eb" x="1000" y="450" font-size="12" text-anchor="middle">Spark Cluster</text>
+
+          <line id="arr5" class="arrow" x1="680" y1="245" x2="720" y2="310" />
+          <line id="arr6" class="arrow" x1="760" y1="460" x2="950" y2="460" />
+        </g>
+
+        <!-- (4) Modeling: Spark MLlib ALS -->
+        <g id="modelRow">
+          <rect id="als" class="tech" x="40" y="470" width="230" height="30" />
+          <text fill="#e5e7eb" x="50" y="490" font-size="12">Spark MLlib (ALS Collaborative Filtering)</text>
+          <line id="arr7" class="arrow" x1="160" y1="500" x2="940" y2="500" />
+        </g>
+
+        <!-- (5) Serving: Feature Store / API / Cache / BI -->
+        <g id="serveRow">
+          <rect id="feat" class="tech" x="40" y="600" width="150" height="30" />
+          <text fill="#e5e7eb" x="50" y="620" font-size="12">Feature Store</text>
+
+          <rect id="api" class="tech" x="210" y="600" width="160" height="30" />
+          <text fill="#e5e7eb" x="220" y="620" font-size="12">Recommender API (REST)</text>
+
+          <rect id="cache" class="tech" x="390" y="600" width="100" height="30" />
+          <text fill="#e5e7eb" x="400" y="620" font-size="12">Redis Cache</text>
+
+          <rect id="presto" class="tech" x="510" y="600" width="110" height="30" />
+          <text fill="#e5e7eb" x="520" y="620" font-size="12">Presto/Trino</text>
+
+          <rect id="bi" class="tech" x="640" y="600" width="160" height="30" />
+          <text fill="#e5e7eb" x="650" y="620" font-size="12">BI/Dashboard (Analyst)</text>
+
+          <rect id="app" class="tech" x="820" y="600" width="230" height="30" />
+          <text fill="#e5e7eb" x="830" y="620" font-size="12">Web/App – Personalized Recommendations</text>
+
+          <line id="arr8" class="arrow" x1="1000" y1="460" x2="1030" y2="600" />
+          <line id="arr9" class="arrow" x1="220" y1="600" x2="390" y2="600" />
+          <line id="arr10" class="arrow" x1="390" y1="600" x2="820" y2="600" />
+        </g>
+      </svg>
+    </section>
+
+    <section class="panel">
+      <div class="stage">
+        <div class="step-title" id="title">Step 1 — Generate representative retail events & catalog</div>
+        <div class="step-desc" id="desc">We synthesize a small dataset of user interactions (view, add_to_cart, purchase) and a product catalog (category, price). These will flow as JSON events.
+        </div>
+        <pre><code id="code"></code></pre>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="footer">Technologies highlighted across steps: Web/App SDK → <b>NiFi/Flume</b> → <b>Kafka</b> → <b>HDFS</b> (raw/curated, Parquet) + <b>Hive</b> (SQL), <b>HBase</b> (real‑time profile), <b>Spark</b> (ETL + MLlib ALS) → Feature Store → <b>REST API</b> + <b>Redis</b> → <b>Presto/Trino</b> → App/BI.  Replication: RF=3 across three DataNodes.</div>
+    </section>
+  </main>
+
+  <script>
+    // ---------- Representative Dataset ----------
+    const catalog = [
+      {sku:"P100", name:"Wireless Mouse", cat:"Electronics", price:899},
+      {sku:"P101", name:"Mechanical Keyboard", cat:"Electronics", price:2999},
+      {sku:"P102", name:"Noise‑Cancel Headphones", cat:"Audio", price:4999},
+      {sku:"P200", name:"Yoga Mat", cat:"Fitness", price:799},
+      {sku:"P201", name:"Kettlebell 12kg", cat:"Fitness", price:2499},
+      {sku:"P300", name:"Coffee Beans 1kg", cat:"Grocery", price:699},
+      {sku:"P301", name:"French Press", cat:"Grocery", price:1299},
+      {sku:"P400", name:"Cotton T‑Shirt", cat:"Fashion", price:499},
+      {sku:"P401", name:"Denim Jeans", cat:"Fashion", price:1499}
+    ];
+
+    // Simple synthetic event stream (userId, sku, action)
+    const events = [
+      {ts:"2025-09-12T09:00:01Z", user:"U1", sku:"P100", action:"view"},
+      {ts:"2025-09-12T09:00:06Z", user:"U1", sku:"P101", action:"add_to_cart"},
+      {ts:"2025-09-12T09:02:03Z", user:"U2", sku:"P300", action:"view"},
+      {ts:"2025-09-12T09:04:10Z", user:"U2", sku:"P301", action:"purchase"},
+      {ts:"2025-09-12T09:05:55Z", user:"U3", sku:"P400", action:"view"},
+      {ts:"2025-09-12T09:06:40Z", user:"U3", sku:"P401", action:"add_to_cart"},
+      {ts:"2025-09-12T09:09:00Z", user:"U1", sku:"P102", action:"purchase"},
+      {ts:"2025-09-12T09:10:12Z", user:"U4", sku:"P200", action:"view"}
+    ];
+
+    // HDFS placement logic (very simplified) → block placement across 3 DNs with RF=3
+    const dataNodes = ["DataNode-1","DataNode-2","DataNode-3"];
+    function hdfsReplicas(key){
+      // map key hash to primary DN, replicate to others round-robin
+      const h = [...key].reduce((a,c)=> (a + c.charCodeAt(0))%997, 0);
+      const p = h % 3;
+      return [0,1,2].map(i=> dataNodes[(p+i)%3]);
+    }
+
+    // Step model
+    const steps = [
+      {
+        title:"Step 1 — Generate representative retail events & catalog",
+        desc:"Synthetic JSON events are created in the app (web/mobile SDK). Product catalog is batch-loaded (CSV/JSON).",
+        code: () => ({catalog, events}) ,
+        highlight: () => activate(["eventsRow"], ["ev1","ev2","ev3","cat1","arr1","arr2"]) 
+      },
+      {
+        title:"Step 2 — Ingest via NiFi/Flume",
+        desc:"NiFi processors (ListenHTTP, PublishKafkaRecord_2_0) or Flume agents collect events and push to Kafka topics (e.g., events.user_actions).",
+        code: () => ({nifi_flow:{source:"/collect", sink:"kafka://events.user_actions", schema:"JSON"}}),
+        highlight: () => activate(["nifi"], ["arr3"]) 
+      },
+      {
+        title:"Step 3 — Buffer on Kafka topics",
+        desc:"Kafka provides a durable, ordered log for streaming ingestion. Producers (NiFi) publish; consumers (Spark, Kafka Connect, HDFS sink) subscribe.",
+        code: () => ({kafka:{topic:"events.user_actions", partitions:3, retention:"7d"}}),
+        highlight: () => activate(["kafka"], [])
+      },
+      {
+        title:"Step 4 — Land raw data in HDFS (Data Lake: Raw Zone)",
+        desc:"A Kafka→HDFS sink writes hourly JSON files to /data/raw/events/dt=YYYY‑MM‑DD/hr=HH." ,
+        code: () => ({hdfs_write:{path:"/data/raw/events/dt=2025-09-12/hr=09/part-000.json", format:"JSON", replication:3, blocks: events.slice(0,4).map(e=>({key:`${e.user}:${e.sku}:${e.action}`, replicas:hdfsReplicas(e.user+e.sku)}))}}),
+        highlight: () => activate(["hdfs","dn1","dn2","dn3"],["arr4","arr5"]) 
+      },
+      {
+        title:"Step 5 — Curate with Spark ETL → Parquet + Hive tables",
+        desc:"Spark reads raw JSON, cleans, joins with product catalog, writes partitioned Parquet, and registers Hive external tables for SQL access.",
+        code: () => `spark.read.json('/data/raw/events')\n  .withColumn('qty', when(col('action')==='purchase', lit(1)).otherwise(lit(0)))\n  .join(catalogDF, 'sku')\n  .write.partitionBy('dt','cat').parquet('/data/curated/events')\n-- Hive: CREATE EXTERNAL TABLE events_parquet (...) STORED AS PARQUET LOCATION '/data/curated/events';`,
+        highlight: () => activate(["spark","hive"],["arr6"]) 
+      },
+      {
+        title:"Step 6 — Build user–item interactions (ratings)",
+        desc:"From curated events, derive implicit ratings (e.g., view=0.2, add_to_cart=0.6, purchase=1.0) aggregated per (user, sku).",
+        code: () => {
+          const w = {view:0.2, add_to_cart:0.6, purchase:1.0};
+          const ratings = {};
+          events.forEach(e=>{const k=e.user+"|"+e.sku; ratings[k]=(ratings[k]||0)+w[e.action];});
+          return {implicit_ratings:Object.entries(ratings).map(([k,v])=>{const [user,sku]=k.split('|'); return {user, sku, score:+v.toFixed(2)};})};
+        },
+        highlight: () => activate(["spark"], [])
+      },
+      {
+        title:"Step 7 — Train ALS model in Spark MLlib",
+        desc:"Use Alternating Least Squares (implicit feedback) to learn latent factors: users × items → recommendations.",
+        code: () => `val ratings = spark.read.parquet('/data/features/implicit_ratings')\nval als = new ALS().setImplicitPrefs(true).setRank(20).setRegParam(0.08).setAlpha(1.0)\nval model = als.fit(ratings)\nval recs = model.recommendForAllUsers(10)`,
+        highlight: () => activate(["als","spark"],["arr7"]) 
+      },
+      {
+        title:"Step 8 — Materialize recommendations to Feature Store",
+        desc:"Persist top‑N recs per user (features & scores) to a feature store (Hive table or HBase for low‑latency reads).",
+        code: () => ({feature_store:{table:"feat.user_recs", storage:"Hive/HBase", example:[{user:"U1", recs:["P101","P102","P301"], scores:[0.82,0.78,0.55]}]}}),
+        highlight: () => activate(["feat","hive","hbase"], [])
+      },
+      {
+        title:"Step 9 — Serve via REST API with Redis cache",
+        desc:"A lightweight API reads user recs from the feature store, caches hot keys in Redis, and responds to the app.",
+        code: () => `GET /api/recommendations?user=U1 -> {"user":"U1","recs":[{"sku":"P101","name":"Mechanical Keyboard"}, {"sku":"P102","name":"Noise‑Cancel Headphones"}]}`,
+        highlight: () => activate(["api","cache","app"],["arr9","arr10"]) 
+      },
+      {
+        title:"Step 10 — Analytics via Presto/Trino + BI",
+        desc:"Analysts query curated Parquet (Hive metastore) using Presto/Trino; dashboards visualize sales lift & CTR.",
+        code: () => `SELECT cat, COUNT(*) AS purchases, approx_percentile(score,0.5) AS p50\nFROM events_parquet\nWHERE action='purchase' GROUP BY cat ORDER BY purchases DESC;`,
+        highlight: () => activate(["presto","bi"], [])
+      }
+    ];
+
+    // ---------- DOM helpers ----------
+    const codeEl = document.getElementById('code');
+    const titleEl = document.getElementById('title');
+    const descEl  = document.getElementById('desc');
+    const stepNow = document.getElementById('stepNow');
+    const stepTotal = document.getElementById('stepTotal');
+    stepTotal.textContent = steps.length;
+
+    function clearHighlights(){
+      document.querySelectorAll('.active').forEach(el=> el.classList.remove('active'));
+      document.querySelectorAll('.arrow').forEach(el=> el.classList.remove('active'));
+    }
+    function activate(nodeIds=[], arrowIds=[]){
+      clearHighlights();
+      nodeIds.forEach(id=>{
+        const g = document.getElementById(id);
+        if(!g) return;
+        // mark contained rects as active where relevant
+        g.querySelectorAll('rect, g').forEach(r=> r.classList.add('active'));
+        g.classList.add('active');
+      });
+      arrowIds.forEach(id=>{ const a = document.getElementById(id); if(a) a.classList.add('active');});
+    }
+
+    // Move a few dots along arrows to create a sense of flow
+    function animateDot(dotId, toX, toY, dur=800){
+      const dot = document.getElementById(dotId);
+      if(!dot) return;
+      const fromX = parseFloat(dot.getAttribute('cx'));
+      const fromY = parseFloat(dot.getAttribute('cy'));
+      const t0 = performance.now();
+      function tick(t){
+        const k = Math.min(1, (t - t0)/dur);
+        const nx = fromX + (toX - fromX)*k;
+        const ny = fromY + (toY - fromY)*k;
+        dot.setAttribute('cx', nx.toFixed(2));
+        dot.setAttribute('cy', ny.toFixed(2));
+        if(k<1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function showStep(i){
+      const s = steps[i];
+      titleEl.textContent = s.title;
+      descEl.textContent = s.desc;
+      const payload = s.code();
+      codeEl.textContent = typeof payload === 'string' ? payload : JSON.stringify(payload, null, 2);
+      s.highlight();
+      stepNow.textContent = i+1;
+
+      // tiny animations on earlier steps
+      if(i===0){
+        animateDot('ev1', 160, 170, 900);
+        animateDot('ev2', 160, 170, 700);
+        animateDot('ev3', 160, 170, 1000);
+        animateDot('cat1', 360, 190, 900);
+      }
+      if(i===3){
+        // replicate a block into 3 datanodes visually by flashing borders
+        ['dn1','dn2','dn3'].forEach((id,idx)=>{
+          setTimeout(()=> document.getElementById(id).classList.add('active'), 250*idx);
+        });
+      }
+    }
+
+    // Controls
+    let idx = 0; showStep(idx);
+    document.getElementById('nextBtn').onclick = ()=>{ idx = Math.min(idx+1, steps.length-1); showStep(idx); };
+    document.getElementById('prevBtn').onclick = ()=>{ idx = Math.max(idx-1, 0); showStep(idx); };
+    document.getElementById('resetBtn').onclick = ()=>{ idx = 0; showStep(idx); };
+
+    let autoplay=false, timer=null;
+    document.getElementById('autoplayBtn').onclick = ()=>{
+      autoplay = !autoplay;
+      document.getElementById('autoplayBtn').textContent = autoplay? 'Stop Auto‑play' : 'Auto‑play';
+      if(autoplay){
+        timer = setInterval(()=>{
+          if(idx < steps.length-1){ idx++; showStep(idx);} else { clearInterval(timer); autoplay=false; document.getElementById('autoplayBtn').textContent='Auto‑play'; }
+        }, 2200);
+      } else if(timer){ clearInterval(timer); }
+    };
+  </script>
+</body>
+</html>
