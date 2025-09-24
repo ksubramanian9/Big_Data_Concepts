@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The 2025 Data Format Report: An Interactive Guide</title>
+    <!-- Chosen Palette: Slate & Cyan -->
+    <!-- Application Structure Plan: The application is structured as an interactive explorer rather than a static report. The core is a filterable grid of data formats, allowing users to discover formats based on their needs (e.g., finding all "Emerging" formats for "AI/ML"). This is supplemented by a "Key Trends" section for high-level insights and an interactive "Timeline" for historical context. This structure prioritizes user-driven discovery and learning over passive reading, making the complex information more accessible and engaging. -->
+    <!-- Visualization & Content Choices: Report Info -> Goal -> Viz/Presentation Method -> Interaction -> Justification. 1. Format Details -> Inform/Compare -> Filterable Card Grid -> User selects filters to dynamically update the grid -> Allows users to narrow down the vast landscape to their specific area of interest. 2. Historical Context -> Show Evolution -> Interactive Timeline Chart (Chart.js) -> Hover over points to see details -> Provides a quick, visual understanding of how data formats have evolved over time. 3. Future Outlook -> Highlight Trends -> Thematic Icon-based Section -> Click to reveal more info (future enhancement) -> Distills key takeaways and future directions in a scannable, visually appealing manner. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        .container {
+            max-width: 1280px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 1rem 2rem;
+        }
+        .glass-pane {
+            background-color: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(55, 65, 81, 0.5);
+        }
+        .tag {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+        .details-list li {
+            position: relative;
+            padding-left: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        .details-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #22d3ee;
+        }
+        select, input {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="py-4 sticky top-0 z-50 glass-pane">
+        <div class="container flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-white">The 2025 Data Format Report</h1>
+            <p class="text-sm text-slate-400 hidden sm:block">An Interactive Guide to Established & Emerging Standards</p>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <section id="intro" class="text-center my-12">
+            <h2 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">The Unseen Engines of Data</h2>
+            <p class="mt-6 text-lg leading-8 text-slate-300">From web APIs to peta-scale analytics and generative AI, data formats are the fundamental building blocks of the digital world. This guide provides an interactive overview of the most critical formats in use today and a look at what's coming next.</p>
+        </section>
+
+        <section id="trends" class="my-16">
+            <h3 class="text-2xl font-bold text-center text-white mb-8">Key Trends Shaping the Future of Formats</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="p-6 rounded-xl glass-pane">
+                    <h4 class="font-semibold text-cyan-400">The Lakehouse Paradigm</h4>
+                    <p class="text-sm text-slate-400 mt-2">Table formats like Delta Lake, Iceberg, and Hudi are bringing database capabilities (ACID transactions, time travel) directly to data lakes, unifying streaming and batch processing on open formats like Parquet.</p>
+                </div>
+                <div class="p-6 rounded-xl glass-pane">
+                    <h4 class="font-semibold text-cyan-400">AI & Vector-Specific Formats</h4>
+                    <p class="text-sm text-slate-400 mt-2">The rise of Generative AI has created a need for formats optimized for vector embeddings and multi-modal data. Formats like Lance are emerging to enable efficient similarity search and ML training at scale.</p>
+                </div>
+                <div class="p-6 rounded-xl glass-pane">
+                    <h4 class="font-semibold text-cyan-400">Cloud-Native Architecture</h4>
+                    <p class="text-sm text-slate-400 mt-2">Formats are increasingly designed for object storage (like S3). This means supporting partial reads and parallel access, with formats like Zarr and Cloud-Optimized GeoTIFFs leading the way for large-scale scientific data.</p>
+                </div>
+                <div class="p-6 rounded-xl glass-pane">
+                    <h4 class="font-semibold text-cyan-400">Interoperability via Arrow</h4>
+                    <p class="text-sm text-slate-400 mt-2">Apache Arrow's in-memory columnar format is becoming the de-facto standard for zero-copy data exchange between different systems (Spark, Pandas, databases), dramatically speeding up data pipelines.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="explorer" class="my-16">
+            <div class="glass-pane p-4 sm:p-6 rounded-xl sticky top-[73px] z-40">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <input type="search" id="search-input" placeholder="Search formats..." class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    <select id="status-filter" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        <option value="">All Statuses</option>
+                        <option value="Established">Established</option>
+                        <option value="Emerging">Emerging</option>
+                    </select>
+                    <select id="domain-filter" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                        <option value="">All Domains</option>
+                        <option value="Analytics">Analytics</option>
+                        <option value="Streaming">Streaming & Serialization</option>
+                        <option value="AI/ML">AI/ML</option>
+                        <option value="Web & Interchange">Web & Interchange</option>
+                        <option value="Lakehouse">Lakehouse</option>
+                        <option value="Scientific">Scientific & HPC</option>
+                        <option value="Geospatial">Geospatial</option>
+                    </select>
+                    <button id="reset-filters" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg px-4 py-2 transition-colors">Reset</button>
+                </div>
+            </div>
+
+            <div id="format-grid" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Format cards will be injected here by JavaScript -->
+            </div>
+             <p id="no-results" class="text-center text-slate-400 mt-8 text-lg hidden">No formats match your criteria.</p>
+        </section>
+        
+        <section id="timeline" class="my-16">
+            <h3 class="text-2xl font-bold text-center text-white mb-8">Evolution of Data Formats</h3>
+            <div class="glass-pane p-6 rounded-xl">
+                <div class="chart-container">
+                    <canvas id="timeline-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center py-8 text-slate-500 text-sm">
+        <p>A 2025 Research Report. All rights reserved.</p>
+    </footer>
+
+<script>
+const dataFormats = [
+    {
+        name: 'JSON',
+        status: 'Established',
+        domain: 'Web & Interchange',
+        year: 2001,
+        summary: 'A lightweight, human-readable format for semi-structured data. The de-facto standard for web APIs.',
+        characteristics: ['Text-based & Human-readable', 'Schema-on-read flexibility', 'Supports nested objects and arrays', 'Language independent'],
+        use_cases: ['Web APIs (REST)', 'Configuration files', 'NoSQL document stores (MongoDB)'],
+        tech: ['JavaScript', 'Python', 'MongoDB', 'Elasticsearch'],
+        features: ['interchange', 'web']
+    },
+    {
+        name: 'Apache Parquet',
+        status: 'Established',
+        domain: 'Analytics',
+        year: 2013,
+        summary: 'A highly efficient columnar storage format optimized for big data analytics. The standard for data lakes.',
+        characteristics: ['Columnar storage for fast queries', 'High compression ratios', 'Supports complex nested data structures', 'Schema-on-write for data quality'],
+        use_cases: ['Data warehousing in data lakes', 'Large-scale ETL/ELT pipelines', 'Powering interactive BI tools'],
+        tech: ['Apache Spark', 'AWS Athena', 'Google BigQuery', 'Databricks'],
+        features: ['columnar', 'analytics', 'compression']
+    },
+    {
+        name: 'Apache Avro',
+        status: 'Established',
+        domain: 'Streaming & Serialization',
+        year: 2009,
+        summary: 'A row-based binary serialization format with robust schema evolution capabilities, ideal for streaming.',
+        characteristics: ['Compact binary format', 'Schema is stored with the data', 'Excellent schema evolution support', 'Dynamic typing'],
+        use_cases: ['Event streaming with Apache Kafka', 'Data serialization for RPCs', 'Ingestion into Hadoop ecosystem'],
+        tech: ['Apache Kafka', 'Apache Spark', 'Hadoop'],
+        features: ['streaming', 'serialization', 'schema-evolution']
+    },
+    {
+        name: 'Protocol Buffers',
+        status: 'Established',
+        domain: 'Streaming & Serialization',
+        year: 2008,
+        summary: 'A language-neutral, platform-neutral binary serialization format developed by Google for high performance.',
+        characteristics: ['Extremely fast and compact', 'Schema-first (.proto files)', 'Generates native code bindings', 'Strongly typed'],
+        use_cases: ['High-performance microservices communication (gRPC)', 'Data storage for performance-critical apps', 'Mobile and IoT applications'],
+        tech: ['gRPC', 'Google Cloud Platform', 'Various programming languages'],
+        features: ['streaming', 'serialization', 'performance']
+    },
+    {
+        name: 'Apache Iceberg',
+        status: 'Established',
+        domain: 'Lakehouse',
+        year: 2017,
+        summary: 'An open table format for huge analytic datasets, bringing reliability and performance of SQL tables to data lakes.',
+        characteristics: ['ACID transactions on object stores', 'Time travel and version rollback', 'Schema and partition evolution without rewriting tables', 'Hidden partitioning to avoid user error'],
+        use_cases: ['Building reliable and scalable data lakehouses', 'Running BI queries directly on object storage', 'Managing massive, evolving datasets'],
+        tech: ['Apache Spark', 'Trino', 'Apache Flink', 'Snowflake'],
+        features: ['lakehouse', 'acid', 'time-travel', 'schema-evolution']
+    },
+    {
+        name: 'Delta Lake',
+        status: 'Established',
+        domain: 'Lakehouse',
+        year: 2019,
+        summary: 'An open-source storage layer that brings ACID transactions to data lakes, built on top of Apache Parquet.',
+        characteristics: ['ACID transactions via a transaction log', 'Time travel (data versioning)', 'Unified batch and streaming sinks', 'Schema enforcement and evolution'],
+        use_cases: ['Creating a "medallion architecture" (Bronze/Silver/Gold tables)', 'GDPR/CCPA compliance with easy updates/deletes', 'Simplifying change data capture (CDC)'],
+        tech: ['Databricks', 'Apache Spark', 'Power BI', 'Azure Synapse'],
+        features: ['lakehouse', 'acid', 'time-travel', 'streaming']
+    },
+    {
+        name: 'HDF5',
+        status: 'Established',
+        domain: 'Scientific',
+        year: 1999,
+        summary: 'A format for storing large amounts of numerical data, especially N-dimensional arrays. A standard in HPC.',
+        characteristics: ['Hierarchical data model (groups and datasets)', 'Supports large, complex, heterogeneous data', 'Portable with no limits on file size', 'Supports partial I/O (chunking)'],
+        use_cases: ['Storing outputs from scientific simulations', 'Earth and space sciences (NASA)', 'Genomics and microscopy data'],
+        tech: ['Python (h5py)', 'MATLAB', 'R', 'C++/Fortran'],
+        features: ['scientific', 'hpc', 'array']
+    },
+    {
+        name: 'Zarr',
+        status: 'Emerging',
+        domain: 'Scientific',
+        year: 2015,
+        summary: 'A format for chunked, compressed, N-dimensional arrays designed for cloud-native parallel computing.',
+        characteristics: ['Cloud-object-storage friendly', 'Allows multiple readers and writers to work in parallel', 'Can be stored in various backends (files, S3, etc.)', 'Natively supports chunking and compression'],
+        use_cases: ['Large-scale genomics analysis in the cloud', 'Cloud-based climate and weather modeling', 'Interactive visualization of terabyte-scale images'],
+        tech: ['Python (xarray, dask)', 'Pangeo Project', 'Google Cloud Storage', 'AWS S3'],
+        features: ['scientific', 'cloud-native', 'parallel', 'array']
+    },
+    {
+        name: 'Lance',
+        status: 'Emerging',
+        domain: 'AI/ML',
+        year: 2022,
+        summary: 'A new, open-source columnar format for ML and AI, optimized for vector search and fast random access.',
+        characteristics: ['Columnar format based on Apache Arrow', 'Optimized for SSDs and cloud object storage', 'Zero-copy, ultra-fast random access', 'Built-in versioning and support for vector indexes (ANN)'],
+        use_cases: ['Storing and querying vector embeddings for similarity search', 'Multi-modal AI datasets (image, text, audio)', 'Fast training data loading for ML models'],
+        tech: ['Python', 'DuckDB', 'PyTorch', 'TensorFlow', 'Vector Databases'],
+        features: ['ai', 'ml', 'vector-search', 'columnar', 'performance']
+    },
+     {
+        name: 'GeoParquet',
+        status: 'Emerging',
+        domain: 'Geospatial',
+        year: 2021,
+        summary: 'An extension of Apache Parquet that adds interoperable storage for geospatial vector data (points, lines, polygons).',
+        characteristics: ['Brings columnar performance benefits to geospatial analysis', 'Stores geometries in a standard format (Well-Known Binary)', 'Maintains full compatibility with standard Parquet readers', 'Supports spatial indexing and bounding boxes'],
+        use_cases: ['Large-scale geospatial analytics in the cloud', 'Storing and querying massive vector datasets', 'Building scalable location intelligence platforms'],
+        tech: ['GeoPandas', 'Apache Sedona', 'BigQuery', 'PostGIS'],
+        features: ['geospatial', 'analytics', 'columnar']
+    },
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+    const grid = document.getElementById('format-grid');
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const domainFilter = document.getElementById('domain-filter');
+    const noResults = document.getElementById('no-results');
+    const resetBtn = document.getElementById('reset-filters');
+    
+    const createCard = (format) => {
+        const statusColor = format.status === 'Established' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
+        const domainColor = 'bg-slate-700/50 text-slate-300';
+        
+        return `
+            <div class="glass-pane rounded-xl p-6 flex flex-col transition-transform duration-300 hover:scale-105">
+                <div class="flex justify-between items-start">
+                    <h4 class="text-xl font-bold text-white">${format.name}</h4>
+                    <span class="tag ${statusColor}">${format.status}</span>
+                </div>
+                <p class="text-slate-400 text-sm mt-2 flex-grow">${format.summary}</p>
+                <div class="mt-4">
+                    <span class="tag ${domainColor}">${format.domain}</span>
+                </div>
+                <div class="mt-6 border-t border-slate-700 pt-4">
+                    <h5 class="text-sm font-semibold text-cyan-400 mb-2">Key Characteristics</h5>
+                    <ul class="text-sm text-slate-400 details-list">
+                        ${format.characteristics.map(c => `<li>${c}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+    };
+
+    const renderGrid = () => {
+        const searchValue = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const domainValue = domainFilter.value;
+
+        const filteredFormats = dataFormats.filter(format => {
+            const matchesSearch = format.name.toLowerCase().includes(searchValue) || format.summary.toLowerCase().includes(searchValue) || format.use_cases.join(' ').toLowerCase().includes(searchValue);
+            const matchesStatus = !statusValue || format.status === statusValue;
+            const matchesDomain = !domainValue || format.domain === domainValue;
+            return matchesSearch && matchesStatus && matchesDomain;
+        });
+
+        if(filteredFormats.length > 0) {
+            grid.innerHTML = filteredFormats.map(createCard).join('');
+            noResults.classList.add('hidden');
+            grid.classList.remove('hidden');
+        } else {
+            grid.innerHTML = '';
+            grid.classList.add('hidden');
+            noResults.classList.remove('hidden');
+        }
+    };
+    
+    searchInput.addEventListener('input', renderGrid);
+    statusFilter.addEventListener('change', renderGrid);
+    domainFilter.addEventListener('change', renderGrid);
+    resetBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        statusFilter.value = '';
+        domainFilter.value = '';
+        renderGrid();
+    });
+
+    // Timeline Chart
+    const ctx = document.getElementById('timeline-chart').getContext('2d');
+    const timelineData = dataFormats.map(f => ({x: f.year, y: 1, label: f.name, domain: f.domain})).sort((a,b) => a.x - b.x);
+    
+    // Add some jitter to y-values to avoid overlap
+    let lastYear = 0;
+    let yLevel = 1;
+    timelineData.forEach(d => {
+        if(d.x === lastYear) {
+            yLevel += 0.5;
+        } else {
+            yLevel = 1;
+        }
+        d.y = yLevel;
+        lastYear = d.x;
+    });
+
+    new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Data Formats',
+                data: timelineData,
+                backgroundColor: 'rgba(34, 211, 238, 0.8)',
+                borderColor: 'rgb(107, 235, 255)',
+                pointRadius: 8,
+                pointHoverRadius: 12,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const dataPoint = context.raw;
+                            return `${dataPoint.label} (${dataPoint.domain})`;
+                        }
+                    },
+                    displayColors: false,
+                    backgroundColor: '#1e293b',
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 10,
+                    cornerRadius: 8,
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: { display: true, text: 'Year Introduced', color: '#94a3b8' },
+                    grid: { color: 'rgba(55, 65, 81, 0.5)' },
+                    ticks: { color: '#94a3b8', stepSize: 5, callback: (v) => v },
+                    min: 1998,
+                    max: 2024
+                },
+                y: {
+                    display: false,
+                    min: 0,
+                    max: 4
+                }
+            }
+        }
+    });
+
+    renderGrid();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Big Data Formats — Interactive Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #111827;
+    --muted: #94a3b8;
+    --text: #e5e7eb;
+    --accent: #22d3ee;
+    --accent-lighter: #67e8f9;
+    --accent2: #a78bfa;
+    --border: #1f2937;
+    --good: #22c55e;
+    --warn: #eab308;
+    --bad: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(180deg, #0b1020, #0f172a);
+    color: var(--text);
+  }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(8px);
+    background: rgba(15,23,42,.8);
+    border-bottom: 1px solid var(--border);
+  }
+  .container {
+    width: min(1200px, 92vw);
+    margin: 0 auto;
+    padding: 16px 0 40px 0;
+  }
+  h1, h2, h3 { margin: 0.6em 0 0.4em; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.4rem; color: var(--accent-lighter); }
+  h3 { font-size: 1.1rem; color: var(--accent2); }
+  p { color: var(--muted); line-height: 1.6; }
+  .grid {
+    display: grid;
+    gap: 16px;
+  }
+  .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+  .card {
+    background: linear-gradient(180deg, #0f172a, #0b1324);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card:hover, .card.highlight {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 35px rgba(34,211,238,.1);
+  }
+  .tag { display: inline-block; font-size: 12px; padding: 4px 8px; margin: 2px 6px 2px 0; border-radius: 999px; border: 1px solid var(--border); color: #cbd5e1;}
+  .tag.good { border-color: #064e3b; background: rgba(34,197,94,.1); color:#bbf7d0 }
+  .tag.warn { border-color: #713f12; background: rgba(234,179,8,.1); color:#fde68a }
+  .tag.bad  { border-color: #7f1d1d; background: rgba(239,68,68,.1); color:#fecaca }
+  .pill { color:var(--accent); background: rgba(34,211,238,.1); border:1px solid #075985; padding:2px 8px; border-radius:999px; font-size:12px; }
+  details { border: 1px dashed var(--border); border-radius: 12px; padding: 10px 12px; margin: 10px 0; }
+  details[open] { background: rgba(167,139,250,.06); border-style: solid; }
+  summary { cursor: pointer; font-weight: 600; color:var(--accent2); }
+  summary:hover { text-decoration: underline; }
+  code, pre {
+    background: #0b1020;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: #d1fae5;
+  }
+  code { padding: 2px 6px; }
+  pre { padding: 12px; overflow:auto; }
+  .row { display:flex; align-items:center; gap:12px; flex-wrap: wrap; }
+  .toolbar {
+    display:flex; gap:12px; flex-wrap: wrap; align-items: center;
+    padding: 14px; border:1px solid var(--border); border-radius: 14px;
+    background: linear-gradient(180deg, #0b1324, #0a1222);
+  }
+  input[type="search"], select, button {
+    background: #0b1020; color: var(--text); border:1px solid var(--border);
+    padding:10px 12px; border-radius: 10px; outline: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  input[type="search"]:focus, select:focus {
+    border-color: var(--accent);
+  }
+  .toolbar button {
+    cursor: pointer;
+    background: rgba(34,211,238,.1);
+    color: var(--accent);
+    border-color: #075985;
+  }
+  .toolbar button:hover {
+    background: rgba(34,211,238,.2);
+  }
+  .copy-btn {
+    float: right; margin-left: 8px; padding: 4px 8px; font-size: 12px;
+    background: #0b1324; color: #93c5fd; border:1px solid #1e293b; border-radius: 8px; cursor: pointer;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .copy-btn:hover {
+    background: #111827;
+    transform: translateY(-1px);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border-bottom: 1px solid #1e293b; padding: 10px 8px; text-align: left; vertical-align: top; }
+  th {
+    position: sticky; top: 0; background:rgba(13,21,48,.8); backdrop-filter: blur(8px);
+    z-index:1; cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  th:hover { color: var(--accent-lighter); }
+  .small { font-size: 12px; color:#a1a1aa }
+  .section { margin-top: 28px; }
+  .kbd { border:1px solid #374151; background:#0f172a; padding:2px 6px; border-radius:6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color:#93c5fd }
+  footer { color:#64748b; font-size: 12px; margin-top: 40px; text-align:center; }
+  .highlight-row { background-color: rgba(167,139,250,.1); }
+  .concept-card { background: rgba(167,139,250,.06); border: 1px solid #4c2c88; margin-bottom: 16px; }
+  .concept-card h3 { margin-top: 0; color: #d1c1fa; }
+  .concept-card p { margin-bottom: 0; }
+  .flow-diagram-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 20px;
+    background: rgba(167,139,250,.06);
+    border-radius: 12px;
+    border: 1px solid #4c2c88;
+  }
+  .flow-step {
+    text-align: center;
+    color: var(--accent-lighter);
+    font-weight: 600;
+  }
+  .flow-arrow {
+    font-size: 2rem;
+    color: var(--accent2);
+    transform: rotate(90deg);
+  }
+  @media (min-width: 600px) {
+    .flow-arrow {
+      transform: none;
+    }
+    .flow-diagram-container {
+      flex-wrap: nowrap;
+    }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="container row">
+      <h1 style="flex:1">Big Data Formats — Interactive Guide</h1>
+      <span class="pill">CSV · JSON · XML · Parquet · ORC · Arrow · Avro · Protobuf · Thrift · SequenceFile · TFRecord · HDF5 · NetCDF · Delta · Iceberg · Hudi · Kudu</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>How to use this guide</h2>
+      <p>Use the filters to narrow formats by <strong>category</strong> and <strong>lifecycle stage</strong>. Click each item to expand details. Copy code with the button on the right.</p>
+      <div class="toolbar">
+        <input id="search" type="search" placeholder="Search formats, tech, scenarios…" />
+        <select id="category">
+          <option value="">All Categories</option>
+          <option>Text/Simple</option>
+          <option>Columnar</option>
+          <option>Row/Serialization</option>
+          <option>Binary/Scientific</option>
+          <option>Lakehouse/Table</option>
+        </select>
+        <select id="lifecycle">
+          <option value="">All Lifecycle Stages</option>
+          <option>Ingestion</option>
+          <option>Serialization/Streaming</option>
+          <option>Storage</option>
+          <option>Table/Transaction Layer</option>
+          <option>Analytics/ML</option>
+        </select>
+        <button data-filter-type="use-case" data-filter-value="Streaming">Streaming</button>
+        <button data-filter-type="use-case" data-filter-value="Analytics">Analytics</button>
+        <button data-filter-type="use-case" data-filter-value="Lakehouse">Lakehouse</button>
+        <span class="small">Tip: Press <span class="kbd">/</span> to focus search</span>
+      </div>
+    </section>
+    
+    <section class="section">
+      <h2>Foundational Concepts</h2>
+      <div class="card concept-card">
+        <h3>Row vs. Columnar Storage</h3>
+        <p><strong>Row-oriented</strong> formats (like CSV) store data record-by-record. This is efficient for reading entire rows but inefficient for analytical queries that only need a few columns. <strong>Columnar-oriented</strong> formats (like Parquet and ORC) store data grouped by column. This is a game-changer for analytics because you can read only the columns you need, drastically reducing I/O and enabling better compression.
+        
+        </p>
+      </div>
+      <div class="card concept-card">
+        <h3>Schema-on-Read vs. Schema-on-Write</h3>
+        <p>With <strong>Schema-on-Write</strong> (e.g., Parquet), the data must conform to a strict, pre-defined schema before being written. This guarantees data quality upfront. With <strong>Schema-on-Read</strong> (e.g., JSON), the schema is applied during the read operation, offering flexibility but potentially leading to data quality issues if the data is inconsistent.</p>
+      </div>
+      <div class="card concept-card">
+        <h3>Lakehouse Formats Explained</h3>
+        <p>Lakehouse formats like Delta Lake, Iceberg, and Hudi are built on top of other storage formats (often Parquet). They add critical features of data warehouses to a data lake, such as **ACID transactions** (enabling reliable updates and deletes), **time travel** (for querying historical data), and robust **schema evolution** to handle changing data structures.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Lifecycle Flow</h2>
+      <div class="flow-diagram-container">
+        <div class="flow-step">Ingestion<br><small>CSV, JSON, Logs</small></div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">Serialization<br><small>Avro, Protobuf</small></div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">Storage<br><small>Parquet, ORC</small></div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">Table Layer<br><small>Delta, Iceberg, Hudi</small></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Summary Comparison (Sortable)</h2>
+      <div class="card">
+        <table id="summary">
+          <thead>
+            <tr>
+              <th data-key="format">Format</th>
+              <th data-key="schema" title="Does it have a predefined schema?">Schema</th>
+              <th data-key="compression" title="Is it optimized for compression?">Compression</th>
+              <th data-key="analytics" title="Is it good for analytical queries?">Analytics</th>
+              <th data-key="streaming" title="Is it good for streaming data?">Streaming</th>
+              <th data-key="category" title="What kind of format is it?">Category</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p class="small">Click a column header to sort.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Formats (Expandable Reference)</h2>
+      <div id="cards" class="grid cols-2"></div>
+    </section>
+
+    <footer>© Big Data Formats Interactive. Built with vanilla HTML/CSS/JS for portability.</footer>
+  </main>
+
+<script>
+const formats = [
+  // Text/Simple
+  {
+    name: "CSV", category: "Text/Simple", lifecycle: ["Ingestion","Storage"],
+    description: "Simple text-based format for tabular data. Human-readable, no fixed schema, inefficient at scale.",
+    exampleLang: "csv",
+    example: "id,name,age,salary\n101,John,30,50000\n102,Alice,28,60000",
+    scenarios: ["Data exchange between heterogeneous systems", "Initial ingestion into Hadoop/Spark", "Small datasets"],
+    technologies: ["Excel","pandas","Hive","Spark","Hadoop MapReduce"],
+    summary: { schema:"No", compression:"No", analytics:"Low", streaming:"No" }
+  },
+  { name:"JSON", category:"Text/Simple", lifecycle:["Ingestion","Analytics/ML"],
+    description:"Text-based semi-structured format, self-describing and flexible. Supports nested objects/arrays.",
+    exampleLang:"json",
+    example:'{\n  "id": 101,\n  "name": "John",\n  "skills": ["Java","Python"]\n}',
+    scenarios:["APIs and log data","Semi-structured storage","Web apps/NoSQL"],
+    technologies:["MongoDB","Elasticsearch","Spark","Kafka","REST APIs"],
+    summary:{ schema:"Yes (self-describing)", compression:"No", analytics:"Low–Medium", streaming:"Yes" }
+  },
+  { name:"XML", category:"Text/Simple", lifecycle:["Ingestion"],
+    description:"Text-based hierarchical format, tag-driven, verbose; common in legacy enterprise integrations.",
+    exampleLang:"xml",
+    example:"<employee>\n  <id>101</id>\n  <name>John</name>\n  <age>30</age>\n</employee>",
+    scenarios:["Enterprise data exchange","Configuration files","Legacy integration"],
+    technologies:["SOAP","Enterprise middleware","Hadoop ingestion"],
+    summary:{ schema:"Yes", compression:"No", analytics:"Low", streaming:"No" }
+  },
+
+  // Columnar
+  { name:"Parquet", category:"Columnar", lifecycle:["Storage","Analytics/ML"],
+    description:"Columnar storage with efficient compression/encoding; optimized for analytical queries and nested data.",
+    exampleLang:"python",
+    example:"df.write.parquet('employee.parquet')\ndf2 = spark.read.parquet('employee.parquet')",
+    scenarios:["Analytical queries with columnar access","Large datasets & storage efficiency","Cloud OLAP"],
+    technologies:["Spark","Hive","Presto","Impala","AWS Athena","BigQuery"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"Limited" }
+  },
+  { name:"ORC", category:"Columnar", lifecycle:["Storage","Analytics/ML"],
+    description:"Columnar format from the Hadoop ecosystem; stores data in stripes; excellent compression & read speed.",
+    exampleLang:"sql",
+    example:"CREATE TABLE employees_orc (id INT, name STRING, salary FLOAT)\nSTORED AS ORC;",
+    scenarios:["Hive workloads","ETL pipelines","Large-scale Hadoop analytics"],
+    technologies:["Hive","Spark","Hadoop ecosystem"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"Limited" }
+  },
+  { name:"Arrow/Feather", category:"Columnar", lifecycle:["Analytics/ML"],
+    description:"Apache Arrow is an in-memory columnar format for fast cross-language analytics; Feather is its file format.",
+    exampleLang:"python",
+    example:"import pyarrow.feather as feather\nfeather.write_feather(df, 'employee.feather')",
+    scenarios:["In-memory analytics (pandas/R)","Sharing data across languages","ML/AI pipelines"],
+    technologies:["Pandas","R","Apache Arrow"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"No" }
+  },
+
+  // Row/Serialization
+  { name:"Avro", category:"Row/Serialization", lifecycle:["Serialization/Streaming","Storage"],
+    description:"Row-based binary with schema stored alongside data. Fast serialization and schema evolution.",
+    exampleLang:"json",
+    example:'{ "type": "record", "name": "Employee", "fields": [{"name":"id","type":"int"},{"name":"name","type":"string"}] }',
+    scenarios:["Kafka event streaming","Cross-system serialization","Schema evolution"],
+    technologies:["Kafka","Hadoop","Hive","Spark","NiFi"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"Medium", streaming:"Yes" }
+  },
+  { name:"Protobuf", category:"Row/Serialization", lifecycle:["Serialization/Streaming"],
+    description:"Language-neutral, platform-neutral binary serialization (Google). Schema-first; compact and fast.",
+    exampleLang:"proto",
+    example:"message Employee {\n  int32 id = 1;\n  string name = 2;\n}",
+    scenarios:["Microservices communication","Event streaming","High-performance APIs"],
+    technologies:["gRPC","Kafka","ML pipelines"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"Medium", streaming:"Yes" }
+  },
+  { name:"Thrift", category:"Row/Serialization", lifecycle:["Serialization/Streaming"],
+    description:"Cross-language serialization and RPC framework (Apache).",
+    exampleLang:"thrift",
+    example:"struct Employee {\n  1: i32 id,\n  2: string name\n}",
+    scenarios:["Cross-language data exchange","RPC in distributed systems"],
+    technologies:["Cassandra","Hadoop RPC"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"Medium", streaming:"Yes" }
+  },
+
+  // Binary/Scientific
+  { name:"SequenceFile", category:"Binary/Scientific", lifecycle:["Storage"],
+    description:"Binary key–value file format native to Hadoop MapReduce (intermediate storage).",
+    exampleLang:"text",
+    example:"Key: row1\nValue: <record bytes>",
+    scenarios:["Intermediate MapReduce storage","Binary KV datasets"],
+    technologies:["Hadoop","Hive"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"Medium", streaming:"No" }
+  },
+  { name:"TFRecord", category:"Binary/Scientific", lifecycle:["Analytics/ML"],
+    description:"Binary format for TensorFlow pipelines; stores serialized Example/SequenceExample protocol buffers.",
+    exampleLang:"python",
+    example:"import tensorflow as tf\nexample = tf.train.Example(...)",
+    scenarios:["Training ML models","Image/audio/video pipelines"],
+    technologies:["TensorFlow","TF Data"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"Medium", streaming:"Yes" }
+  },
+  { name:"HDF5", category:"Binary/Scientific", lifecycle:["Storage","Analytics/ML"],
+    description:"Binary hierarchical format for scientific computing; supports large multidimensional arrays.",
+    exampleLang:"text",
+    example:"/group/dataset  (hierarchical)",
+    scenarios:["Scientific simulations","Large array storage","Engineering datasets"],
+    technologies:["h5py","MATLAB","R"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"No" }
+  },
+  { name:"NetCDF", category:"Binary/Scientific", lifecycle:["Storage","Analytics/ML"],
+    description:"Binary format for multidimensional scientific data; widely used in climate and meteorology.",
+    exampleLang:"text",
+    example:"Dimensions: time, latitude, longitude",
+    scenarios:["Climate modeling","Meteorology","Geoscience"],
+    technologies:["netCDF libraries","Climate toolchains"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"No" }
+  },
+
+  // Lakehouse/Table
+  { name:"Delta Lake", category:"Lakehouse/Table", lifecycle:["Table/Transaction Layer","Storage"],
+    description:"Open-source storage layer (on Parquet) adding ACID transactions, schema evolution, time travel.",
+    exampleLang:"python",
+    example:"df.write.format('delta').save('/delta/employees')",
+    scenarios:["Slowly changing dimensions","Batch+streaming ingestion","Schema evolution"],
+    technologies:["Databricks","Spark","Azure Synapse"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"Yes" }
+  },
+  { name:"Iceberg", category:"Lakehouse/Table", lifecycle:["Table/Transaction Layer","Storage"],
+    description:"Open table format for huge analytic datasets; partition evolution, schema evolution, time travel.",
+    exampleLang:"sql",
+    example:"CREATE TABLE db.employees (id INT, name STRING) USING iceberg;",
+    scenarios:["Analytics on data lakes","Time travel queries","Lakehouse architectures"],
+    technologies:["Spark","Trino","Flink","Presto"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"Yes" }
+  },
+  { name:"Hudi", category:"Lakehouse/Table", lifecycle:["Table/Transaction Layer","Storage"],
+    description:"Table format enabling upserts/deletes and incremental processing on data lakes.",
+    exampleLang:"text",
+    example:"Hoodie table with incremental updates",
+    scenarios:["CDC (Change Data Capture)","Real-time ingestion","ETL workflows"],
+    technologies:["Spark","Hive","Presto","Flink"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"Yes" }
+  },
+  { name:"Kudu", category:"Lakehouse/Table", lifecycle:["Table/Transaction Layer","Storage"],
+    description:"Columnar store supporting fast analytics with OLTP-like updates (tablet-based).",
+    exampleLang:"text",
+    example:"Data sharded into tablets across nodes",
+    scenarios:["Fast analytics on fresh data","Near real-time reporting"],
+    technologies:["Impala","Spark","Hadoop ecosystem"],
+    summary:{ schema:"Yes", compression:"Yes", analytics:"High", streaming:"Yes" }
+  }
+];
+
+// Get references to all the HTML elements we need to interact with
+const summaryBody = document.querySelector('#summary tbody');
+const cardsContainer = document.getElementById('cards');
+const searchInput = document.getElementById('search');
+const categorySelect = document.getElementById('category');
+const lifecycleSelect = document.getElementById('lifecycle');
+const quickFilterButtons = document.querySelectorAll('[data-filter-type="use-case"]');
+
+// Store the full list of formats for filtering and sorting
+let currentFormats = [...formats];
+
+// ====================================================================
+// Functions for Rendering & Displaying
+// ====================================================================
+
+// Renders the summary table rows based on a given list of formats
+function renderSummary(data) {
+  summaryBody.innerHTML = data.map(r => `
+    <tr data-format-name="${r.name.replace(/\s+/g, '-').toLowerCase()}">
+      <td>${r.name}</td>
+      <td>${r.summary.schema}</td>
+      <td>${r.summary.compression}</td>
+      <td>${r.summary.analytics}</td>
+      <td>${r.summary.streaming}</td>
+      <td>${r.category}</td>
+    </tr>
+  `).join("");
+}
+
+// Generates the code block for each format card
+function snippetBlock(fmt) {
+  const id = 'code_' + btoa(fmt.name).replace(/=/g,"");
+  return `
+    <button class="copy-btn" data-target="${id}">Copy</button>
+    <pre id="${id}"><code class="language-${fmt.exampleLang}">${fmt.example.replace(/</g,"&lt;")}</code></pre>
+  `;
+}
+
+// Generates a list of tags for a given array of strings
+function tagList(items, cls="tag") {
+  return items.map(t => `<span class="${cls}">${t}</span>`).join(" ");
+}
+
+// Renders the expandable cards for each format
+function renderCards(list) {
+  cardsContainer.innerHTML = list.map(fmt => `
+    <div class="card" data-format-name="${fmt.name.replace(/\s+/g, '-').toLowerCase()}">
+      <div class="row">
+        <h3 style="margin-right:8px">${fmt.name}</h3>
+        <span class="pill">${fmt.category}</span>
+        ${fmt.lifecycle.map(s=>`<span class="tag">${s}</span>`).join("")}
+      </div>
+      <p>${fmt.description}</p>
+      <details>
+        <summary>Example</summary>
+        ${snippetBlock(fmt)}
+      </details>
+      <details>
+        <summary>Scenarios</summary>
+        <div>${tagList(fmt.scenarios)}</div>
+      </details>
+      <details>
+        <summary>Technologies</summary>
+        <div>${tagList(fmt.technologies)}</div>
+      </details>
+    </div>
+  `).join("");
+}
+
+// Initial render of both tables and cards
+renderSummary(formats);
+renderCards(formats);
+
+// ====================================================================
+// Interactivity: Sorting, Filtering, and Highlighting
+// ====================================================================
+
+// Initial sort state for the summary table
+let sortState = { key: 'format', dir: 1 };
+document.querySelectorAll('#summary th').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    // Reverse sort direction if the same column is clicked
+    sortState.dir = (sortState.key === key) ? -sortState.dir : 1;
+    sortState.key = key;
+
+    // Sort the current filtered list of formats
+    currentFormats.sort((a, b) => {
+      let aVal, bVal;
+      switch(key) {
+        case 'format': aVal = a.name; bVal = b.name; break;
+        case 'schema': aVal = a.summary.schema; bVal = b.summary.schema; break;
+        case 'compression': aVal = a.summary.compression; bVal = b.summary.compression; break;
+        case 'analytics': aVal = a.summary.analytics; bVal = b.summary.analytics; break;
+        case 'streaming': aVal = a.summary.streaming; bVal = b.summary.streaming; break;
+        case 'category': aVal = a.category; bVal = b.category; break;
+      }
+      return aVal.localeCompare(bVal) * sortState.dir;
+    });
+
+    renderSummary(currentFormats);
+  });
+});
+
+// Function to apply all filters and re-render the content
+function applyFilters() {
+  const query = searchInput.value.toLowerCase();
+  const category = categorySelect.value;
+  const lifecycle = lifecycleSelect.value;
+  
+  // Filter the original `formats` array to get the new list
+  currentFormats = formats.filter(f => {
+    const text = (f.name + " " + f.category + " " + f.description + " " + f.scenarios.join(" ") + " " + f.technologies.join(" ")).toLowerCase();
+    const matchQ = !query || text.includes(query);
+    const matchC = !category || f.category === category;
+    const matchL = !lifecycle || f.lifecycle.includes(lifecycle);
+    return matchQ && matchC && matchL;
+  });
+
+  renderSummary(currentFormats);
+  renderCards(currentFormats);
+}
+
+// Add event listeners for all filter elements
+[searchInput, categorySelect, lifecycleSelect].forEach(el => el.addEventListener('input', applyFilters));
+
+// Add event listeners for quick filter buttons
+quickFilterButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const filterValue = button.getAttribute('data-filter-value');
+    
+    // Set the filter values based on the button clicked
+    switch(filterValue) {
+      case 'Streaming':
+        categorySelect.value = '';
+        lifecycleSelect.value = 'Serialization/Streaming';
+        break;
+      case 'Analytics':
+        categorySelect.value = 'Columnar';
+        lifecycleSelect.value = 'Analytics/ML';
+        break;
+      case 'Lakehouse':
+        categorySelect.value = 'Lakehouse/Table';
+        lifecycleSelect.value = 'Table/Transaction Layer';
+        break;
+      default:
+        categorySelect.value = '';
+        lifecycleSelect.value = '';
+    }
+    // Trigger the filtering process
+    applyFilters();
+  });
+});
+
+
+// Add keyboard shortcut to focus the search bar
+window.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement !== searchInput) {
+    e.preventDefault();
+    searchInput.focus();
+  }
+});
+
+// Add a highlight on hover for the summary table rows and corresponding cards
+summaryBody.addEventListener('mouseover', (e) => {
+  const row = e.target.closest('tr');
+  if (row) {
+    const name = row.getAttribute('data-format-name');
+    document.querySelector(`.card[data-format-name="${name}"]`).classList.add('highlight');
+  }
+});
+
+summaryBody.addEventListener('mouseout', (e) => {
+  const row = e.target.closest('tr');
+  if (row) {
+    const name = row.getAttribute('data-format-name');
+    document.querySelector(`.card[data-format-name="${name}"]`).classList.remove('highlight');
+  }
+});
+
+// ====================================================================
+// Copy-to-clipboard functionality
+// ====================================================================
+
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('copy-btn')) {
+    const id = e.target.getAttribute('data-target');
+    const el = document.getElementById(id);
+    const text = el.innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      e.target.textContent = "Copied!";
+      setTimeout(()=> e.target.textContent = "Copy", 1000);
+    });
+  }
+});
+
+</script>
+</body>
+</html>
