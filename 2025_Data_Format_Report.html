@@ -16,8 +16,8 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            color: #e2e8f0;
+            background-color: #f8fafc;
+            color: #334155;
         }
         .container {
             max-width: 1280px;
@@ -26,38 +26,52 @@
             padding: 1rem 2rem;
         }
         .glass-pane {
-            background-color: rgba(17, 24, 39, 0.8);
+            background-color: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(55, 65, 81, 0.5);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
         }
         .tag {
             display: inline-block;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
         .details-list li {
             position: relative;
             padding-left: 1.25rem;
             margin-bottom: 0.5rem;
+            color: #475569;
         }
         .details-list li::before {
             content: '✓';
             position: absolute;
             left: 0;
-            color: #22d3ee;
+            color: #f59e0b;
+            font-weight: 700;
         }
         select, input {
             -webkit-appearance: none;
             -moz-appearance: none;
             appearance: none;
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-            background-position: right 0.5rem center;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
             background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
+            background-size: 1.25em 1.25em;
             padding-right: 2.5rem;
+            background-color: #ffffff;
+            border: 1px solid #cbd5f5;
+            border-radius: 0.75rem;
+            color: #1e293b;
+        }
+        select:focus,
+        input:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25);
         }
         .chart-container {
             position: relative;
@@ -68,52 +82,60 @@
 </head>
 <body class="antialiased">
 
-    <header class="py-4 sticky top-0 z-50 glass-pane">
-        <div class="container flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-white">The 2025 Data Format Report</h1>
-            <p class="text-sm text-slate-400 hidden sm:block">An Interactive Guide to Established & Emerging Standards</p>
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="container flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between">
+            <div>
+                <div class="flex flex-wrap items-center gap-3 text-sm font-semibold text-amber-600">
+                    <a href="index.html" class="transition-colors hover:text-amber-700">&larr; Back to main navigation</a>
+                    <span class="hidden md:inline text-slate-300">•</span>
+                    <a href="Big_Data_Formats.html" class="text-slate-500 transition-colors hover:text-amber-700">Formats explorer</a>
+                </div>
+                <h1 class="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">The 2025 Data Format Report</h1>
+                <p class="mt-2 text-sm text-slate-500 sm:text-base">An interactive guide to established and emerging standards.</p>
+            </div>
+            <a href="#explorer" class="inline-flex items-center justify-center rounded-lg bg-amber-500 px-4 py-2 font-semibold text-white shadow-sm transition-colors hover:bg-amber-600">Jump to explorer</a>
         </div>
     </header>
 
     <main class="container">
         
         <section id="intro" class="text-center my-12">
-            <h2 class="text-4xl font-bold tracking-tight text-white sm:text-5xl">The Unseen Engines of Data</h2>
-            <p class="mt-6 text-lg leading-8 text-slate-300">From web APIs to peta-scale analytics and generative AI, data formats are the fundamental building blocks of the digital world. This guide provides an interactive overview of the most critical formats in use today and a look at what's coming next.</p>
+            <h2 class="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">The Unseen Engines of Data</h2>
+            <p class="mt-6 text-lg leading-8 text-slate-600">From web APIs to peta-scale analytics and generative AI, data formats are the fundamental building blocks of the digital world. This guide provides an interactive overview of the most critical formats in use today and a look at what's coming next.</p>
         </section>
 
         <section id="trends" class="my-16">
-            <h3 class="text-2xl font-bold text-center text-white mb-8">Key Trends Shaping the Future of Formats</h3>
+            <h3 class="text-2xl font-bold text-center text-slate-900 mb-8">Key Trends Shaping the Future of Formats</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="p-6 rounded-xl glass-pane">
-                    <h4 class="font-semibold text-cyan-400">The Lakehouse Paradigm</h4>
-                    <p class="text-sm text-slate-400 mt-2">Table formats like Delta Lake, Iceberg, and Hudi are bringing database capabilities (ACID transactions, time travel) directly to data lakes, unifying streaming and batch processing on open formats like Parquet.</p>
+                    <h4 class="font-semibold text-amber-600">The Lakehouse Paradigm</h4>
+                    <p class="text-sm text-slate-600 mt-2">Table formats like Delta Lake, Iceberg, and Hudi are bringing database capabilities (ACID transactions, time travel) directly to data lakes, unifying streaming and batch processing on open formats like Parquet.</p>
                 </div>
                 <div class="p-6 rounded-xl glass-pane">
-                    <h4 class="font-semibold text-cyan-400">AI & Vector-Specific Formats</h4>
-                    <p class="text-sm text-slate-400 mt-2">The rise of Generative AI has created a need for formats optimized for vector embeddings and multi-modal data. Formats like Lance are emerging to enable efficient similarity search and ML training at scale.</p>
+                    <h4 class="font-semibold text-amber-600">AI & Vector-Specific Formats</h4>
+                    <p class="text-sm text-slate-600 mt-2">The rise of Generative AI has created a need for formats optimized for vector embeddings and multi-modal data. Formats like Lance are emerging to enable efficient similarity search and ML training at scale.</p>
                 </div>
                 <div class="p-6 rounded-xl glass-pane">
-                    <h4 class="font-semibold text-cyan-400">Cloud-Native Architecture</h4>
-                    <p class="text-sm text-slate-400 mt-2">Formats are increasingly designed for object storage (like S3). This means supporting partial reads and parallel access, with formats like Zarr and Cloud-Optimized GeoTIFFs leading the way for large-scale scientific data.</p>
+                    <h4 class="font-semibold text-amber-600">Cloud-Native Architecture</h4>
+                    <p class="text-sm text-slate-600 mt-2">Formats are increasingly designed for object storage (like S3). This means supporting partial reads and parallel access, with formats like Zarr and Cloud-Optimized GeoTIFFs leading the way for large-scale scientific data.</p>
                 </div>
                 <div class="p-6 rounded-xl glass-pane">
-                    <h4 class="font-semibold text-cyan-400">Interoperability via Arrow</h4>
-                    <p class="text-sm text-slate-400 mt-2">Apache Arrow's in-memory columnar format is becoming the de-facto standard for zero-copy data exchange between different systems (Spark, Pandas, databases), dramatically speeding up data pipelines.</p>
+                    <h4 class="font-semibold text-amber-600">Interoperability via Arrow</h4>
+                    <p class="text-sm text-slate-600 mt-2">Apache Arrow's in-memory columnar format is becoming the de-facto standard for zero-copy data exchange between different systems (Spark, Pandas, databases), dramatically speeding up data pipelines.</p>
                 </div>
             </div>
         </section>
 
         <section id="explorer" class="my-16">
-            <div class="glass-pane p-4 sm:p-6 rounded-xl sticky top-[73px] z-40">
+            <div class="glass-pane p-4 sm:p-6 rounded-xl sticky top-[88px] z-40">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <input type="search" id="search-input" placeholder="Search formats..." class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
-                    <select id="status-filter" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    <input type="search" id="search-input" placeholder="Search formats..." class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400">
+                    <select id="status-filter" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400">
                         <option value="">All Statuses</option>
                         <option value="Established">Established</option>
                         <option value="Emerging">Emerging</option>
                     </select>
-                    <select id="domain-filter" class="w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none">
+                    <select id="domain-filter" class="w-full bg-white border border-slate-300 rounded-lg px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400">
                         <option value="">All Domains</option>
                         <option value="Analytics">Analytics</option>
                         <option value="Streaming">Streaming & Serialization</option>
@@ -123,18 +145,18 @@
                         <option value="Scientific">Scientific & HPC</option>
                         <option value="Geospatial">Geospatial</option>
                     </select>
-                    <button id="reset-filters" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold rounded-lg px-4 py-2 transition-colors">Reset</button>
+                    <button id="reset-filters" class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg px-4 py-2 transition-colors">Reset</button>
                 </div>
             </div>
 
             <div id="format-grid" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Format cards will be injected here by JavaScript -->
             </div>
-             <p id="no-results" class="text-center text-slate-400 mt-8 text-lg hidden">No formats match your criteria.</p>
+             <p id="no-results" class="text-center text-slate-500 mt-8 text-lg hidden">No formats match your criteria.</p>
         </section>
-        
+
         <section id="timeline" class="my-16">
-            <h3 class="text-2xl font-bold text-center text-white mb-8">Evolution of Data Formats</h3>
+            <h3 class="text-2xl font-bold text-center text-slate-900 mb-8">Evolution of Data Formats</h3>
             <div class="glass-pane p-6 rounded-xl">
                 <div class="chart-container">
                     <canvas id="timeline-chart"></canvas>
@@ -271,22 +293,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetBtn = document.getElementById('reset-filters');
     
     const createCard = (format) => {
-        const statusColor = format.status === 'Established' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20';
-        const domainColor = 'bg-slate-700/50 text-slate-300';
-        
+        const statusColor = format.status === 'Established' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-violet-100 text-violet-700 border border-violet-200';
+        const domainColor = 'bg-slate-100 text-slate-600 border border-slate-200';
+
         return `
-            <div class="glass-pane rounded-xl p-6 flex flex-col transition-transform duration-300 hover:scale-105">
+            <div class="glass-pane rounded-xl p-6 flex flex-col transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
                 <div class="flex justify-between items-start">
-                    <h4 class="text-xl font-bold text-white">${format.name}</h4>
+                    <h4 class="text-xl font-bold text-slate-900">${format.name}</h4>
                     <span class="tag ${statusColor}">${format.status}</span>
                 </div>
-                <p class="text-slate-400 text-sm mt-2 flex-grow">${format.summary}</p>
+                <p class="text-slate-600 text-sm mt-2 flex-grow">${format.summary}</p>
                 <div class="mt-4">
                     <span class="tag ${domainColor}">${format.domain}</span>
                 </div>
-                <div class="mt-6 border-t border-slate-700 pt-4">
-                    <h5 class="text-sm font-semibold text-cyan-400 mb-2">Key Characteristics</h5>
-                    <ul class="text-sm text-slate-400 details-list">
+                <div class="mt-6 border-t border-slate-200 pt-4">
+                    <h5 class="text-sm font-semibold text-amber-600 mb-2">Key Characteristics</h5>
+                    <ul class="text-sm text-slate-600 details-list">
                         ${format.characteristics.map(c => `<li>${c}</li>`).join('')}
                     </ul>
                 </div>
@@ -350,8 +372,8 @@ document.addEventListener('DOMContentLoaded', () => {
             datasets: [{
                 label: 'Data Formats',
                 data: timelineData,
-                backgroundColor: 'rgba(34, 211, 238, 0.8)',
-                borderColor: 'rgb(107, 235, 255)',
+                backgroundColor: 'rgba(245, 158, 11, 0.85)',
+                borderColor: 'rgb(217, 119, 6)',
                 pointRadius: 8,
                 pointHoverRadius: 12,
             }]
@@ -369,11 +391,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     },
                     displayColors: false,
-                    backgroundColor: '#1e293b',
+                    backgroundColor: '#ffffff',
+                    titleColor: '#0f172a',
+                    bodyColor: '#334155',
                     titleFont: { size: 14, weight: 'bold' },
                     bodyFont: { size: 12 },
                     padding: 10,
                     cornerRadius: 8,
+                    borderColor: '#e2e8f0',
+                    borderWidth: 1,
                 }
             },
             scales: {
@@ -381,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: 'linear',
                     position: 'bottom',
                     title: { display: true, text: 'Year Introduced', color: '#94a3b8' },
-                    grid: { color: 'rgba(55, 65, 81, 0.5)' },
+                    grid: { color: 'rgba(148, 163, 184, 0.35)' },
                     ticks: { color: '#94a3b8', stepSize: 5, callback: (v) => v },
                     min: 1998,
                     max: 2024
