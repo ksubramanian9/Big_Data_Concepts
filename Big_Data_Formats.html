@@ -9,17 +9,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f8fafc;
+    --bg: #f8f7f4;
     --card: #ffffff;
-    --muted: #64748b;
-    --text: #1e293b;
-    --accent: #f59e0b;
-    --accent-lighter: #fbbf24;
-    --accent2: #6366f1;
-    --border: #e2e8f0;
-    --good: #16a34a;
-    --warn: #f59e0b;
-    --bad: #ef4444;
+    --muted: #6f625c;
+    --text: #4a423d;
+    --accent: #8c7b72;
+    --accent-lighter: #c9b8b0;
+    --accent2: #63534d;
+    --border: #eaddd7;
+    --good: #2f855a;
+    --warn: #b7791f;
+    --bad: #c53030;
   }
   * { box-sizing: border-box; }
   body {
@@ -28,58 +28,46 @@
     background: var(--bg);
     color: var(--text);
   }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { color: #d97706; }
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    backdrop-filter: blur(12px);
-    background: rgba(255,255,255,0.9);
-    border-bottom: 1px solid var(--border);
-    box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+  a {
+    color: var(--accent2);
+    text-decoration: none;
+    transition: color 0.2s ease;
   }
-  .top-bar {
-    background: #fef3c7;
-    border-bottom: 1px solid #fde68a;
-    padding: 8px 0;
+  a:hover { color: #4d3b34; }
+  .site-header {
+    background: #ece5e1;
+    border-bottom: 1px solid #e0d7d0;
+    box-shadow: 0 12px 30px rgba(99,83,77,0.12);
   }
   .container {
     width: min(1200px, 92vw);
     margin: 0 auto;
   }
-  .top-bar .container {
+  .nav-bar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
+    padding: 16px 0;
     flex-wrap: wrap;
   }
-  .top-bar a {
-    color: #b45309;
+  .home-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #ffffff;
+    padding: 10px 18px;
+    border-radius: 999px;
     font-weight: 600;
-    font-size: 14px;
+    border: 1px solid var(--accent);
+    box-shadow: 0 8px 20px rgba(99,83,77,0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   }
-  .top-bar a:hover {
-    color: #92400e;
-  }
-  .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 24px;
-    padding: 20px 0;
-    flex-wrap: wrap;
-  }
-  .header-content h1 {
-    font-size: 2.25rem;
-    margin: 0;
-    color: var(--text);
-  }
-  .subtitle {
-    margin: 6px 0 0;
-    color: var(--muted);
-    max-width: 520px;
+  .home-button:hover {
+    background: #6f5f57;
+    transform: translateY(-1px);
+    box-shadow: 0 12px 28px rgba(99,83,77,0.25);
   }
   .nav-actions {
     display: flex;
@@ -91,37 +79,88 @@
     align-items: center;
     gap: 8px;
     font-weight: 600;
-    color: #1f2937;
     font-size: 14px;
-    padding: 8px 12px;
-    border-radius: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
     border: 1px solid var(--border);
-    background: #ffffff;
+    background: rgba(255,255,255,0.85);
+    color: var(--accent2);
     transition: all 0.2s ease;
   }
   .nav-actions a:hover {
-    border-color: var(--accent);
-    box-shadow: 0 12px 28px rgba(245,158,11,0.18);
-    color: #92400e;
+    border-color: #d3c1b9;
+    background: #d3c1b9;
+    color: #42342f;
+    box-shadow: 0 12px 28px rgba(110,90,82,0.2);
+  }
+  .hero {
+    padding: 12px 0 28px;
+  }
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .hero-content h1 {
+    font-size: 2.5rem;
+    margin: 0;
+    color: var(--accent2);
+  }
+  .subtitle {
+    margin: 0;
+    color: var(--muted);
+    max-width: 640px;
+    line-height: 1.65;
   }
   .pill {
-    color: #b45309;
-    background: #fef3c7;
-    border: 1px solid #fde68a;
-    padding: 6px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent2);
+    background: rgba(255,255,255,0.65);
+    border: 1px solid #d3c1b9;
+    padding: 6px 14px;
     border-radius: 999px;
     font-weight: 600;
     font-size: 13px;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.05em;
   }
   .page {
-    padding: 32px 0 64px;
+    padding: 48px 0 72px;
   }
-  h1, h2, h3 { margin: 0.6em 0 0.4em; }
-  h2 { font-size: 1.6rem; color: #1e293b; }
-  h3 { font-size: 1.2rem; color: #4338ca; }
-  p { color: var(--muted); line-height: 1.65; }
+  .layout-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .intro-card {
+    background: linear-gradient(135deg, rgba(236,229,225,0.85), rgba(255,255,255,0.95));
+  }
+  .controls-card .toolbar {
+    margin-top: 12px;
+  }
+  .controls-card .report-callout {
+    margin-top: 24px;
+  }
+  .lead {
+    margin: 0 0 16px;
+    font-size: 1rem;
+    color: var(--muted);
+  }
+  h1, h2, h3 {
+    margin: 0.6em 0 0.4em;
+    font-weight: 600;
+  }
+  h2 {
+    font-size: 1.75rem;
+    color: var(--accent2);
+  }
+  h3 {
+    font-size: 1.2rem;
+    color: var(--accent);
+  }
+  p { color: var(--muted); line-height: 1.7; }
   .grid {
     display: grid;
     gap: 16px;
@@ -131,18 +170,18 @@
   .card {
     background: var(--card);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px 22px;
-    box-shadow: 0 12px 28px rgba(15,23,42,0.08);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 12px 28px rgba(99,83,77,0.12);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   }
   .card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 22px 40px rgba(15,23,42,0.12);
+    box-shadow: 0 22px 42px rgba(99,83,77,0.16);
   }
   .card.highlight {
     border-color: var(--accent);
-    box-shadow: 0 18px 36px rgba(245,158,11,0.22);
+    box-shadow: 0 18px 36px rgba(140,123,114,0.22);
   }
   .tag {
     display: inline-flex;
@@ -151,48 +190,48 @@
     padding: 4px 10px;
     margin: 2px 6px 2px 0;
     border-radius: 999px;
-    border: 1px solid var(--border);
-    background: #f1f5f9;
-    color: #475569;
+    border: 1px solid #d3c1b9;
+    background: #f2ebe7;
+    color: #63534d;
     font-weight: 500;
   }
   .tag.good {
-    border-color: rgba(134,239,172,0.6);
-    background: rgba(187,247,208,0.7);
-    color: #166534;
+    border-color: rgba(119,176,136,0.5);
+    background: rgba(207,231,214,0.7);
+    color: #276749;
   }
   .tag.warn {
-    border-color: rgba(253,230,138,0.9);
-    background: rgba(254,243,199,0.85);
-    color: #92400e;
+    border-color: rgba(224,177,92,0.6);
+    background: rgba(244,219,182,0.75);
+    color: #8c5a15;
   }
   .tag.bad {
-    border-color: rgba(254,202,202,0.7);
-    background: rgba(254,226,226,0.85);
-    color: #b91c1c;
+    border-color: rgba(226,134,134,0.6);
+    background: rgba(246,207,207,0.75);
+    color: #9b2c2c;
   }
   details {
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 12px 16px;
     margin: 12px 0;
-    background: #f8fafc;
+    background: #f5ede8;
   }
   details[open] {
-    background: #fff7ed;
-    border-color: #fbbf24;
+    background: #ede3dd;
+    border-color: #d3c1b9;
   }
   summary {
     cursor: pointer;
     font-weight: 600;
-    color: #b45309;
+    color: var(--accent2);
   }
   summary:hover { text-decoration: underline; }
   code, pre {
-    background: #0f172a;
-    border: 1px solid #1e293b;
+    background: #3f3430;
+    border: 1px solid #2c2320;
     border-radius: 10px;
-    color: #e2e8f0;
+    color: #f4ede8;
   }
   code { padding: 2px 6px; display: inline-block; }
   pre { padding: 12px; overflow: auto; }
@@ -205,7 +244,7 @@
     padding: 16px;
     border:1px solid var(--border);
     border-radius: 14px;
-    background: #f1f5f9;
+    background: #f2ebe7;
   }
   input[type="search"], select, button {
     background: #ffffff;
@@ -218,34 +257,34 @@
   }
   input[type="search"]:focus, select:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(245,158,11,0.25);
+    box-shadow: 0 0 0 3px rgba(140,123,114,0.28);
   }
   .toolbar button {
     cursor: pointer;
-    background: var(--accent);
+    background: var(--accent2);
     color: #ffffff;
-    border-color: var(--accent);
+    border-color: var(--accent2);
     font-weight: 600;
   }
   .toolbar button:hover {
-    background: #d97706;
-    border-color: #d97706;
+    background: #4d3b34;
+    border-color: #4d3b34;
   }
   .copy-btn {
     float: right;
     margin-left: 8px;
     padding: 4px 10px;
     font-size: 12px;
-    background: #f8fafc;
-    color: #334155;
+    background: #f2ebe7;
+    color: #4d3b34;
     border:1px solid var(--border);
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
   }
   .copy-btn:hover {
-    background: #e2e8f0;
-    color: #1e293b;
+    background: #e6d8d1;
+    color: #332622;
     transform: translateY(-1px);
   }
   table { width: 100%; border-collapse: collapse; }
@@ -258,27 +297,27 @@
   th {
     position: sticky;
     top: 0;
-    background: rgba(248,250,252,0.95);
+    background: rgba(236,229,225,0.95);
     backdrop-filter: blur(6px);
     z-index:1;
     cursor: pointer;
     transition: color 0.2s ease;
     font-weight: 600;
-    color: #475569;
+    color: var(--accent2);
   }
   th:hover { color: var(--accent); }
-  tbody tr:hover { background: #fff7ed; }
-  .small { font-size: 12px; color:#94a3b8; }
-  .section { margin-top: 32px; }
-  .kbd { border:1px solid #cbd5f5; background:#eef2ff; padding:2px 6px; border-radius:6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color:#4338ca; }
-  footer { color:#94a3b8; font-size: 12px; margin-top: 40px; text-align:center; }
-  .highlight-row { background-color: rgba(251,191,36,0.2); }
+  tbody tr:hover { background: #f2ebe7; }
+  .small { font-size: 12px; color:#8f8078; }
+  .section { margin-top: 36px; }
+  .kbd { border:1px solid #d3c1b9; background:#f2ebe7; padding:2px 6px; border-radius:6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color:#63534d; }
+  footer { color:#9c8e86; font-size: 12px; margin-top: 48px; text-align:center; }
+  .highlight-row { background-color: rgba(198,176,164,0.25); }
   .concept-card {
-    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(59,130,246,0.05));
-    border: 1px solid rgba(99,102,241,0.25);
+    background: linear-gradient(135deg, rgba(196,178,168,0.3), rgba(236,229,225,0.8));
+    border: 1px solid rgba(192,168,158,0.45);
     margin-bottom: 16px;
   }
-  .concept-card h3 { margin-top: 0; color: #4338ca; }
+  .concept-card h3 { margin-top: 0; color: var(--accent2); }
   .concept-card p { margin-bottom: 0; }
   .flow-diagram-container {
     display: flex;
@@ -287,13 +326,13 @@
     flex-wrap: wrap;
     gap: 20px;
     padding: 20px;
-    background: linear-gradient(135deg, rgba(251,191,36,0.18), rgba(236,233,254,0.8));
-    border-radius: 12px;
-    border: 1px solid rgba(251,191,36,0.45);
+    background: linear-gradient(135deg, rgba(236,229,225,0.9), rgba(212,194,184,0.65));
+    border-radius: 16px;
+    border: 1px solid rgba(211,193,185,0.6);
   }
   .flow-step {
     text-align: center;
-    color: #b45309;
+    color: var(--accent2);
     font-weight: 600;
   }
   .flow-arrow {
@@ -309,33 +348,33 @@
     justify-content: space-between;
     gap: 16px;
     padding: 16px 18px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(99,102,241,0.15));
-    border: 1px solid rgba(245,158,11,0.35);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(236,229,225,0.95), rgba(196,178,168,0.7));
+    border: 1px solid rgba(199,178,168,0.6);
   }
   .report-callout h3 {
     margin: 0;
-    color: #92400e;
+    color: var(--accent2);
   }
   .report-callout p {
     margin: 4px 0 0;
-    color: #475569;
+    color: var(--muted);
   }
   .cta-button {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     padding: 10px 16px;
-    border-radius: 10px;
-    background: var(--accent);
+    border-radius: 999px;
+    background: var(--accent2);
     color: #ffffff;
     font-weight: 600;
     text-decoration: none;
     transition: background 0.2s ease, box-shadow 0.2s ease;
   }
   .cta-button:hover {
-    background: #d97706;
-    box-shadow: 0 16px 32px rgba(245,158,11,0.25);
+    background: #4d3b34;
+    box-shadow: 0 16px 32px rgba(110,90,82,0.25);
   }
   @media (min-width: 600px) {
     .flow-arrow {
@@ -348,72 +387,77 @@
   @media (max-width: 640px) {
     .nav-actions {
       width: 100%;
+      justify-content: center;
     }
     .nav-actions a {
       flex: 1 1 100%;
       justify-content: center;
     }
-    .header-content {
+    .hero-content {
       align-items: flex-start;
     }
   }
-</style>
+  </style>
 </head>
 <body>
-  <header>
-    <div class="top-bar">
-      <div class="container">
-        <a href="index.html">&larr; Back to main navigation</a>
-        <div class="nav-actions">
-          <a href="#summary">Jump to comparison table</a>
-          <a href="2025_Data_Format_Report.html">View the 2025 Data Format Report</a>
-        </div>
+  <header class="site-header">
+    <div class="container nav-bar">
+      <a href="index.html" class="home-button">Home</a>
+      <div class="nav-actions">
+        <a href="#summary">Summary Table</a>
+        <a href="2025_Data_Format_Report.html">2025 Data Format Report</a>
       </div>
     </div>
-    <div class="container header-content">
-      <div>
+    <div class="container hero">
+      <div class="hero-content">
+        <span class="pill">CSV · JSON · XML · Parquet · ORC · Arrow · Avro · Protobuf · Thrift · SequenceFile · TFRecord · HDF5 · NetCDF · Delta · Iceberg · Hudi · Kudu</span>
         <h1>Big Data Formats Explorer</h1>
         <p class="subtitle">Identify the right file, table, and serialization formats for ingestion, analytics, streaming, and lakehouse workloads.</p>
       </div>
-      <span class="pill">CSV · JSON · XML · Parquet · ORC · Arrow · Avro · Protobuf · Thrift · SequenceFile · TFRecord · HDF5 · NetCDF · Delta · Iceberg · Hudi · Kudu</span>
     </div>
   </header>
 
-  <main class="container page">
-    <section class="card">
-      <h2>How to use this guide</h2>
-      <p>Use the filters to narrow formats by <strong>category</strong> and <strong>lifecycle stage</strong>. Click each item to expand details. Copy code with the button on the right.</p>
-      <div class="toolbar">
-        <input id="search" type="search" placeholder="Search formats, tech, scenarios…" />
-        <select id="category">
-          <option value="">All Categories</option>
-          <option>Text/Simple</option>
-          <option>Columnar</option>
-          <option>Row/Serialization</option>
-          <option>Binary/Scientific</option>
-          <option>Lakehouse/Table</option>
-        </select>
-        <select id="lifecycle">
-          <option value="">All Lifecycle Stages</option>
-          <option>Ingestion</option>
-          <option>Serialization/Streaming</option>
-          <option>Storage</option>
-          <option>Table/Transaction Layer</option>
-          <option>Analytics/ML</option>
-        </select>
-        <button data-filter-type="use-case" data-filter-value="Streaming">Streaming</button>
-        <button data-filter-type="use-case" data-filter-value="Analytics">Analytics</button>
-        <button data-filter-type="use-case" data-filter-value="Lakehouse">Lakehouse</button>
-        <span class="small">Tip: Press <span class="kbd">/</span> to focus search</span>
-      </div>
-      <div class="report-callout">
-        <div>
-          <h3>New for 2025: Data Format Outlook</h3>
-          <p>Explore key trends, emerging formats, and adoption milestones in the interactive annual research report.</p>
+  <main class="page">
+    <div class="container layout-stack">
+      <section class="card intro-card">
+        <h2>Explore the format landscape</h2>
+        <p>The explorer distills how modern data formats behave across ingestion, storage, and analytics workflows so you can match the right technology to your workload. Each card highlights schema expectations, performance traits, and the ecosystems where a format shines.</p>
+      </section>
+
+      <section class="card controls-card">
+        <h2>Filter the catalog</h2>
+        <p class="lead">Search across formats or jump straight to common lifecycle scenarios to focus the comparison on what matters for your project.</p>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="Search formats, tech, scenarios…" />
+          <select id="category">
+            <option value="">All Categories</option>
+            <option>Text/Simple</option>
+            <option>Columnar</option>
+            <option>Row/Serialization</option>
+            <option>Binary/Scientific</option>
+            <option>Lakehouse/Table</option>
+          </select>
+          <select id="lifecycle">
+            <option value="">All Lifecycle Stages</option>
+            <option>Ingestion</option>
+            <option>Serialization/Streaming</option>
+            <option>Storage</option>
+            <option>Table/Transaction Layer</option>
+            <option>Analytics/ML</option>
+          </select>
+          <button data-filter-type="use-case" data-filter-value="Streaming">Streaming</button>
+          <button data-filter-type="use-case" data-filter-value="Analytics">Analytics</button>
+          <button data-filter-type="use-case" data-filter-value="Lakehouse">Lakehouse</button>
+          <span class="small">Tip: Press <span class="kbd">/</span> to focus search</span>
         </div>
-        <a class="cta-button" href="2025_Data_Format_Report.html">Read the 2025 Report</a>
-      </div>
-    </section>
+        <div class="report-callout">
+          <div>
+            <h3>New for 2025: Data Format Outlook</h3>
+            <p>Explore key trends, emerging formats, and adoption milestones in the interactive annual research report.</p>
+          </div>
+          <a class="cta-button" href="2025_Data_Format_Report.html">Read the 2025 Report</a>
+        </div>
+      </section>
     
     <section class="section">
       <h2>Foundational Concepts</h2>
@@ -472,6 +516,7 @@
     </section>
 
     <footer>© Big Data Formats Interactive. Built with vanilla HTML/CSS/JS for portability.</footer>
+    </div>
   </main>
 
 <script>
