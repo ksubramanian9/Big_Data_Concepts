@@ -358,6 +358,76 @@
     background: var(--accent-strong);
     box-shadow: 0 16px 28px rgba(111,95,87,0.25);
   }
+  .format-browser {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .format-tabs {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .format-tab {
+    border: 1px solid var(--border);
+    background: #f5ede9;
+    color: #63534d;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .format-tab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 8px 18px rgba(99,83,77,0.14);
+  }
+  .format-tab.active {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+    box-shadow: 0 12px 24px rgba(111,95,87,0.22);
+  }
+  .format-panel {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(248,244,240,0.65), rgba(255,255,255,0.9));
+    padding: 24px;
+    min-height: 220px;
+  }
+  .format-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 15px 30px rgba(99,83,77,0.08);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .format-card .row {
+    margin-bottom: 4px;
+  }
+  .format-card.highlight {
+    border-color: var(--accent);
+    box-shadow: 0 22px 44px rgba(99,83,77,0.16);
+  }
+  .format-card__section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .format-card__section h4 {
+    margin: 0;
+    color: #6f5f57;
+    font-size: 1.05rem;
+  }
+  .format-empty {
+    color: var(--muted);
+    font-style: italic;
+  }
   @media (min-width: 640px) {
     .hero-card__heading {
       flex-direction: row;
@@ -403,6 +473,37 @@
       <p>Scan the curated library to understand lifecycle fit, compare strengths in the sortable summary table, and open each card for implementation notes and examples.</p>
     </section>
 
+    <section class="section">
+      <h2>Foundational Concepts</h2>
+      <div class="card concept-card">
+        <h3>Row vs. Columnar Storage</h3>
+        <p><strong>Row-oriented</strong> formats (like CSV) store data record-by-record. This is efficient for reading entire rows but inefficient for analytical queries that only need a few columns. <strong>Columnar-oriented</strong> formats (like Parquet and ORC) store data grouped by column. This is a game-changer for analytics because you can read only the columns you need, drastically reducing I/O and enabling better compression.
+        
+        </p>
+      </div>
+      <div class="card concept-card">
+        <h3>Schema-on-Read vs. Schema-on-Write</h3>
+        <p>With <strong>Schema-on-Write</strong> (e.g., Parquet), the data must conform to a strict, pre-defined schema before being written. This guarantees data quality upfront. With <strong>Schema-on-Read</strong> (e.g., JSON), the schema is applied during the read operation, offering flexibility but potentially leading to data quality issues if the data is inconsistent.</p>
+      </div>
+      <div class="card concept-card">
+        <h3>Lakehouse Formats Explained</h3>
+        <p>Lakehouse formats like Delta Lake, Iceberg, and Hudi are built on top of other storage formats (often Parquet). They add critical features of data warehouses to a data lake, such as **ACID transactions** (enabling reliable updates and deletes), **time travel** (for querying historical data), and robust **schema evolution** to handle changing data structures.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Lifecycle Flow</h2>
+      <div class="flow-diagram-container">
+        <div class="flow-step">Ingestion<br><small>CSV, JSON, Logs</small></div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">Serialization<br><small>Avro, Protobuf</small></div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">Storage<br><small>Parquet, ORC</small></div>
+        <div class="flow-arrow">&#8594;</div>
+        <div class="flow-step">Table Layer<br><small>Delta, Iceberg, Hudi</small></div>
+      </div>
+    </section>
+
     <section class="card filters-panel">
       <div class="filters-panel__header">
         <h2>Explore the library</h2>
@@ -439,37 +540,6 @@
         <a class="cta-button" href="2025_Data_Format_Report.html">Read the 2025 Report</a>
       </div>
     </section>
-    
-    <section class="section">
-      <h2>Foundational Concepts</h2>
-      <div class="card concept-card">
-        <h3>Row vs. Columnar Storage</h3>
-        <p><strong>Row-oriented</strong> formats (like CSV) store data record-by-record. This is efficient for reading entire rows but inefficient for analytical queries that only need a few columns. <strong>Columnar-oriented</strong> formats (like Parquet and ORC) store data grouped by column. This is a game-changer for analytics because you can read only the columns you need, drastically reducing I/O and enabling better compression.
-        
-        </p>
-      </div>
-      <div class="card concept-card">
-        <h3>Schema-on-Read vs. Schema-on-Write</h3>
-        <p>With <strong>Schema-on-Write</strong> (e.g., Parquet), the data must conform to a strict, pre-defined schema before being written. This guarantees data quality upfront. With <strong>Schema-on-Read</strong> (e.g., JSON), the schema is applied during the read operation, offering flexibility but potentially leading to data quality issues if the data is inconsistent.</p>
-      </div>
-      <div class="card concept-card">
-        <h3>Lakehouse Formats Explained</h3>
-        <p>Lakehouse formats like Delta Lake, Iceberg, and Hudi are built on top of other storage formats (often Parquet). They add critical features of data warehouses to a data lake, such as **ACID transactions** (enabling reliable updates and deletes), **time travel** (for querying historical data), and robust **schema evolution** to handle changing data structures.</p>
-      </div>
-    </section>
-
-    <section class="section">
-      <h2>Lifecycle Flow</h2>
-      <div class="flow-diagram-container">
-        <div class="flow-step">Ingestion<br><small>CSV, JSON, Logs</small></div>
-        <div class="flow-arrow">&#8594;</div>
-        <div class="flow-step">Serialization<br><small>Avro, Protobuf</small></div>
-        <div class="flow-arrow">&#8594;</div>
-        <div class="flow-step">Storage<br><small>Parquet, ORC</small></div>
-        <div class="flow-arrow">&#8594;</div>
-        <div class="flow-step">Table Layer<br><small>Delta, Iceberg, Hudi</small></div>
-      </div>
-    </section>
 
     <section class="section">
       <h2>Summary Comparison (Sortable)</h2>
@@ -492,8 +562,11 @@
     </section>
 
     <section class="section">
-      <h2>Formats (Expandable Reference)</h2>
-      <div id="cards" class="grid cols-2"></div>
+      <h2>Formats Reference</h2>
+      <div class="card format-browser">
+        <div id="formatTabs" class="format-tabs" role="tablist" aria-label="Data formats"></div>
+        <div id="formatPanel" class="format-panel" role="tabpanel" tabindex="0"></div>
+      </div>
     </section>
 
     <footer>© Big Data Formats Interactive. Built with vanilla HTML/CSS/JS for portability.</footer>
@@ -651,7 +724,8 @@ const formats = [
 
 // Get references to all the HTML elements we need to interact with
 const summaryBody = document.querySelector('#summary tbody');
-const cardsContainer = document.getElementById('cards');
+const tabsContainer = document.getElementById('formatTabs');
+const formatPanel = document.getElementById('formatPanel');
 const searchInput = document.getElementById('search');
 const categorySelect = document.getElementById('category');
 const lifecycleSelect = document.getElementById('lifecycle');
@@ -659,15 +733,20 @@ const quickFilterButtons = document.querySelectorAll('[data-filter-type="use-cas
 
 // Store the full list of formats for filtering and sorting
 let currentFormats = [...formats];
+let activeFormatSlug = '';
 
 // ====================================================================
 // Functions for Rendering & Displaying
 // ====================================================================
 
+const slugify = (name) => name.replace(/\s+/g, '-').toLowerCase();
+
 // Renders the summary table rows based on a given list of formats
 function renderSummary(data) {
-  summaryBody.innerHTML = data.map(r => `
-    <tr data-format-name="${r.name.replace(/\s+/g, '-').toLowerCase()}">
+  summaryBody.innerHTML = data.map(r => {
+    const slug = slugify(r.name);
+    return `
+    <tr data-format-name="${slug}">
       <td>${r.name}</td>
       <td>${r.summary.schema}</td>
       <td>${r.summary.compression}</td>
@@ -675,7 +754,8 @@ function renderSummary(data) {
       <td>${r.summary.streaming}</td>
       <td>${r.category}</td>
     </tr>
-  `).join("");
+  `;
+  }).join("");
 }
 
 // Generates the code block for each format card
@@ -692,35 +772,80 @@ function tagList(items, cls="tag") {
   return items.map(t => `<span class="${cls}">${t}</span>`).join(" ");
 }
 
-// Renders the expandable cards for each format
-function renderCards(list) {
-  cardsContainer.innerHTML = list.map(fmt => `
-    <div class="card" data-format-name="${fmt.name.replace(/\s+/g, '-').toLowerCase()}">
+function formatCardTemplate(fmt) {
+  const slug = slugify(fmt.name);
+  return `
+    <div class="format-card" data-format-slug="${slug}">
       <div class="row">
         <h3 style="margin-right:8px">${fmt.name}</h3>
         <span class="pill">${fmt.category}</span>
         ${fmt.lifecycle.map(s=>`<span class="tag">${s}</span>`).join("")}
       </div>
       <p>${fmt.description}</p>
-      <details>
-        <summary>Example</summary>
+      <div class="format-card__section">
+        <h4>Example</h4>
         ${snippetBlock(fmt)}
-      </details>
-      <details>
-        <summary>Scenarios</summary>
+      </div>
+      <div class="format-card__section">
+        <h4>Scenarios</h4>
         <div>${tagList(fmt.scenarios)}</div>
-      </details>
-      <details>
-        <summary>Technologies</summary>
+      </div>
+      <div class="format-card__section">
+        <h4>Technologies</h4>
         <div>${tagList(fmt.technologies)}</div>
-      </details>
+      </div>
     </div>
-  `).join("");
+  `;
+}
+
+function renderFormatBrowser(list) {
+  if (!list.length) {
+    tabsContainer.innerHTML = '';
+    formatPanel.innerHTML = '<p class="format-empty">No formats match your filters. Adjust the search or lifecycle selections.</p>';
+    formatPanel.removeAttribute('data-format-slug');
+    formatPanel.removeAttribute('aria-labelledby');
+    activeFormatSlug = '';
+    return;
+  }
+
+  if (!activeFormatSlug || !list.some(f => slugify(f.name) === activeFormatSlug)) {
+    activeFormatSlug = slugify(list[0].name);
+  }
+
+  tabsContainer.innerHTML = list.map(f => {
+    const slug = slugify(f.name);
+    const isActive = slug === activeFormatSlug;
+    return `<button class="format-tab ${isActive ? 'active' : ''}" role="tab" aria-selected="${isActive ? 'true' : 'false'}" aria-controls="formatPanel" id="tab-${slug}" data-format-slug="${slug}">${f.name}</button>`;
+  }).join('');
+
+  const activeFormat = list.find(f => slugify(f.name) === activeFormatSlug);
+
+  if (activeFormat) {
+    formatPanel.innerHTML = formatCardTemplate(activeFormat);
+    formatPanel.setAttribute('data-format-slug', activeFormatSlug);
+    formatPanel.setAttribute('aria-labelledby', `tab-${activeFormatSlug}`);
+  } else {
+    formatPanel.innerHTML = '';
+    formatPanel.removeAttribute('data-format-slug');
+    formatPanel.removeAttribute('aria-labelledby');
+  }
+
+  tabsContainer.querySelectorAll('.format-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const slug = btn.getAttribute('data-format-slug');
+      if (slug === activeFormatSlug) return;
+      activeFormatSlug = slug;
+      renderFormatBrowser(list);
+      if (typeof formatPanel.focus === 'function') {
+        formatPanel.focus();
+      }
+    });
+  });
 }
 
 // Initial render of both tables and cards
 renderSummary(formats);
-renderCards(formats);
+renderFormatBrowser(formats);
 
 // ====================================================================
 // Interactivity: Sorting, Filtering, and Highlighting
@@ -769,7 +894,7 @@ function applyFilters() {
   });
 
   renderSummary(currentFormats);
-  renderCards(currentFormats);
+  renderFormatBrowser(currentFormats);
 }
 
 // Add event listeners for all filter elements
@@ -813,19 +938,31 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Add a highlight on hover for the summary table rows and corresponding cards
+function togglePanelHighlight(slug, state) {
+  if (!slug) return;
+  const panelSlug = formatPanel.getAttribute('data-format-slug');
+  if (panelSlug !== slug) return;
+  const activeCard = formatPanel.querySelector('.format-card');
+  if (activeCard) {
+    activeCard.classList.toggle('highlight', state);
+  }
+}
+
 summaryBody.addEventListener('mouseover', (e) => {
   const row = e.target.closest('tr');
   if (row) {
-    const name = row.getAttribute('data-format-name');
-    document.querySelector(`.card[data-format-name="${name}"]`).classList.add('highlight');
+    const slug = row.getAttribute('data-format-name');
+    togglePanelHighlight(slug, true);
   }
 });
 
 summaryBody.addEventListener('mouseout', (e) => {
   const row = e.target.closest('tr');
   if (row) {
-    const name = row.getAttribute('data-format-name');
-    document.querySelector(`.card[data-format-name="${name}"]`).classList.remove('highlight');
+    const slug = row.getAttribute('data-format-name');
+    togglePanelHighlight(slug, false);
+  } else {
+    togglePanelHighlight(formatPanel.getAttribute('data-format-slug'), false);
   }
 });
 
