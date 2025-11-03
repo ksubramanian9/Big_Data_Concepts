@@ -111,6 +111,7 @@
                     <p class="text-slate-500">High-level APIs in Python, Scala, Java, and R simplify complex data manipulation.</p>
                 </div>
             </div>
+            <p class="max-w-3xl mx-auto mt-8 text-base text-slate-600">Because Spark keeps intermediate datasets in memory and aggressively pipelines operations, iterative analytics and streaming workloads complete dramatically faster than Hadoop MapReduce, which repeatedly writes every stage to disk. The practical result is that jobs that might take hours under MapReduce can often finish in minutes with Spark.</p>
         </section>
 
         <section id="genesis" class="mb-24 scroll-mt-20">
@@ -164,12 +165,14 @@
                     <p id="info-text" class="text-slate-600">Select a component from the diagram to see its description here.</p>
                 </div>
             </div>
+            <p class="max-w-3xl mx-auto mt-8 text-base text-slate-600 text-center">In every deployment, the cluster manager (Standalone, YARN, Mesos, or Kubernetes) is the resource broker that hands out CPU and memory to executors so the driver can schedule tasks efficiently across the cluster.</p>
 
         </section>
 
         <section id="ecosystem" class="mb-24 scroll-mt-20">
             <h2 class="text-3xl font-bold text-center text-slate-900 mb-4">A Unified Ecosystem</h2>
             <p class="text-lg text-slate-600 text-center max-w-3xl mx-auto mb-12">Spark is more than just a processing engine; it's a comprehensive ecosystem of libraries that work together seamlessly. This design allows you to combine different workloads, like SQL queries and machine learning, within a single application. Explore the core components of this powerful, unified stack.</p>
+            <p class="text-base text-slate-600 text-center max-w-3xl mx-auto mb-8">The core modules include <span class="font-semibold">Spark Core</span> for RDD processing, <span class="font-semibold">Spark SQL</span> for structured queries, <span class="font-semibold">Spark Streaming</span> and <span class="font-semibold">Structured Streaming</span> for real-time pipelines, <span class="font-semibold">MLlib</span> for machine learning, and <span class="font-semibold">GraphX</span> for graph analytics.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 <div class="bg-white p-6 rounded-xl shadow-md text-center card-hover">
                     <div class="text-4xl mb-3">⚙️</div>
@@ -213,6 +216,14 @@
                 <div class="chart-container">
                     <canvas id="clusterManagerChart"></canvas>
                 </div>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg mt-12">
+                <h3 class="text-2xl font-bold text-slate-800 mb-4 text-center">Run Spark on Your Laptop in Minutes</h3>
+                <ol class="list-decimal list-inside text-slate-600 space-y-2 max-w-3xl mx-auto text-left">
+                    <li>Download the latest pre-built Spark package from <a href="https://spark.apache.org/downloads.html" class="text-sky-600 underline">spark.apache.org/downloads</a>, choosing the Hadoop version that matches your environment.</li>
+                    <li>Extract the archive and set the <span class="font-mono">SPARK_HOME</span> environment variable to the extracted directory; add <span class="font-mono">$SPARK_HOME/bin</span> to your <span class="font-mono">PATH</span>.</li>
+                    <li>Install Java if it is not already available, then launch an interactive shell with <span class="font-mono">$SPARK_HOME/bin/spark-shell</span> (Scala) or <span class="font-mono">pyspark</span> for Python to verify the installation.</li>
+                </ol>
             </div>
         </section>
 

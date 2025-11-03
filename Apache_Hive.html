@@ -202,6 +202,21 @@ LIMIT 10;</code></pre>
                     </div>
                 </div>
 
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Data Definition Essentials</h3>
+                    <p class="text-gray-600 mb-6">HiveQL includes familiar DDL verbs for structuring data warehouses. Common commands such as <span class="font-mono">CREATE TABLE</span> for introducing new tables and <span class="font-mono">DROP TABLE</span> for removing outdated datasets mirror their SQL counterparts, making schema management straightforward for teams moving from traditional RDBMS platforms.</p>
+                    <ul class="list-disc list-inside text-gray-600 space-y-2">
+                        <li><span class="font-semibold">CREATE TABLE:</span> Defines table columns, data types, and storage format, optionally specifying partition columns.</li>
+                        <li><span class="font-semibold">ALTER TABLE:</span> Updates table metadata, such as renaming columns or adding partitions without rewriting data.</li>
+                        <li><span class="font-semibold">DROP TABLE:</span> Deletes both the table definition in the Metastore and the underlying data files when no longer needed.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Why Partition Tables?</h3>
+                    <p class="text-gray-600">Partitioning segments large Hive tables by high-cardinality columns such as date or region. Each partition maps to a distinct directory in HDFS, so queries that filter on the partition key can skip irrelevant folders, reducing I/O and improving execution time. Well-designed partitions are one of the most effective tuning levers for petabyte-scale warehouses.</p>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
                      <div class="bg-white rounded-2xl shadow-xl p-8">
                         <h3 class="text-2xl font-bold text-gray-800 mb-4">Data Types</h3>
