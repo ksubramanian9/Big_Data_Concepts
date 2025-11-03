@@ -46,6 +46,8 @@
                 <a href="#value" class="nav-link font-medium pb-1">Value</a>
                 <a href="#principles" class="nav-link font-medium pb-1">Principles</a>
                 <a href="#concepts" class="nav-link font-medium pb-1">Concepts</a>
+                <a href="#aggregation" class="nav-link font-medium pb-1">Aggregation</a>
+                <a href="#indexes" class="nav-link font-medium pb-1">Indexes</a>
                 <a href="#commands" class="nav-link font-medium pb-1">Commands</a>
                 <a href="#organizations" class="nav-link font-medium pb-1">Organizations</a>
                 <a href="mongodb-flashcards.html" class="nav-link font-medium pb-1">Flashcards</a>
@@ -56,6 +58,8 @@
                     <option value="#value">Value</option>
                     <option value="#principles">Principles</option>
                     <option value="#concepts">Concepts</option>
+                    <option value="#aggregation">Aggregation</option>
+                    <option value="#indexes">Indexes</option>
                     <option value="#commands">Commands</option>
                     <option value="#organizations">Organizations</option>
                     <option value="mongodb-flashcards.html">Flashcards</option>
@@ -129,6 +133,154 @@
                 <div class="bg-white p-6 rounded-xl shadow-md card">
                     <h4 class="text-xl font-semibold text-slate-800 mb-2">Transactions</h4>
                     <p class="text-slate-600">Multi-document ACID transactions ensure data consistency when needed.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="aggregation" class="py-16 bg-slate-100">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-800">Aggregation Framework</h3>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl mx-auto">MongoDB's aggregation framework processes documents through a pipeline of stages, letting you reshape, filter, group, and analyze data in-place without exporting it to an external analytics tool.</p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-10">
+                <div class="space-y-6">
+                    <h4 class="text-2xl font-semibold text-slate-800">How the Pipeline Works</h4>
+                    <p class="text-slate-600 leading-relaxed">Each stage receives documents from the previous stage, transforms them, and passes them along. Common stages include <span class="font-semibold text-slate-800">$match</span> to filter documents, <span class="font-semibold text-slate-800">$group</span> to aggregate values, <span class="font-semibold text-slate-800">$sort</span> to order results, and <span class="font-semibold text-slate-800">$project</span> to reshape the output. MongoDB executes the pipeline on the server and can leverage indexes on early stages.</p>
+                    <div class="bg-white rounded-xl shadow p-6 space-y-4">
+                        <h5 class="text-xl font-semibold text-slate-800">Sample Pipeline</h5>
+                        <pre class="bg-slate-900 text-slate-100 text-sm rounded-lg p-4 overflow-x-auto">db.orders.aggregate([
+  { $match: { status: "delivered", orderDate: { $gte: ISODate("2024-01-01") } } },
+  { $group: {
+      _id: "$customerId",
+      totalSpent: { $sum: "$orderTotal" },
+      averageBasket: { $avg: "$orderTotal" },
+      orders: { $sum: 1 }
+  } },
+  { $sort: { totalSpent: -1 } },
+  { $project: {
+      customerId: "$_id",
+      totalSpent: 1,
+      averageBasket: 1,
+      orders: 1,
+      _id: 0
+  } }
+]);</pre>
+                        <p class="text-slate-600">This pipeline finds 2024 orders that were delivered, groups them per customer, ranks them by spending, and returns a tidy report for dashboards.</p>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <h4 class="text-2xl font-semibold text-slate-800">Pipeline Flow Diagram</h4>
+                    <p class="text-slate-600">The diagram below illustrates how documents stream through representative stages:</p>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <div class="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4 items-center justify-center">
+                            <div class="flex items-center space-x-4 overflow-x-auto pb-2 md:pb-0">
+                                <div class="min-w-[150px] bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+                                    <p class="text-sm font-semibold text-amber-600">$match</p>
+                                    <p class="text-xs text-slate-600 mt-1">Filter delivered orders</p>
+                                </div>
+                                <span class="text-2xl text-amber-500">&rarr;</span>
+                                <div class="min-w-[150px] bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
+                                    <p class="text-sm font-semibold text-emerald-600">$group</p>
+                                    <p class="text-xs text-slate-600 mt-1">Summarize by customer</p>
+                                </div>
+                                <span class="text-2xl text-amber-500">&rarr;</span>
+                                <div class="min-w-[150px] bg-sky-50 border border-sky-200 rounded-lg p-4 text-center">
+                                    <p class="text-sm font-semibold text-sky-600">$sort</p>
+                                    <p class="text-xs text-slate-600 mt-1">Rank top spenders</p>
+                                </div>
+                                <span class="text-2xl text-amber-500">&rarr;</span>
+                                <div class="min-w-[150px] bg-violet-50 border border-violet-200 rounded-lg p-4 text-center">
+                                    <p class="text-sm font-semibold text-violet-600">$project</p>
+                                    <p class="text-xs text-slate-600 mt-1">Reshape final fields</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h5 class="text-xl font-semibold text-slate-800 mb-3">Popular Stages &amp; Uses</h5>
+                        <ul class="space-y-3 text-slate-600">
+                            <li><span class="font-semibold text-slate-800">$unwind</span> &ndash; Flattens array values for per-item analysis.</li>
+                            <li><span class="font-semibold text-slate-800">$addFields</span> &ndash; Creates computed columns, e.g., profit margins.</li>
+                            <li><span class="font-semibold text-slate-800">$lookup</span> &ndash; Performs left outer joins against other collections.</li>
+                            <li><span class="font-semibold text-slate-800">$facet</span> &ndash; Runs multiple pipelines in parallel to serve dashboards.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="indexes" class="py-16">
+            <div class="text-center mb-12">
+                <h3 class="text-3xl md:text-4xl font-bold text-slate-800">Indexes in MongoDB</h3>
+                <p class="mt-4 text-lg text-slate-600 max-w-4xl mx-auto">Indexes keep frequently queried fields in sorted data structures so MongoDB can locate matching documents quickly. Without indexes, the server must scan every document in a collection.</p>
+            </div>
+            <div class="grid lg:grid-cols-2 gap-10">
+                <div class="space-y-6">
+                    <h4 class="text-2xl font-semibold text-slate-800">Why Indexes Matter</h4>
+                    <ul class="list-disc list-inside text-slate-600 space-y-2">
+                        <li>Accelerate read queries and allow query planners to avoid full collection scans.</li>
+                        <li>Support efficient sorting and range queries by maintaining ordered keys.</li>
+                        <li>Enable unique constraints that enforce data quality (e.g., unique emails).</li>
+                        <li>Improve performance of aggregation pipelines when early stages filter on indexed fields.</li>
+                    </ul>
+                    <div class="bg-white rounded-xl shadow p-6">
+                        <h5 class="text-xl font-semibold text-slate-800 mb-3">Creating and Inspecting Indexes</h5>
+                        <pre class="bg-slate-900 text-slate-100 text-sm rounded-lg p-4 overflow-x-auto">db.users.createIndex({ email: 1 }, { unique: true });
+db.orders.createIndex({ customerId: 1, orderDate: -1 });
+db.orders.getIndexes();</pre>
+                        <p class="text-slate-600 mt-3">This example adds a unique single-field index and a compound index used for "latest orders per customer" queries.</p>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <h4 class="text-2xl font-semibold text-slate-800">Index Types at a Glance</h4>
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <p class="text-lg font-semibold text-slate-800">Single Field</p>
+                            <p class="text-sm text-slate-600 mt-2">Ordered list of one key (ascending or descending). Ideal for equality or range filters on a single field.</p>
+                            <div class="mt-3 flex space-x-1 justify-center text-xs font-medium">
+                                <span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700">name</span>
+                                <span class="px-2 py-1 rounded bg-emerald-100 text-emerald-700">&uarr;</span>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <p class="text-lg font-semibold text-slate-800">Compound</p>
+                            <p class="text-sm text-slate-600 mt-2">Combines multiple fields and preserves their sort order. Useful for queries that filter by a prefix of the indexed fields.</p>
+                            <div class="mt-3 flex space-x-1 justify-center text-xs font-medium">
+                                <span class="px-2 py-1 rounded bg-sky-100 text-sky-700">customerId</span>
+                                <span class="px-2 py-1 rounded bg-sky-100 text-sky-700">&uarr;</span>
+                                <span class="px-2 py-1 rounded bg-sky-100 text-sky-700">orderDate</span>
+                                <span class="px-2 py-1 rounded bg-sky-100 text-sky-700">&darr;</span>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <p class="text-lg font-semibold text-slate-800">Multikey</p>
+                            <p class="text-sm text-slate-600 mt-2">Automatically created for array fields so each element is indexed. Perfect for tag lists or categories.</p>
+                            <div class="mt-3 flex space-x-1 justify-center text-xs font-medium">
+                                <span class="px-2 py-1 rounded bg-amber-100 text-amber-700">tags[0]</span>
+                                <span class="px-2 py-1 rounded bg-amber-100 text-amber-700">tags[1]</span>
+                                <span class="px-2 py-1 rounded bg-amber-100 text-amber-700">...</span>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                            <p class="text-lg font-semibold text-slate-800">Text</p>
+                            <p class="text-sm text-slate-600 mt-2">Supports language-aware text search with stemming and scoring.</p>
+                            <div class="mt-3 flex space-x-1 justify-center text-xs font-medium">
+                                <span class="px-2 py-1 rounded bg-violet-100 text-violet-700">"analytics"</span>
+                                <span class="px-2 py-1 rounded bg-violet-100 text-violet-700">"cloud"</span>
+                                <span class="px-2 py-1 rounded bg-violet-100 text-violet-700">score</span>
+                            </div>
+                        </div>
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm sm:col-span-2">
+                            <p class="text-lg font-semibold text-slate-800">Geospatial &amp; Hashed</p>
+                            <p class="text-sm text-slate-600 mt-2">2dsphere indexes enable map queries within polygons or by distance; hashed indexes evenly distribute shard keys for write scaling.</p>
+                            <div class="mt-3 flex flex-wrap justify-center gap-2 text-xs font-medium">
+                                <span class="px-2 py-1 rounded bg-rose-100 text-rose-700">2dsphere</span>
+                                <span class="px-2 py-1 rounded bg-rose-100 text-rose-700">2d</span>
+                                <span class="px-2 py-1 rounded bg-rose-100 text-rose-700">geoNear</span>
+                                <span class="px-2 py-1 rounded bg-rose-100 text-rose-700">hashed</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
