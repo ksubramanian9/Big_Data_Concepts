@@ -115,6 +115,10 @@
                     <p class="text-slate-600">Secondary indexes accelerate queries on frequently accessed fields.</p>
                 </div>
                 <div class="bg-white p-6 rounded-xl shadow-md card">
+                    <h4 class="text-xl font-semibold text-slate-800 mb-2">Query Cursors</h4>
+                    <p class="text-slate-600">Each find() operation returns a cursor that lazily iterates matching documents, allowing applications to page through large result sets efficiently.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card">
                     <h4 class="text-xl font-semibold text-slate-800 mb-2">Aggregation Pipeline</h4>
                     <p class="text-slate-600">Stages transform documents for analytics, similar to SQL GROUP BY operations.</p>
                 </div>
@@ -157,6 +161,11 @@
                             <td class="px-6 py-4 font-mono text-sm text-slate-800">db.createCollection()</td>
                             <td class="px-6 py-4 font-mono text-sm text-slate-800">db.createCollection('users')</td>
                             <td class="px-6 py-4 text-slate-600">Create a new collection</td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.collection.count()</td>
+                            <td class="px-6 py-4 font-mono text-sm text-slate-800">db.orders.count({ status: 'open' })</td>
+                            <td class="px-6 py-4 text-slate-600">Return the total number of documents that match a query filter.</td>
                         </tr>
                         <tr>
                             <td class="px-6 py-4 font-mono text-sm text-slate-800">db.collection.insertOne()</td>

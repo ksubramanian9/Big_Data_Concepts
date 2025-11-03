@@ -124,6 +124,10 @@
                     <p class="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">
                         This report explores Apache Pig, a high-level platform for creating MapReduce programs used with Hadoop. Discover its philosophy, architecture, and the power of its dataflow language, Pig Latin.
                     </p>
+                    <div class="max-w-3xl mx-auto mt-6 bg-blue-50 border border-blue-200 text-blue-900 rounded-xl p-6 text-left">
+                        <h2 class="text-xl font-semibold mb-2">Why Pig Feels Higher-Level Than MapReduce</h2>
+                        <p class="text-base">Pig Latin scripts describe <em>what</em> transformations should happen to the data, while the Pig platform automatically compiles those steps into the series of MapReduce jobs required to execute them. This abstraction eliminates the need to hand-code low-level Java, dramatically reducing boilerplate and letting data engineers prototype complex ETL flows with far fewer lines of code.</p>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-2xl shadow-lg p-8">
@@ -170,6 +174,7 @@
                 <div class="bg-white rounded-2xl shadow-lg p-8">
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">Core Data Types</h3>
                     <p class="text-gray-600 mb-6">Pig Latin operates on a rich set of data types that can handle complex, nested data structures with ease. Hover over each type to see a simple example.</p>
+                    <p class="text-gray-600 mb-6">The language natively understands four categories of values: <span class="font-semibold">atoms</span> for individual scalars, <span class="font-semibold">tuples</span> for ordered records, <span class="font-semibold">bags</span> for unordered collections of tuples, and <span class="font-semibold">maps</span> for key-value pairs indexed by strings.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
                         <div class="relative group border-2 border-blue-200 bg-blue-50 rounded-lg p-4">
                             <h4 class="font-bold text-lg text-blue-900">Atom</h4>
