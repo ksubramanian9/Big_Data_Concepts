@@ -72,6 +72,71 @@
             color: #1e3a8a;
             font-weight: 600;
         }
+        .workflow-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            position: relative;
+        }
+        .workflow-step {
+            background: linear-gradient(135deg, #eef2ff, #e0f2fe);
+            border: 1px solid rgba(30, 58, 138, 0.2);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            height: 100%;
+            box-shadow: 0 10px 30px -15px rgba(30, 58, 138, 0.4);
+        }
+        .workflow-step h4 {
+            font-weight: 700;
+            color: #1e3a8a;
+            margin-bottom: 0.5rem;
+        }
+        .workflow-connector {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #1e3a8a;
+            font-size: 1.5rem;
+        }
+        .stage-timeline {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        @media (min-width: 1024px) {
+            .stage-timeline {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+        .stage-card {
+            background: #ffffff;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 1rem;
+            padding: 1rem;
+            box-shadow: 0 10px 25px -20px rgba(15, 23, 42, 0.4);
+            height: 100%;
+        }
+        .stage-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            background: rgba(30, 64, 175, 0.1);
+            padding: 0.35rem 0.75rem;
+            border-radius: 9999px;
+            margin-bottom: 0.75rem;
+        }
+        .stage-illustration {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            color: #475569;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -162,6 +227,37 @@
                     <p class="text-gray-700 text-center text-lg">Select a component to view its details.</p>
                 </div>
             </div>
+            <div class="mt-12 bg-white rounded-2xl shadow-lg p-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Pig Execution Flow on Hadoop</h3>
+                <p class="text-gray-600 mb-6 text-center max-w-4xl mx-auto">Every Pig Latin script ultimately becomes a series of coordinated MapReduce jobs. The diagram below summarizes how a script travels from your workstation, through Pig’s compilation pipeline, and finally into the distributed execution fabric of Hadoop.</p>
+                <div class="workflow-grid">
+                    <div class="workflow-step">
+                        <h4>1. Script Authoring</h4>
+                        <p class="text-sm text-gray-600">Developers compose Pig Latin in Grunt or a file, defining the end-to-end dataflow they expect on Hadoop.</p>
+                    </div>
+                    <div class="workflow-connector" aria-hidden="true">⟶</div>
+                    <div class="workflow-step">
+                        <h4>2. Parsing &amp; Logical Plan</h4>
+                        <p class="text-sm text-gray-600">Pig parses the script, validates types, and builds a logical DAG whose nodes are Pig operators such as LOAD, FILTER, JOIN, and STORE.</p>
+                    </div>
+                    <div class="workflow-connector" aria-hidden="true">⟶</div>
+                    <div class="workflow-step">
+                        <h4>3. Optimization</h4>
+                        <p class="text-sm text-gray-600">Rule-based optimizations (projection pruning, predicate pushdown) rearrange the DAG to reduce I/O and shuffle volume before any MapReduce job is emitted.</p>
+                    </div>
+                    <div class="workflow-connector" aria-hidden="true">⟶</div>
+                    <div class="workflow-step">
+                        <h4>4. Physical Compilation</h4>
+                        <p class="text-sm text-gray-600">The logical plan is segmented into executable units. Pig chooses map and reduce boundaries and generates MapReduce job graphs with the necessary UDF hooks.</p>
+                    </div>
+                    <div class="workflow-connector" aria-hidden="true">⟶</div>
+                    <div class="workflow-step">
+                        <h4>5. Hadoop Execution</h4>
+                        <p class="text-sm text-gray-600">Compiled jobs are submitted to YARN. HDFS feeds the map tasks, reducers shuffle intermediate data, and Pig collects the final results or stores them back to HDFS.</p>
+                    </div>
+                </div>
+                <p class="text-gray-600 mt-6 text-center max-w-3xl mx-auto">During execution Pig monitors progress, retries failed tasks via Hadoop’s fault tolerance, and surfaces job statistics back to the client. This workflow lets analysts focus on data transformations while Pig manages distributed execution mechanics.</p>
+            </div>
         </section>
 
         <section id="piglatin" class="min-h-screen py-20">
@@ -228,7 +324,7 @@
                         <p class="text-gray-600 mb-6">A typical Pig script involves loading data, applying a series of transformations, and then storing or displaying the results.</p>
                         <div class="bg-gray-800 rounded-lg p-4 text-white font-mono text-sm overflow-x-auto">
 <pre><code>-- Load user data from HDFS
-users = LOAD '/data/users.txt' USING PigStorage(',') 
+users = LOAD '/data/users.txt' USING PigStorage(',')
         AS (id:int, age:int, country:chararray);
 
 -- Filter for users older than 25
@@ -243,6 +339,60 @@ user_count = FOREACH grouped_by_country
             
 -- Store the results back to HDFS
 STORE user_count INTO '/output/user_counts';</code></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-12 bg-white rounded-2xl shadow-lg p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">Pig Latin Operators Across Execution Stages</h3>
+                    <p class="text-gray-600 mb-8 text-center max-w-4xl mx-auto">Pig organizes its operators into a dataflow. Understanding when each operator runs helps you reason about the MapReduce jobs Pig generates. The stage-oriented view below groups the most common operators and shows how they feed one another at runtime.</p>
+                    <div class="stage-timeline">
+                        <div class="stage-card">
+                            <div class="stage-label">Stage 1 · Load</div>
+                            <h4 class="text-lg font-semibold text-gray-800">LOAD, STREAM</h4>
+                            <p class="text-sm text-gray-600">Entry-point operators pull raw data from HDFS, local files, or external processes. They instantiate relations that subsequent operators can consume.</p>
+                            <div class="stage-illustration" aria-hidden="true">
+                                <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">LOAD data INTO users</span>
+                                <span>⟶ relation</span>
+                            </div>
+                        </div>
+                        <div class="stage-card">
+                            <div class="stage-label">Stage 2 · Transform</div>
+                            <h4 class="text-lg font-semibold text-gray-800">FOREACH, FILTER, DISTINCT</h4>
+                            <p class="text-sm text-gray-600">Tuple-level operators reshape or filter the relation in the map phase. Pig often keeps these in the mapper to avoid unnecessary shuffles.</p>
+                            <div class="stage-illustration" aria-hidden="true">
+                                <span>records</span>
+                                <span>⟶</span>
+                                <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">FOREACH users GENERATE clean fields</span>
+                            </div>
+                        </div>
+                        <div class="stage-card">
+                            <div class="stage-label">Stage 3 · Group &amp; Aggregate</div>
+                            <h4 class="text-lg font-semibold text-gray-800">GROUP, COGROUP, ORDER</h4>
+                            <p class="text-sm text-gray-600">Operators that require data redistribution trigger a MapReduce boundary. Pig emits shuffle keys and orchestrates reducers that receive grouped bags.</p>
+                            <div class="stage-illustration" aria-hidden="true">
+                                <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">GROUP users BY country</span>
+                                <span>⟶</span>
+                                <span>reducers aggregate bags</span>
+                            </div>
+                        </div>
+                        <div class="stage-card">
+                            <div class="stage-label">Stage 4 · Join &amp; Combine</div>
+                            <h4 class="text-lg font-semibold text-gray-800">JOIN, CROSS, UNION</h4>
+                            <p class="text-sm text-gray-600">Binary operators align multiple relations. Pig determines whether the join can stay in the map phase (replicated/fragments) or must execute in reducers.</p>
+                            <div class="stage-illustration" aria-hidden="true">
+                                <span>relation A</span>
+                                <span>⋈</span>
+                                <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">JOIN A BY id, B BY id</span>
+                            </div>
+                        </div>
+                        <div class="stage-card">
+                            <div class="stage-label">Stage 5 · Output</div>
+                            <h4 class="text-lg font-semibold text-gray-800">STORE, DUMP</h4>
+                            <p class="text-sm text-gray-600">Terminal operators finalize the flow. STORE writes back to HDFS or external systems, while DUMP streams results to the client—often after reducers finish.</p>
+                            <div class="stage-illustration" aria-hidden="true">
+                                <span class="font-mono text-xs bg-slate-100 px-2 py-1 rounded">STORE result INTO '/reports'</span>
+                                <span>⟶ persisted output</span>
+                            </div>
                         </div>
                     </div>
                 </div>
