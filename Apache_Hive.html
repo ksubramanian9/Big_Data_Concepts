@@ -67,6 +67,34 @@
         .content-card {
             transition: opacity 0.5s ease-in-out;
         }
+        .hql-stage {
+            min-width: 160px;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 2px solid rgba(59, 130, 246, 0.35);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.25));
+            box-shadow: 0 10px 25px -15px rgba(59, 130, 246, 0.7);
+        }
+        .diagram-arrow {
+            font-size: 2rem;
+            color: #9CA3AF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .metastore-node {
+            border-radius: 0.75rem;
+            border: 2px solid rgba(16, 185, 129, 0.35);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(59, 130, 246, 0.15));
+            padding: 1rem;
+            min-width: 180px;
+            box-shadow: 0 12px 30px -18px rgba(16, 185, 129, 0.7);
+        }
+        .metastore-bridge {
+            width: 100%;
+            border-bottom: 2px dashed rgba(107, 114, 128, 0.6);
+            margin: 0.5rem 0;
+        }
     </style>
 </head>
 <body class="antialiased">
@@ -215,6 +243,130 @@ LIMIT 10;</code></pre>
                 <div class="bg-white rounded-2xl shadow-xl p-8">
                     <h3 class="text-2xl font-bold text-gray-800 mb-4">Why Partition Tables?</h3>
                     <p class="text-gray-600">Partitioning segments large Hive tables by high-cardinality columns such as date or region. Each partition maps to a distinct directory in HDFS, so queries that filter on the partition key can skip irrelevant folders, reducing I/O and improving execution time. Well-designed partitions are one of the most effective tuning levers for petabyte-scale warehouses.</p>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">How HiveQL Queries Execute</h3>
+                    <p class="text-gray-600 mb-6">When an analyst submits HiveQL, Hive transforms the familiar SQL-like syntax into a distributed execution plan. The Driver coordinates compilation, the Compiler produces a logical plan, the Optimizer reshapes it, and the Executor delegates work to engines such as Tez or Spark. The result is that statements authored in minutes can analyze terabytes stored across HDFS.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-900 rounded-xl p-4 text-white font-mono text-sm shadow-lg">
+                            <p class="text-xs uppercase tracking-wider text-blue-300 mb-2">Example 1 &mdash; Sessionized metrics</p>
+<pre><code>WITH active AS (
+    SELECT user_id,
+           MAX(session_end) AS last_session
+    FROM web_events
+    WHERE event_date = '2025-02-01'
+    GROUP BY user_id
+)
+SELECT a.user_id, d.country, d.tier
+FROM active a
+JOIN dim_users d
+  ON a.user_id = d.id
+WHERE d.tier = 'premium';</code></pre>
+                            <p class="mt-4 text-sm text-blue-100">Hive rewrites the CTE and join into stages that scan partitions for <span class="font-semibold">web_events</span>, shuffle by <span class="font-semibold">user_id</span>, and broadcast the small dimension table for an efficient distributed join.</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl p-4 text-gray-800 border border-gray-200 shadow-inner">
+                            <p class="text-xs uppercase tracking-wider text-blue-500 mb-2">Example 2 &mdash; Incremental loads</p>
+                            <pre class="bg-white border border-gray-200 rounded-lg p-4 text-sm font-mono overflow-x-auto">INSERT OVERWRITE TABLE sales_daily
+PARTITION (dt = '2025-02-01')
+SELECT s.order_id,
+       s.store_id,
+       s.net_total,
+       p.channel
+FROM staging_sales s
+LEFT JOIN promo_lookup p
+  ON s.promo_code = p.code
+WHERE s.dt = '2025-02-01';</pre>
+                            <p class="mt-4 text-sm">The query planner streams rows from <span class="font-semibold">staging_sales</span> only for the specified partition, performs the lookup join, and writes the transformed results into the target warehouse partition atomically.</p>
+                        </div>
+                    </div>
+                    <div class="mt-10">
+                        <h4 class="text-xl font-semibold text-gray-800 mb-3">Compilation and Execution Stages</h4>
+                        <p class="text-gray-600 mb-6">Each HiveQL request advances through coordinated stages before producing results. The illustration below acts as a textual sketch of the compilation pipeline you would normally draw in class.</p>
+                        <div class="overflow-x-auto">
+                            <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 md:gap-6 min-w-[680px]">
+                                <div class="hql-stage">
+                                    <p class="text-sm font-semibold text-blue-700 uppercase">1. Submission</p>
+                                    <p class="text-gray-700 text-sm">CLI, Beeline, or JDBC client sends HQL to the Driver.</p>
+                                </div>
+                                <div class="diagram-arrow transform rotate-90 md:rotate-0">➜</div>
+                                <div class="hql-stage">
+                                    <p class="text-sm font-semibold text-blue-700 uppercase">2. Parsing &amp; Analysis</p>
+                                    <p class="text-gray-700 text-sm">Lexer and parser validate syntax, semantic analyzer resolves tables, columns, and types using Metastore metadata.</p>
+                                </div>
+                                <div class="diagram-arrow transform rotate-90 md:rotate-0">➜</div>
+                                <div class="hql-stage">
+                                    <p class="text-sm font-semibold text-blue-700 uppercase">3. Logical Plan</p>
+                                    <p class="text-gray-700 text-sm">Compiler converts the abstract syntax tree into a DAG of relational operators.</p>
+                                </div>
+                                <div class="diagram-arrow transform rotate-90 md:rotate-0">➜</div>
+                                <div class="hql-stage">
+                                    <p class="text-sm font-semibold text-blue-700 uppercase">4. Optimization</p>
+                                    <p class="text-gray-700 text-sm">Rule-based optimizer prunes partitions, reorders joins, and pushes predicates to minimize data scans.</p>
+                                </div>
+                                <div class="diagram-arrow transform rotate-90 md:rotate-0">➜</div>
+                                <div class="hql-stage">
+                                    <p class="text-sm font-semibold text-blue-700 uppercase">5. Physical Plan</p>
+                                    <p class="text-gray-700 text-sm">Plan is translated into Tez DAGs, Spark jobs, or MapReduce stages with task boundaries.</p>
+                                </div>
+                                <div class="diagram-arrow transform rotate-90 md:rotate-0">➜</div>
+                                <div class="hql-stage">
+                                    <p class="text-sm font-semibold text-blue-700 uppercase">6. Execution &amp; Results</p>
+                                    <p class="text-gray-700 text-sm">Executor submits tasks to YARN, monitors progress, and streams final results back to the client.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <ul class="mt-6 space-y-3 text-gray-600 text-sm">
+                            <li><span class="font-semibold text-blue-700">Compiler internals:</span> Hive uses Apache Calcite for parsing and optimization; statistics fetched from the Metastore guide cost-based decisions when available.</li>
+                            <li><span class="font-semibold text-blue-700">Execution engines:</span> Administrators can choose MapReduce for compatibility, Tez for DAG execution, or Spark for in-memory performance without changing HiveQL.</li>
+                            <li><span class="font-semibold text-blue-700">Fault tolerance:</span> If a task fails, the execution engine replays the stage using lineage information captured in the physical plan.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Hive Metastore Architecture</h3>
+                    <p class="text-gray-600 mb-6">The Metastore is Hive's catalog brain. It exposes metadata through a network service so that query compilers, ETL tools, and governance platforms share a single source of truth for schemas, partitions, and storage locations.</p>
+                    <div class="overflow-x-auto">
+                        <div class="flex flex-col md:flex-row items-stretch md:items-center gap-4 md:gap-6 min-w-[720px] justify-center">
+                            <div class="metastore-node text-center">
+                                <p class="text-sm font-semibold text-emerald-700 uppercase">Client &amp; Service Consumers</p>
+                                <p class="text-gray-700 text-sm">HiveServer2, Spark SQL, Presto, and metadata crawlers issue Thrift RPC calls to read or mutate metadata.</p>
+                            </div>
+                            <div class="diagram-arrow transform rotate-90 md:rotate-0">➜</div>
+                            <div class="metastore-node">
+                                <p class="text-sm font-semibold text-emerald-700 uppercase text-center">Metastore Service Tier</p>
+                                <p class="text-gray-700 text-sm">Thrift servers expose APIs, enforce authentication, and apply authorization policies (SQL standard or Ranger).</p>
+                                <div class="metastore-bridge"></div>
+                                <p class="text-gray-700 text-sm"><span class="font-semibold">Caches &amp; Event Listeners:</span> Embedded caches serve hot metadata; listeners publish notifications to replication or lineage systems.</p>
+                            </div>
+                            <div class="diagram-arrow transform rotate-90 md:rotate-0">➜</div>
+                            <div class="metastore-node">
+                                <p class="text-sm font-semibold text-emerald-700 uppercase text-center">Persistent Storage</p>
+                                <p class="text-gray-700 text-sm">A relational database (MySQL, PostgreSQL, Oracle) stores table definitions, column schemas, partition lists, and statistics.</p>
+                                <div class="metastore-bridge"></div>
+                                <p class="text-gray-700 text-sm"><span class="font-semibold">Warehouse Directory:</span> HDFS locations registered in metadata point to actual data files under <span class="font-mono">/warehouse</span> or cloud object stores.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
+                        <div class="space-y-3">
+                            <h4 class="text-lg font-semibold text-gray-800">Key Responsibilities</h4>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><span class="font-semibold">Schema management:</span> Stores database, table, view, and column metadata for HiveQL validation.</li>
+                                <li><span class="font-semibold">Partition catalog:</span> Tracks partition keys, storage paths, and file formats for fast query pruning.</li>
+                                <li><span class="font-semibold">Statistics repository:</span> Maintains row counts, column cardinality, and file sizes used by the optimizer.</li>
+                            </ul>
+                        </div>
+                        <div class="space-y-3">
+                            <h4 class="text-lg font-semibold text-gray-800">Deployment Considerations</h4>
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><span class="font-semibold">High availability:</span> Run multiple Thrift services behind a load balancer with shared backing DB.</li>
+                                <li><span class="font-semibold">Disaster recovery:</span> Enable DB replication and export notifications so downstream catalogs stay synchronized.</li>
+                                <li><span class="font-semibold">Security:</span> Integrate Kerberos, Ranger/Atlas, and table-level policies to audit access.</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
