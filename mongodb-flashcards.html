@@ -19,10 +19,10 @@
   }
 
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
+  html, body { background-color: #add8e6; height: 100%; }
   body{
     margin:0;
-    background: linear-gradient(180deg, #0b1020 0%, #0f172a 100%);
+    background-color: #add8e6;
     color: var(--text);
     font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     line-height: 1.5;
@@ -119,7 +119,7 @@
 
   /* PRINT (Export to PDF) */
   @media print{
-    body{ background:#ffffff; color:#000; }
+    body{ background-color:#add8e6; color:#000; }
     header, nav, .controls{ display:none !important; }
     .main{ padding:0; }
     .qcard{ break-inside: avoid; border:1px solid #aaa; background:#fff; }
